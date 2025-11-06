@@ -7,6 +7,13 @@ const initializeFirebase = () => {
     return admin;
   }
 
+  // Check if Firebase credentials are provided
+  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_CLIENT_EMAIL) {
+    console.log('⚠️  Firebase credentials not configured - Push notifications disabled');
+    console.log('   Add FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL to enable notifications');
+    return null;
+  }
+
   try {
     const serviceAccount = {
       type: "service_account",
@@ -24,12 +31,18 @@ const initializeFirebase = () => {
     return admin;
   } catch (error) {
     console.error('❌ Error initializing Firebase:', error);
-    throw error;
+    console.log('   Backend will continue without push notifications');
+    return null;
   }
 };
 
 // Send notification to single user
 const sendNotificationToUser = async (fcmToken, title, body, data = {}) => {
+  if (!firebaseInitialized) {
+    console.log('⚠️  Firebase not configured - Notification not sent');
+    return { success: false, error: 'Firebase not configured' };
+  }
+
   if (!fcmToken) {
     throw new Error('FCM token is required');
   }
@@ -62,6 +75,11 @@ const sendNotificationToUser = async (fcmToken, title, body, data = {}) => {
 
 // Send to multiple users (batch)
 const sendNotificationToMultiple = async (tokens, title, body, data = {}) => {
+  if (!firebaseInitialized) {
+    console.log('⚠️  Firebase not configured - Notifications not sent');
+    return { success: false, error: 'Firebase not configured' };
+  }
+
   if (!tokens || tokens.length === 0) {
     return { success: false, message: 'No tokens provided' };
   }

@@ -100,8 +100,12 @@ const initializeApp = async () => {
     // Initialize database
     await initDatabase();
 
-    // Initialize Firebase
-    initializeFirebase();
+    // Initialize Firebase (optional - won't crash if not configured)
+    try {
+      initializeFirebase();
+    } catch (firebaseError) {
+      console.log('⚠️  Firebase initialization skipped - Push notifications will not work');
+    }
 
     console.log('✅ App initialization complete');
   } catch (error) {
