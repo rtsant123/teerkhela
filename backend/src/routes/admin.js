@@ -20,9 +20,11 @@ router.post('/user/:userId/deactivate', adminController.deactivatePremium);
 
 // Predictions
 router.post('/predictions/override', adminController.overridePrediction);
+router.post('/predictions/generate', adminController.generatePredictions);
 
 // Results
 router.post('/results/manual-entry', adminController.manualResultEntry);
+router.post('/results/bulk-add', adminController.bulkAddResults);
 
 // Notifications
 router.post('/notification/send', adminController.sendPushNotification);

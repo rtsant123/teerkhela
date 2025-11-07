@@ -83,6 +83,24 @@ class Result {
     }
   }
 
+  // Get results for a game within a date range
+  static async getByGameAndDateRange(game, startDate, endDate) {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM results
+         WHERE game = $1
+         AND date >= $2
+         AND date <= $3
+         ORDER BY date ASC`,
+        [game, startDate, endDate]
+      );
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting results by date range:', error);
+      throw error;
+    }
+  }
+
   // Get common numbers (hot/cold) for a game
   static async getCommonNumbers(game, days = 30) {
     try {

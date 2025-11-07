@@ -84,6 +84,11 @@ export const manualResultEntry = async (data) => {
   return response.data;
 };
 
+export const bulkAddResults = async (data) => {
+  const response = await api.post('/admin/results/bulk-add', data);
+  return response.data;
+};
+
 // Notifications
 export const sendNotification = async (data) => {
   const response = await api.post('/admin/notification/send', data);

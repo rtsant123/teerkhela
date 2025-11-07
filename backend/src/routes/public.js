@@ -14,4 +14,7 @@ router.post('/user/register', publicController.registerUser);
 router.get('/user/:userId/status', publicController.getUserStatus);
 router.post('/user/fcm-token', publicController.updateFcmToken);
 
+// Formula Calculator
+router.post('/formulas/calculate', publicController.calculateFormulas);
+
 module.exports = router;

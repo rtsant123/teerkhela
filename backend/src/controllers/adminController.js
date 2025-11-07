@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Payment = require('../models/Payment');
 const Notification = require('../models/Notification');
 const Game = require('../models/Game');
+const Prediction = require('../models/Prediction');
 const predictionService = require('../services/predictionService');
 const scraperService = require('../services/scraperService');
 const { sendNotificationToMultiple, sendNotificationToUser } = require('../config/firebase');
@@ -194,6 +195,41 @@ const overridePrediction = async (req, res) => {
   }
 };
 
+// Generate predictions for all games
+const generatePredictions = async (req, res) => {
+  try {
+    const { date } = req.body;
+
+    // If no date provided, generate for tomorrow
+    const targetDate = date || (() => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toISOString().split('T')[0];
+    })();
+
+    console.log(`Admin triggered prediction generation for ${targetDate}`);
+
+    const predictions = await Prediction.generateForAllGames(targetDate);
+
+    res.json({
+      success: true,
+      message: `Generated ${predictions.length} predictions successfully`,
+      predictions: predictions.map(p => ({
+        game: p.game,
+        fr: p.fr,
+        sr: p.sr,
+        confidence: p.confidence
+      }))
+    });
+  } catch (error) {
+    console.error('Error generating predictions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error generating predictions: ' + error.message
+    });
+  }
+};
+
 // Manual result entry
 const manualResultEntry = async (req, res) => {
   try {
@@ -232,6 +268,75 @@ const manualResultEntry = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error entering result'
+    });
+  }
+};
+
+// Bulk add results for multiple games at once
+const bulkAddResults = async (req, res) => {
+  try {
+    const { date, results } = req.body;
+
+    if (!date || !results || !Array.isArray(results)) {
+      return res.status(400).json({
+        success: false,
+        message: 'date and results array are required'
+      });
+    }
+
+    const addedResults = [];
+    const notifications = [];
+
+    // Process each result
+    for (const result of results) {
+      const { gameId, game, fr, sr } = result;
+
+      if (!game && !gameId) continue;
+
+      // Use gameId if provided, otherwise use game name
+      const gameName = game || (await Game.getById(gameId)).name;
+
+      // Add result
+      await scraperService.manualEntry(gameName, date, fr, sr, new Date().toISOString());
+
+      addedResults.push({ game: gameName, fr, sr });
+
+      // Prepare notification for this game
+      if (fr && sr) {
+        notifications.push({
+          game: gameName,
+          fr,
+          sr
+        });
+      }
+    }
+
+    // Send bulk notification to premium users
+    if (notifications.length > 0) {
+      const premiumUsers = await User.getAllPremiumUsers();
+      const tokens = premiumUsers.map(u => u.fcm_token).filter(t => t);
+
+      if (tokens.length > 0) {
+        const gamesList = notifications.map(n => `${n.game}: FR ${n.fr}, SR ${n.sr}`).join(' | ');
+        await sendNotificationToMultiple(
+          tokens,
+          `⚡ All Results Declared!`,
+          gamesList.substring(0, 100), // Limit message length
+          { screen: 'home' }
+        );
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `${addedResults.length} results entered successfully`,
+      results: addedResults
+    });
+  } catch (error) {
+    console.error('Error bulk adding results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error bulk adding results'
     });
   }
 };
@@ -600,7 +705,9 @@ module.exports = {
   extendPremium,
   deactivatePremium,
   overridePrediction,
+  generatePredictions,
   manualResultEntry,
+  bulkAddResults,
   sendPushNotification,
   getNotificationHistory,
   getRevenueChart,

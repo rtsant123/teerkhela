@@ -169,11 +169,114 @@ const updateFcmToken = async (req, res) => {
   }
 };
 
+// Formula Calculator
+const calculateFormulas = async (req, res) => {
+  try {
+    const { fr, sr } = req.body;
+
+    if (fr === undefined && sr === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one of FR or SR is required'
+      });
+    }
+
+    const results = {};
+
+    // House Formula (from FR)
+    if (fr !== null && fr !== undefined) {
+      const frNum = parseInt(fr);
+      if (isNaN(frNum) || frNum < 0 || frNum > 99) {
+        return res.status(400).json({
+          success: false,
+          message: 'FR must be a number between 0 and 99'
+        });
+      }
+
+      // House: Sum of FR digits
+      const digits = frNum.toString().split('');
+      let house = digits.reduce((sum, d) => sum + parseInt(d), 0);
+
+      // If sum is 10+, add digits again
+      if (house >= 10) {
+        const houseDigits = house.toString().split('');
+        house = houseDigits.reduce((sum, d) => sum + parseInt(d), 0);
+      }
+
+      results.house = house;
+
+      // FR related calculations
+      results.fr = {
+        value: frNum,
+        tens: Math.floor(frNum / 10),
+        ones: frNum % 10,
+        sum: digits.reduce((sum, d) => sum + parseInt(d), 0),
+        isEven: frNum % 2 === 0,
+        isOdd: frNum % 2 === 1
+      };
+    }
+
+    // Ending Formula (from SR)
+    if (sr !== null && sr !== undefined) {
+      const srNum = parseInt(sr);
+      if (isNaN(srNum) || srNum < 0 || srNum > 99) {
+        return res.status(400).json({
+          success: false,
+          message: 'SR must be a number between 0 and 99'
+        });
+      }
+
+      // Ending: Last digit of SR
+      results.ending = srNum % 10;
+
+      // SR related calculations
+      const srDigits = srNum.toString().split('');
+      results.sr = {
+        value: srNum,
+        tens: Math.floor(srNum / 10),
+        ones: srNum % 10,
+        sum: srDigits.reduce((sum, d) => sum + parseInt(d), 0),
+        isEven: srNum % 2 === 0,
+        isOdd: srNum % 2 === 1
+      };
+    }
+
+    // Combined formulas (if both FR and SR provided)
+    if (fr !== null && fr !== undefined && sr !== null && sr !== undefined) {
+      const frNum = parseInt(fr);
+      const srNum = parseInt(sr);
+
+      results.combined = {
+        sum: frNum + srNum,
+        difference: Math.abs(frNum - srNum),
+        average: ((frNum + srNum) / 2).toFixed(1)
+      };
+    }
+
+    res.json({
+      success: true,
+      data: results,
+      formulas: {
+        house: 'Sum of FR digits (if ≥10, add again)',
+        ending: 'Last digit of SR',
+        sum: 'FR + SR'
+      }
+    });
+  } catch (error) {
+    console.error('Error calculating formulas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error calculating formulas'
+    });
+  }
+};
+
 module.exports = {
   getAllGames,
   getResults,
   getResultHistory,
   registerUser,
   getUserStatus,
-  updateFcmToken
+  updateFcmToken,
+  calculateFormulas
 };
