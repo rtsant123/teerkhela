@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/predictions_provider.dart';
 import '../models/prediction.dart';
+import '../utils/app_theme.dart';
+import '../widgets/app_bottom_nav.dart';
 
 class PredictionsScreen extends StatefulWidget {
   const PredictionsScreen({super.key});
@@ -15,7 +17,24 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPredictions();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndLoadPredictions();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAndLoadPredictions();
+  }
+
+  void _checkAndLoadPredictions() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final predictionsProvider = Provider.of<PredictionsProvider>(context, listen: false);
+
+    if (userProvider.isPremium && userProvider.userId != null && !predictionsProvider.isLoading) {
+      _loadPredictions();
+    }
   }
 
   Future<void> _loadPredictions() async {
@@ -30,10 +49,13 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('AI Predictions'),
+        backgroundColor: AppTheme.primary,
         actions: [
           if (userProvider.isPremium)
             IconButton(
@@ -43,85 +65,137 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
         ],
       ),
       body: userProvider.isPremium
-          ? _buildPredictionsView()
-          : _buildPremiumGate(context),
+          ? _buildPredictionsView(size)
+          : _buildPremiumGate(size),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 
-  Widget _buildPremiumGate(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.lock_outline,
-              size: 80,
-              color: Theme.of(context).primaryColor,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Premium Feature',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+  Widget _buildPremiumGate(Size size) {
+    final iconSize = size.width * 0.2;
+    final horizontalPadding = size.width * 0.05;
+
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: AppTheme.space24,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: iconSize,
+                height: iconSize,
+                decoration: const BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.psychology,
+                  size: iconSize * 0.5,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'AI predictions are available for premium members only',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+              SizedBox(height: AppTheme.space24),
+              Text(
+                'AI Predictions',
+                style: AppTheme.heading1.copyWith(
+                  fontSize: size.width * 0.065,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/subscribe');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              SizedBox(height: AppTheme.space12),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+                child: Text(
+                  'Get AI-powered predictions based on 30 days historical analysis',
+                  textAlign: TextAlign.center,
+                  style: AppTheme.bodyMedium.copyWith(
+                    fontSize: size.width * 0.037,
+                  ),
+                ),
               ),
-              child: const Text(
-                'Upgrade to Premium - ₹49/month • 50% OFF',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+              SizedBox(height: AppTheme.space32),
+              Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxWidth: 400),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/subscribe');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppTheme.space24,
+                      vertical: AppTheme.space16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    ),
+                  ),
+                  child: Text(
+                    'Upgrade to Premium - ₹49/month',
+                    style: AppTheme.buttonText.copyWith(
+                      fontSize: size.width * 0.04,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPredictionsView() {
+  Widget _buildPredictionsView(Size size) {
     return Consumer<PredictionsProvider>(
       builder: (context, predictionsProvider, child) {
         if (predictionsProvider.isLoading) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+            ),
           );
         }
 
         if (predictionsProvider.error != null) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(size.width * 0.06),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
+                  Icon(
+                    Icons.error_outline,
+                    size: size.width * 0.16,
+                    color: AppTheme.error,
+                  ),
+                  SizedBox(height: AppTheme.space16),
                   Text(
                     predictionsProvider.error!,
                     textAlign: TextAlign.center,
+                    style: AppTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppTheme.space16),
                   ElevatedButton(
                     onPressed: _loadPredictions,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppTheme.space24,
+                        vertical: AppTheme.space12,
+                      ),
+                    ),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -133,25 +207,36 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
         if (!predictionsProvider.hasPredictions) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(size.width * 0.06),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.schedule, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Predictions not yet available',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Icon(
+                    Icons.schedule,
+                    size: size.width * 0.16,
+                    color: AppTheme.textSecondary,
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: AppTheme.space16),
+                  Text(
+                    'Predictions not yet available',
+                    style: AppTheme.heading3.copyWith(
+                      fontSize: size.width * 0.045,
+                    ),
+                  ),
+                  SizedBox(height: AppTheme.space8),
+                  Text(
                     'AI predictions are generated daily at 6 AM',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppTheme.space16),
                   ElevatedButton(
                     onPressed: _loadPredictions,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                    ),
                     child: const Text('Check Again'),
                   ),
                 ],
@@ -162,13 +247,14 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
 
         return RefreshIndicator(
           onRefresh: _loadPredictions,
+          color: AppTheme.primary,
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(size.width * 0.04),
             itemCount: predictionsProvider.predictions.length,
             itemBuilder: (context, index) {
               final game = predictionsProvider.predictions.keys.elementAt(index);
               final prediction = predictionsProvider.predictions[game]!;
-              return _buildPredictionCard(prediction);
+              return _buildPredictionCard(prediction, size);
             },
           ),
         );
@@ -176,13 +262,14 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
     );
   }
 
-  Widget _buildPredictionCard(Prediction prediction) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _buildPredictionCard(Prediction prediction, Size size) {
+    final cardPadding = size.width * 0.04;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: size.width * 0.04),
+      decoration: AppTheme.elevatedCard,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -192,79 +279,88 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                 Expanded(
                   child: Text(
                     prediction.displayName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF7c3aed),
+                    style: AppTheme.heading3.copyWith(
+                      fontSize: size.width * 0.045,
+                      color: AppTheme.primary,
                     ),
                   ),
                 ),
-                _buildConfidenceBadge(prediction.confidence),
+                _buildConfidenceBadge(prediction.confidence, size),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppTheme.space16),
 
             // FR Predictions
-            const Text(
+            Text(
               'First Round (FR) Predictions',
-              style: TextStyle(
-                fontSize: 14,
+              style: AppTheme.bodySmall.copyWith(
+                fontSize: size.width * 0.033,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: AppTheme.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: AppTheme.space8),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: prediction.fr.map((num) => _buildNumberChip(num)).toList(),
+              spacing: AppTheme.space8,
+              runSpacing: AppTheme.space8,
+              children: prediction.fr.map((num) => _buildNumberChip(num, size)).toList(),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppTheme.space16),
 
             // SR Predictions
-            const Text(
+            Text(
               'Second Round (SR) Predictions',
-              style: TextStyle(
-                fontSize: 14,
+              style: AppTheme.bodySmall.copyWith(
+                fontSize: size.width * 0.033,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: AppTheme.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: AppTheme.space8),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: prediction.sr.map((num) => _buildNumberChip(num)).toList(),
+              spacing: AppTheme.space8,
+              runSpacing: AppTheme.space8,
+              children: prediction.sr.map((num) => _buildNumberChip(num, size)).toList(),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppTheme.space16),
 
             // Analysis
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(cardPadding * 0.75),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                color: AppTheme.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                border: Border.all(
+                  color: AppTheme.primary.withOpacity(0.1),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.lightbulb_outline, size: 16, color: Colors.orange),
-                      SizedBox(width: 8),
+                      Icon(
+                        Icons.lightbulb_outline,
+                        size: size.width * 0.04,
+                        color: AppTheme.accent,
+                      ),
+                      SizedBox(width: AppTheme.space8),
                       Text(
                         'AI Analysis',
-                        style: TextStyle(
+                        style: AppTheme.bodyMedium.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: size.width * 0.033,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: AppTheme.space8),
                   Text(
                     prediction.analysis,
-                    style: const TextStyle(fontSize: 12, height: 1.5),
+                    style: AppTheme.bodySmall.copyWith(
+                      fontSize: size.width * 0.032,
+                      height: 1.5,
+                    ),
                   ),
                 ],
               ),
@@ -275,61 +371,61 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
     );
   }
 
-  Widget _buildNumberChip(int number) {
+  Widget _buildNumberChip(int number, Size size) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.04,
+        vertical: size.width * 0.02,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xFF7c3aed),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF7c3aed).withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.buttonShadow(AppTheme.primary),
       ),
       child: Text(
         number.toString().padLeft(2, '0'),
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
-          fontSize: 16,
+          fontSize: size.width * 0.04,
         ),
       ),
     );
   }
 
-  Widget _buildConfidenceBadge(int confidence) {
+  Widget _buildConfidenceBadge(int confidence, Size size) {
     Color color;
     if (confidence >= 90) {
-      color = Colors.green;
+      color = AppTheme.success;
     } else if (confidence >= 80) {
-      color = Colors.blue;
+      color = AppTheme.info;
     } else if (confidence >= 70) {
-      color = Colors.orange;
+      color = AppTheme.warning;
     } else {
-      color = Colors.grey;
+      color = AppTheme.textSecondary;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.03,
+        vertical: size.width * 0.015,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(color: color, width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(Icons.check_circle, size: size.width * 0.035, color: color),
+          SizedBox(width: AppTheme.space4),
           Text(
             '$confidence%',
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: size.width * 0.03,
             ),
           ),
         ],

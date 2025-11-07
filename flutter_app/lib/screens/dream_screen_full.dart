@@ -4,6 +4,7 @@ import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../models/dream_interpretation.dart';
 import '../utils/app_theme.dart';
+import '../widgets/app_bottom_nav.dart';
 
 class DreamScreen extends StatefulWidget {
   const DreamScreen({super.key});
@@ -36,6 +37,12 @@ class _DreamScreenState extends State<DreamScreen> {
     'khanapara-morning': 'Khanapara Morning',
     'juwai-morning': 'Juwai Morning',
   };
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // This ensures UI rebuilds when premium status changes
+  }
 
   Future<void> _interpretDream() async {
     if (_dreamController.text.trim().isEmpty) {
@@ -78,6 +85,7 @@ class _DreamScreenState extends State<DreamScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -86,174 +94,201 @@ class _DreamScreenState extends State<DreamScreen> {
         backgroundColor: AppTheme.primary,
       ),
       body: userProvider.isPremium
-          ? _buildDreamBotView()
-          : _buildPremiumLock(),
+          ? _buildDreamBotView(size)
+          : _buildPremiumLock(size),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
 
-  Widget _buildPremiumLock() {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Premium Icon
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                gradient: AppTheme.premiumGradient,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.psychology,
-                size: 60,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 32),
+  Widget _buildPremiumLock(Size size) {
+    final iconSize = size.width * 0.2;
+    final horizontalPadding = size.width * 0.05;
 
-            // Title
-            const Text(
-              'Dream AI Bot',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: AppTheme.space24,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: size.height * 0.02),
 
-            // Description
-            const Text(
-              'AI-powered dream interpretation with Teer number predictions',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.textSecondary,
+              // Premium Icon - Responsive
+              Container(
+                width: iconSize,
+                height: iconSize,
+                decoration: const BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.psychology,
+                  size: iconSize * 0.5,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
+              SizedBox(height: AppTheme.space24),
 
-            // Features
-            _buildFeatureItem(
-              Icons.translate,
-              'Multi-Language Support',
-              'Works in English, Hindi, Bengali, Assamese & more',
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureItem(
-              Icons.lightbulb_outline,
-              '100+ Dream Symbols',
-              'Comprehensive dream symbol database',
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureItem(
-              Icons.auto_awesome,
-              'AI-Powered Analysis',
-              'Advanced AI interprets your dreams',
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureItem(
-              Icons.numbers,
-              'Teer Number Predictions',
-              'Get FR & SR number suggestions',
-            ),
-            const SizedBox(height: 40),
-
-            // Upgrade Button
-            Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: AppTheme.premiumGradient,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.premiumGold.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+              // Title - Responsive
+              Text(
+                'Dream AI Bot',
+                style: AppTheme.heading1.copyWith(
+                  fontSize: size.width * 0.065,
+                ),
+                textAlign: TextAlign.center,
               ),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/subscribe');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+              SizedBox(height: AppTheme.space12),
+
+              // Description - Responsive
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+                child: Text(
+                  'AI-powered dream interpretation with Teer number predictions',
+                  textAlign: TextAlign.center,
+                  style: AppTheme.bodyMedium.copyWith(
+                    fontSize: size.width * 0.037,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.workspace_premium, size: 24),
-                    SizedBox(width: 12),
-                    Text(
-                      'Unlock Dream AI',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+              ),
+              SizedBox(height: AppTheme.space24),
+
+              // Features - Compact and Responsive
+              _buildFeatureItem(
+                Icons.translate,
+                'Multi-Language Support',
+                'Works in English, Hindi, Bengali, Assamese & more',
+                size,
+              ),
+              SizedBox(height: AppTheme.space12),
+              _buildFeatureItem(
+                Icons.lightbulb_outline,
+                '100+ Dream Symbols',
+                'Comprehensive dream symbol database',
+                size,
+              ),
+              SizedBox(height: AppTheme.space12),
+              _buildFeatureItem(
+                Icons.auto_awesome,
+                'AI-Powered Analysis',
+                'Advanced AI interprets your dreams',
+                size,
+              ),
+              SizedBox(height: AppTheme.space12),
+              _buildFeatureItem(
+                Icons.numbers,
+                'Teer Number Predictions',
+                'Get FR & SR number suggestions',
+                size,
+              ),
+              SizedBox(height: AppTheme.space32),
+
+              // Upgrade Button - Responsive
+              Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(
+                  maxWidth: 400,
+                  minHeight: 48,
+                  maxHeight: 56,
+                ),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/subscribe');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     ),
-                  ],
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppTheme.space16,
+                      vertical: AppTheme.space12,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.workspace_premium, size: 20),
+                      SizedBox(width: AppTheme.space8),
+                      Text(
+                        'Unlock Dream AI',
+                        style: AppTheme.buttonText.copyWith(
+                          fontSize: size.width * 0.04,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              SizedBox(height: AppTheme.space12),
 
-            // Price
-            const Text(
-              'Just ₹49/month • 50% OFF • 50% OFF',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
+              // Price - Responsive
+              Text(
+                'Just ₹49/month • 50% OFF',
+                style: AppTheme.bodySmall.copyWith(
+                  fontSize: size.width * 0.033,
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: size.height * 0.02),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFeatureItem(IconData icon, String title, String subtitle) {
+  Widget _buildFeatureItem(
+    IconData icon,
+    String title,
+    String subtitle,
+    Size size,
+  ) {
+    final iconContainerSize = size.width * 0.11;
+    final iconSize = iconContainerSize * 0.5;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppTheme.space12),
       decoration: AppTheme.cardDecoration,
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: iconContainerSize,
+            height: iconContainerSize,
             decoration: BoxDecoration(
               color: AppTheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
-            child: Icon(icon, color: AppTheme.primary, size: 24),
+            child: Icon(
+              icon,
+              color: AppTheme.primary,
+              size: iconSize,
+            ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: AppTheme.space12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                  style: AppTheme.subtitle1.copyWith(
+                    fontSize: size.width * 0.038,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: AppTheme.space4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textSecondary,
+                  style: AppTheme.bodySmall.copyWith(
+                    fontSize: size.width * 0.032,
                   ),
                 ),
               ],
@@ -264,106 +299,84 @@ class _DreamScreenState extends State<DreamScreen> {
     );
   }
 
-  Widget _buildOldPremiumGate(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.nights_stay_outlined,
-              size: 80,
-              color: Theme.of(context).primaryColor,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Dream Bot Premium',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Get personalized Teer number predictions based on your dreams in any language',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/subscribe');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              ),
-              child: const Text(
-                'Upgrade to Premium - ₹49/month • 50% OFF',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildDreamBotView(Size size) {
+    final horizontalPadding = size.width * 0.04;
 
-  Widget _buildDreamBotView() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(horizontalPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Info Card
+            // Info Card - Responsive
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppTheme.space12),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               ),
               child: Row(
-                children: const [
-                  Icon(Icons.info_outline, color: AppTheme.primary),
-                  SizedBox(width: 12),
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: AppTheme.primary,
+                    size: size.width * 0.045,
+                  ),
+                  SizedBox(width: AppTheme.space12),
                   Expanded(
                     child: Text(
                       'Describe your dream in any language. Our AI will interpret it and suggest Teer numbers.',
-                      style: TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+                      style: AppTheme.bodySmall.copyWith(
+                        fontSize: size.width * 0.033,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: AppTheme.space16),
 
-            // Language Selector
+            // Language Selector - Responsive
             DropdownButtonFormField<String>(
               value: _selectedLanguage,
               decoration: InputDecoration(
                 labelText: 'Language',
+                labelStyle: AppTheme.bodyMedium.copyWith(
+                  fontSize: size.width * 0.037,
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.space12,
+                  vertical: AppTheme.space12,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                  borderSide: BorderSide(
+                    color: AppTheme.textSecondary.withOpacity(0.3),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                   borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                 ),
-                prefixIcon: const Icon(Icons.language, color: AppTheme.primary),
+                prefixIcon: Icon(
+                  Icons.language,
+                  color: AppTheme.primary,
+                  size: size.width * 0.05,
+                ),
               ),
               items: _languages.entries.map((entry) {
                 return DropdownMenuItem(
                   value: entry.key,
-                  child: Text(entry.value),
+                  child: Text(
+                    entry.value,
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontSize: size.width * 0.037,
+                    ),
+                  ),
                 );
               }).toList(),
               onChanged: (value) {
@@ -372,30 +385,48 @@ class _DreamScreenState extends State<DreamScreen> {
                 });
               },
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppTheme.space16),
 
-            // Game Selector
+            // Game Selector - Responsive
             DropdownButtonFormField<String>(
               value: _selectedGame,
               decoration: InputDecoration(
                 labelText: 'Target Game',
+                labelStyle: AppTheme.bodyMedium.copyWith(
+                  fontSize: size.width * 0.037,
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.space12,
+                  vertical: AppTheme.space12,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                  borderSide: BorderSide(
+                    color: AppTheme.textSecondary.withOpacity(0.3),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                   borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                 ),
-                prefixIcon: const Icon(Icons.sports_cricket, color: AppTheme.primary),
+                prefixIcon: Icon(
+                  Icons.sports_cricket,
+                  color: AppTheme.primary,
+                  size: size.width * 0.05,
+                ),
               ),
               items: _games.entries.map((entry) {
                 return DropdownMenuItem(
                   value: entry.key,
-                  child: Text(entry.value),
+                  child: Text(
+                    entry.value,
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontSize: size.width * 0.037,
+                    ),
+                  ),
                 );
               }).toList(),
               onChanged: (value) {
@@ -404,37 +435,50 @@ class _DreamScreenState extends State<DreamScreen> {
                 });
               },
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppTheme.space16),
 
-            // Dream Input
+            // Dream Input - Responsive
             TextField(
               controller: _dreamController,
               maxLines: 6,
+              style: AppTheme.bodyMedium.copyWith(
+                fontSize: size.width * 0.037,
+              ),
               decoration: InputDecoration(
                 labelText: 'Describe your dream',
+                labelStyle: AppTheme.bodyMedium.copyWith(
+                  fontSize: size.width * 0.037,
+                ),
                 hintText: 'Enter your dream in any language...\n\nExample:\nमैंने सपने में साँप देखा\nI saw a snake in my dream\nআমি স্বপ্নে সাপ দেখেছি',
+                hintStyle: AppTheme.bodySmall.copyWith(
+                  fontSize: size.width * 0.032,
+                ),
+                contentPadding: EdgeInsets.all(AppTheme.space12),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                  borderSide: BorderSide(
+                    color: AppTheme.textSecondary.withOpacity(0.3),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                   borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                 ),
                 alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: AppTheme.space20),
 
-            // Submit Button
+            // Submit Button - Responsive
             Container(
               height: 52,
               decoration: BoxDecoration(
                 gradient: AppTheme.primaryGradient,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                boxShadow: AppTheme.buttonShadow(AppTheme.primary),
               ),
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _interpretDream,
@@ -442,162 +486,156 @@ class _DreamScreenState extends State<DreamScreen> {
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.space16,
+                    vertical: AppTheme.space12,
                   ),
                 ),
                 child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
+                    ? SizedBox(
+                        height: size.width * 0.05,
+                        width: size.width * 0.05,
+                        child: const CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
                         ),
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.auto_awesome, size: 20),
-                          SizedBox(width: 8),
+                        children: [
+                          Icon(Icons.auto_awesome, size: size.width * 0.045),
+                          SizedBox(width: AppTheme.space8),
                           Text(
                             'Interpret Dream',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: AppTheme.buttonText.copyWith(
+                              fontSize: size.width * 0.04,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: AppTheme.space24),
 
             // Results
-            if (_result != null) _buildResults(_result!),
+            if (_result != null) _buildResults(_result!, size),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildResults(DreamInterpretation result) {
+  Widget _buildResults(DreamInterpretation result, Size size) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Divider(thickness: 2),
-        const SizedBox(height: 16),
+        Divider(thickness: 2, color: AppTheme.textSecondary.withOpacity(0.2)),
+        SizedBox(height: AppTheme.space16),
 
-        // Header
+        // Header - Responsive
         Row(
           children: [
-            const Icon(Icons.auto_awesome, color: Color(0xFF7c3aed), size: 28),
-            const SizedBox(width: 12),
-            const Text(
+            Icon(
+              Icons.auto_awesome,
+              color: AppTheme.accent,
+              size: size.width * 0.06,
+            ),
+            SizedBox(width: AppTheme.space12),
+            Text(
               'Interpretation Results',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              style: AppTheme.heading2.copyWith(
+                fontSize: size.width * 0.05,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: AppTheme.space16),
 
-        // Language Detected
-        Card(
+        // Language Detected - Responsive
+        Container(
+          decoration: AppTheme.cardDecoration,
           child: ListTile(
-            leading: const Icon(Icons.language, color: Color(0xFF7c3aed)),
-            title: const Text('Language Detected'),
-            subtitle: Text(result.languageName),
-          ),
-        ),
-
-        // Symbols Found
-        if (result.symbols.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.psychology, color: Colors.orange),
-                      SizedBox(width: 8),
-                      Text(
-                        'Symbols Found',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: result.symbols.map((symbol) {
-                      return Chip(
-                        label: Text(symbol),
-                        backgroundColor: Colors.orange.shade100,
-                        avatar: const Icon(Icons.circle, size: 12),
-                      );
-                    }).toList(),
-                  ),
-                ],
+            leading: Icon(
+              Icons.language,
+              color: AppTheme.accent,
+              size: size.width * 0.055,
+            ),
+            title: Text(
+              'Language Detected',
+              style: AppTheme.subtitle1.copyWith(
+                fontSize: size.width * 0.038,
+              ),
+            ),
+            subtitle: Text(
+              result.languageName,
+              style: AppTheme.bodyMedium.copyWith(
+                fontSize: size.width * 0.035,
               ),
             ),
           ),
-        ],
+        ),
 
-        // Predicted Numbers
-        const SizedBox(height: 16),
-        Card(
-          color: const Color(0xFF7c3aed).withOpacity(0.1),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        // Symbols Found - Responsive
+        if (result.symbols.isNotEmpty) ...[
+          SizedBox(height: AppTheme.space16),
+          Container(
+            decoration: AppTheme.cardDecoration,
+            padding: EdgeInsets.all(AppTheme.space16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.stars, color: Color(0xFF7c3aed)),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Predicted Numbers',
-                      style: TextStyle(
+                    Icon(
+                      Icons.psychology,
+                      color: AppTheme.warning,
+                      size: size.width * 0.05,
+                    ),
+                    SizedBox(width: AppTheme.space8),
+                    Text(
+                      'Symbols Found',
+                      style: AppTheme.subtitle1.copyWith(
+                        fontSize: size.width * 0.04,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                     ),
-                    const Spacer(),
-                    _buildConfidenceBadge(result.confidence),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: AppTheme.space12),
                 Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: result.numbers.map((num) {
+                  spacing: AppTheme.space8,
+                  runSpacing: AppTheme.space8,
+                  children: result.symbols.map((symbol) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.03,
+                        vertical: size.width * 0.015,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7c3aed),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF7c3aed).withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                        color: AppTheme.warning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        border: Border.all(color: AppTheme.warning),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: size.width * 0.025,
+                            color: AppTheme.warning,
+                          ),
+                          SizedBox(width: AppTheme.space4),
+                          Text(
+                            symbol,
+                            style: AppTheme.bodyMedium.copyWith(
+                              fontSize: size.width * 0.033,
+                              color: AppTheme.textPrimary,
+                            ),
                           ),
                         ],
-                      ),
-                      child: Text(
-                        num.toString().padLeft(2, '0'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
                       ),
                     );
                   }).toList(),
@@ -605,95 +643,170 @@ class _DreamScreenState extends State<DreamScreen> {
               ],
             ),
           ),
-        ),
+        ],
 
-        // Analysis
-        const SizedBox(height: 16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.amber),
-                    SizedBox(width: 8),
-                    Text(
-                      'AI Analysis',
-                      style: TextStyle(
+        // Predicted Numbers - Responsive
+        SizedBox(height: AppTheme.space16),
+        Container(
+          decoration: AppTheme.cardDecoration,
+          padding: EdgeInsets.all(AppTheme.space16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.stars,
+                    color: AppTheme.accent,
+                    size: size.width * 0.05,
+                  ),
+                  SizedBox(width: AppTheme.space8),
+                  Expanded(
+                    child: Text(
+                      'Predicted Numbers',
+                      style: AppTheme.subtitle1.copyWith(
+                        fontSize: size.width * 0.04,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  result.analysis,
-                  style: const TextStyle(fontSize: 14, height: 1.6),
-                ),
-              ],
-            ),
+                  ),
+                  _buildConfidenceBadge(result.confidence, size),
+                ],
+              ),
+              SizedBox(height: AppTheme.space12),
+              Wrap(
+                spacing: size.width * 0.03,
+                runSpacing: size.width * 0.03,
+                children: result.numbers.map((num) {
+                  return Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.04,
+                      vertical: size.width * 0.025,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.premiumGradient,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      boxShadow: AppTheme.buttonShadow(AppTheme.accent),
+                    ),
+                    child: Text(
+                      num.toString().padLeft(2, '0'),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: size.width * 0.05,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         ),
 
-        // Recommendation
-        const SizedBox(height: 16),
-        Card(
-          color: Colors.green.shade50,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Recommended for ${result.recommendation} Teer',
-                    style: const TextStyle(
+        // Analysis - Responsive
+        SizedBox(height: AppTheme.space16),
+        Container(
+          decoration: AppTheme.cardDecoration,
+          padding: EdgeInsets.all(AppTheme.space16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    color: AppTheme.warning,
+                    size: size.width * 0.05,
+                  ),
+                  SizedBox(width: AppTheme.space8),
+                  Text(
+                    'AI Analysis',
+                    style: AppTheme.subtitle1.copyWith(
+                      fontSize: size.width * 0.04,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ],
+              ),
+              SizedBox(height: AppTheme.space12),
+              Text(
+                result.analysis,
+                style: AppTheme.bodyMedium.copyWith(
+                  fontSize: size.width * 0.035,
+                  height: 1.6,
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
+        ),
+
+        // Recommendation - Responsive
+        SizedBox(height: AppTheme.space16),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.success.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+            border: Border.all(color: AppTheme.success),
+          ),
+          padding: EdgeInsets.all(AppTheme.space16),
+          child: Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: AppTheme.success,
+                size: size.width * 0.05,
+              ),
+              SizedBox(width: AppTheme.space12),
+              Expanded(
+                child: Text(
+                  'Recommended for ${result.recommendation} Teer',
+                  style: AppTheme.subtitle1.copyWith(
+                    fontSize: size.width * 0.038,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.success,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildConfidenceBadge(int confidence) {
+  Widget _buildConfidenceBadge(int confidence, Size size) {
     Color color;
     if (confidence >= 90) {
-      color = Colors.green;
+      color = AppTheme.success;
     } else if (confidence >= 80) {
-      color = Colors.blue;
+      color = AppTheme.info;
     } else if (confidence >= 70) {
-      color = Colors.orange;
+      color = AppTheme.warning;
     } else {
-      color = Colors.grey;
+      color = AppTheme.textSecondary;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.03,
+        vertical: size.width * 0.015,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(color: color, width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.trending_up, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(Icons.check_circle, size: size.width * 0.035, color: color),
+          SizedBox(width: AppTheme.space4),
           Text(
-            '${confidence}%',
+            '$confidence%',
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: size.width * 0.03,
             ),
           ),
         ],

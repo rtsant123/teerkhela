@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/user_provider.dart';
 import '../services/storage_service.dart';
+import '../utils/app_theme.dart';
+import '../widgets/app_bottom_nav.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -55,28 +57,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showAboutDialog() {
+    final size = MediaQuery.of(context).size;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('About Teer Khela'),
+        title: Text(
+          'About Teer Khela',
+          style: AppTheme.heading3.copyWith(
+            fontSize: size.width * 0.045,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Version: 1.0.0'),
-            SizedBox(height: 8),
-            Text('Teer Khela - AI Predictions & Results'),
-            SizedBox(height: 16),
+          children: [
+            Text(
+              'Version: 1.0.0',
+              style: AppTheme.bodyMedium.copyWith(
+                fontSize: size.width * 0.037,
+              ),
+            ),
+            SizedBox(height: AppTheme.space8),
+            Text(
+              'Teer Khela - AI Predictions & Results',
+              style: AppTheme.subtitle1.copyWith(
+                fontSize: size.width * 0.038,
+              ),
+            ),
+            SizedBox(height: AppTheme.space16),
             Text(
               'Get accurate Teer results and AI-powered predictions for all major Teer games.',
-              style: TextStyle(fontSize: 14),
+              style: AppTheme.bodySmall.copyWith(
+                fontSize: size.width * 0.032,
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(
+              'Close',
+              style: TextStyle(fontSize: size.width * 0.038),
+            ),
           ),
         ],
       ),
@@ -87,134 +110,212 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Profile'),
+        backgroundColor: AppTheme.primary,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // User Info Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: userProvider.isPremium
-                      ? [const Color(0xFF7c3aed), const Color(0xFFa78bfa)]
-                      : [Colors.grey.shade700, Colors.grey.shade500],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.04,
+            vertical: AppTheme.space12,
+          ),
+          child: Column(
+            children: [
+              // User Info Card
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(size.width * 0.05),
+                decoration: BoxDecoration(
+                  gradient: userProvider.isPremium
+                      ? AppTheme.premiumGradient
+                      : LinearGradient(
+                          colors: [Colors.grey.shade700, Colors.grey.shade500],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 ),
-              ),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      userProvider.isPremium ? Icons.workspace_premium : Icons.person,
-                      size: 40,
-                      color: const Color(0xFF7c3aed),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.email ?? 'Guest User',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      userProvider.isPremium ? 'Premium Member' : 'Free User',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: size.width * 0.12,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        userProvider.isPremium ? Icons.workspace_premium : Icons.person,
+                        size: size.width * 0.12,
+                        color: AppTheme.primary,
                       ),
                     ),
+                    SizedBox(height: AppTheme.space16),
+                    Text(
+                      user?.email ?? 'Guest User',
+                      style: AppTheme.heading2.copyWith(
+                        fontSize: size.width * 0.045,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: AppTheme.space8),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.04,
+                        vertical: AppTheme.space8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      ),
+                      child: Text(
+                        userProvider.isPremium ? 'Premium Member' : 'Free User',
+                        style: AppTheme.subtitle1.copyWith(
+                          fontSize: size.width * 0.038,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Premium Status Card
+              if (userProvider.isPremium)
+                _buildPremiumStatusCard(user!, size)
+              else
+                _buildUpgradeCard(size),
+
+              SizedBox(height: AppTheme.space16),
+
+              // Settings Section
+              _buildSection(
+                'Settings',
+                [
+                  SwitchListTile(
+                    title: Text(
+                      'Push Notifications',
+                      style: AppTheme.subtitle1.copyWith(
+                        fontSize: size.width * 0.038,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Receive daily predictions and alerts',
+                      style: AppTheme.bodySmall.copyWith(
+                        fontSize: size.width * 0.032,
+                      ),
+                    ),
+                    value: _notificationsEnabled,
+                    activeColor: AppTheme.primary,
+                    onChanged: _toggleNotifications,
+                    secondary: Icon(
+                      Icons.notifications,
+                      size: size.width * 0.06,
+                    ),
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.language,
+                      size: size.width * 0.06,
+                    ),
+                    title: Text(
+                      'Language',
+                      style: AppTheme.subtitle1.copyWith(
+                        fontSize: size.width * 0.038,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _getLanguageName(_selectedLanguage),
+                      style: AppTheme.bodySmall.copyWith(
+                        fontSize: size.width * 0.032,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: size.width * 0.04,
+                    ),
+                    onTap: () => _showLanguageSelector(),
                   ),
                 ],
+                size,
               ),
-            ),
 
-            // Premium Status Card
-            if (userProvider.isPremium)
-              _buildPremiumStatusCard(user!)
-            else
-              _buildUpgradeCard(),
+              SizedBox(height: AppTheme.space16),
 
-            const SizedBox(height: 16),
+              // Account Section
+              _buildSection(
+                'Account',
+                [
+                  ListTile(
+                    leading: Icon(
+                      Icons.info_outline,
+                      size: size.width * 0.06,
+                    ),
+                    title: Text(
+                      'About',
+                      style: AppTheme.subtitle1.copyWith(
+                        fontSize: size.width * 0.038,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: size.width * 0.04,
+                    ),
+                    onTap: _showAboutDialog,
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.privacy_tip_outlined,
+                      size: size.width * 0.06,
+                    ),
+                    title: Text(
+                      'Privacy Policy',
+                      style: AppTheme.subtitle1.copyWith(
+                        fontSize: size.width * 0.038,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: size.width * 0.04,
+                    ),
+                    onTap: () {
+                      // TODO: Open privacy policy
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.description_outlined,
+                      size: size.width * 0.06,
+                    ),
+                    title: Text(
+                      'Terms of Service',
+                      style: AppTheme.subtitle1.copyWith(
+                        fontSize: size.width * 0.038,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: size.width * 0.04,
+                    ),
+                    onTap: () {
+                      // TODO: Open terms
+                    },
+                  ),
+                ],
+                size,
+              ),
 
-            // Settings Section
-            _buildSection(
-              'Settings',
-              [
-                SwitchListTile(
-                  title: const Text('Push Notifications'),
-                  subtitle: const Text('Receive daily predictions and alerts'),
-                  value: _notificationsEnabled,
-                  activeColor: const Color(0xFF7c3aed),
-                  onChanged: _toggleNotifications,
-                  secondary: const Icon(Icons.notifications),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.language),
-                  title: const Text('Language'),
-                  subtitle: Text(_getLanguageName(_selectedLanguage)),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _showLanguageSelector(),
-                ),
-              ],
-            ),
+              SizedBox(height: AppTheme.space16),
 
-            const SizedBox(height: 16),
-
-            // Account Section
-            _buildSection(
-              'Account',
-              [
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('About'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: _showAboutDialog,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.privacy_tip_outlined),
-                  title: const Text('Privacy Policy'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    // TODO: Open privacy policy
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.description_outlined),
-                  title: const Text('Terms of Service'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    // TODO: Open terms
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Test User Button (for testing without payment)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
+              // Test User Button (for testing without payment)
+              Container(
                 width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+                ),
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     final provider = Provider.of<UserProvider>(context, listen: false);
@@ -223,7 +324,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('✅ Test account activated! All premium features unlocked for 30 days.'),
+                            content: Text('Test account activated! All premium features unlocked for 30 days.'),
                             backgroundColor: Colors.green,
                             duration: Duration(seconds: 3),
                           ),
@@ -240,207 +341,269 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }
                     }
                   },
-                  icon: const Icon(Icons.science),
-                  label: const Text('Use Test Account (30 Days Premium)'),
+                  icon: Icon(
+                    Icons.science,
+                    size: size.width * 0.05,
+                  ),
+                  label: Text(
+                    'Use Test Account (30 Days Premium)',
+                    style: AppTheme.buttonText.copyWith(
+                      fontSize: size.width * 0.038,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: EdgeInsets.symmetric(
+                      vertical: AppTheme.space12,
+                      horizontal: AppTheme.space16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              SizedBox(height: AppTheme.space16),
 
-            // Logout Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
+              // Logout Button
+              SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
                     _showLogoutDialog();
                   },
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: Colors.red),
+                    padding: EdgeInsets.symmetric(
+                      vertical: AppTheme.space12,
+                      horizontal: AppTheme.space16,
+                    ),
+                    side: const BorderSide(color: AppTheme.error),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Logout',
-                    style: TextStyle(color: Colors.red, fontSize: 16),
+                    style: AppTheme.buttonText.copyWith(
+                      fontSize: size.width * 0.04,
+                      color: AppTheme.error,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-          ],
+              SizedBox(height: AppTheme.space32),
+            ],
+          ),
         ),
       ),
+      bottomNavigationBar: AppBottomNav(currentIndex: 3),
     );
   }
 
-  Widget _buildPremiumStatusCard(user) {
+  Widget _buildPremiumStatusCard(user, Size size) {
     final expiryDate = user.expiryDate;
     final daysLeft = user.daysLeft;
     final isExpiringSoon = user.isExpiringSoon;
 
-    return Card(
-      margin: const EdgeInsets.all(16),
-      color: isExpiringSoon ? Colors.orange.shade50 : Colors.green.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(
-                  isExpiringSoon ? Icons.warning_amber : Icons.check_circle,
-                  color: isExpiringSoon ? Colors.orange : Colors.green,
-                  size: 32,
+    return Container(
+      margin: EdgeInsets.only(top: AppTheme.space16),
+      padding: EdgeInsets.all(size.width * 0.05),
+      decoration: BoxDecoration(
+        color: isExpiringSoon ? Colors.orange.shade50 : Colors.green.shade50,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(
+                isExpiringSoon ? Icons.warning_amber : Icons.check_circle,
+                color: isExpiringSoon ? Colors.orange : Colors.green,
+                size: size.width * 0.08,
+              ),
+              SizedBox(width: AppTheme.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Premium Active',
+                      style: AppTheme.heading3.copyWith(
+                        fontSize: size.width * 0.045,
+                      ),
+                    ),
+                    SizedBox(height: AppTheme.space4),
+                    Text(
+                      expiryDate != null
+                          ? 'Expires on ${DateFormat('MMM dd, yyyy').format(expiryDate)}'
+                          : 'Active',
+                      style: AppTheme.bodySmall.copyWith(
+                        fontSize: size.width * 0.032,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Premium Active',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        expiryDate != null
-                            ? 'Expires on ${DateFormat('MMM dd, yyyy').format(expiryDate)}'
-                            : 'Active',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+              ),
+            ],
+          ),
+          SizedBox(height: AppTheme.space16),
+          Container(
+            padding: EdgeInsets.all(AppTheme.space12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Days Remaining',
+                  style: AppTheme.subtitle1.copyWith(
+                    fontSize: size.width * 0.038,
+                  ),
+                ),
+                Text(
+                  '$daysLeft days',
+                  style: AppTheme.heading3.copyWith(
+                    fontSize: size.width * 0.045,
+                    color: isExpiringSoon ? Colors.orange : Colors.green,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Days Remaining',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '$daysLeft days',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isExpiringSoon ? Colors.orange : Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Navigate to manage subscription screen
-                  Navigator.pushNamed(context, '/manage-subscription');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7c3aed),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          SizedBox(height: AppTheme.space16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                // TODO: Navigate to manage subscription screen
+                Navigator.pushNamed(context, '/manage-subscription');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: EdgeInsets.symmetric(
+                  vertical: AppTheme.space12,
+                  horizontal: AppTheme.space16,
                 ),
-                child: const Text(
-                  'Manage Subscription',
-                  style: TextStyle(color: Colors.white),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+              ),
+              child: Text(
+                'Manage Subscription',
+                style: AppTheme.buttonText.copyWith(
+                  fontSize: size.width * 0.04,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildUpgradeCard() {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      color: const Color(0xFF7c3aed).withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Icon(
+  Widget _buildUpgradeCard(Size size) {
+    final iconSize = size.width * 0.15;
+
+    return Container(
+      margin: EdgeInsets.only(top: AppTheme.space16),
+      padding: EdgeInsets.all(size.width * 0.05),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: iconSize,
+            height: iconSize,
+            decoration: const BoxDecoration(
+              gradient: AppTheme.premiumGradient,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
               Icons.workspace_premium,
-              size: 48,
-              color: Color(0xFF7c3aed),
+              size: iconSize * 0.6,
+              color: Colors.white,
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Upgrade to Premium',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+          ),
+          SizedBox(height: AppTheme.space16),
+          Text(
+            'Upgrade to Premium',
+            style: AppTheme.heading2.copyWith(
+              fontSize: size.width * 0.05,
+            ),
+          ),
+          SizedBox(height: AppTheme.space8),
+          Text(
+            'Get AI predictions, dream bot, and more!',
+            textAlign: TextAlign.center,
+            style: AppTheme.bodyMedium.copyWith(
+              fontSize: size.width * 0.037,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          SizedBox(height: AppTheme.space16),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: AppTheme.premiumGradient,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+            ),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/subscribe');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: EdgeInsets.symmetric(
+                  vertical: AppTheme.space12,
+                  horizontal: AppTheme.space16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+              ),
+              child: Text(
+                'Upgrade Now - ₹49/month • 50% OFF',
+                style: AppTheme.buttonText.copyWith(
+                  fontSize: size.width * 0.04,
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Get AI predictions, dream bot, and more!',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/subscribe');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7c3aed),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: const Text(
-                  'Upgrade Now - ₹49/month • 50% OFF',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
+  Widget _buildSection(String title, List<Widget> children, Size size) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.02,
+            vertical: AppTheme.space8,
+          ),
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 14,
+            style: AppTheme.bodySmall.copyWith(
+              fontSize: size.width * 0.032,
               fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              color: AppTheme.textSecondary,
             ),
           ),
         ),
-        Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
+        Container(
+          decoration: AppTheme.cardDecoration,
           child: Column(children: children),
         ),
       ],
@@ -448,15 +611,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showLanguageSelector() {
+    final size = MediaQuery.of(context).size;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
+        title: Text(
+          'Select Language',
+          style: AppTheme.heading3.copyWith(
+            fontSize: size.width * 0.045,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             RadioListTile<String>(
-              title: const Text('English'),
+              title: Text(
+                'English',
+                style: AppTheme.bodyMedium.copyWith(
+                  fontSize: size.width * 0.037,
+                ),
+              ),
               value: 'en',
               groupValue: _selectedLanguage,
               onChanged: (value) {
@@ -465,7 +639,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             RadioListTile<String>(
-              title: const Text('हिन्दी (Hindi)'),
+              title: Text(
+                'हिन्दी (Hindi)',
+                style: AppTheme.bodyMedium.copyWith(
+                  fontSize: size.width * 0.037,
+                ),
+              ),
               value: 'hi',
               groupValue: _selectedLanguage,
               onChanged: (value) {
@@ -474,7 +653,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             RadioListTile<String>(
-              title: const Text('বাংলা (Bengali)'),
+              title: Text(
+                'বাংলা (Bengali)',
+                style: AppTheme.bodyMedium.copyWith(
+                  fontSize: size.width * 0.037,
+                ),
+              ),
               value: 'bn',
               groupValue: _selectedLanguage,
               onChanged: (value) {
@@ -499,15 +683,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showLogoutDialog() {
+    final size = MediaQuery.of(context).size;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(
+          'Logout',
+          style: AppTheme.heading3.copyWith(
+            fontSize: size.width * 0.045,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: AppTheme.bodyMedium.copyWith(
+            fontSize: size.width * 0.037,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(fontSize: size.width * 0.038),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -515,9 +713,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(context); // Close dialog
               Navigator.pushReplacementNamed(context, '/home'); // Go to home
             },
-            child: const Text(
+            child: Text(
               'Logout',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(
+                fontSize: size.width * 0.038,
+                color: AppTheme.error,
+              ),
             ),
           ),
         ],
