@@ -10,6 +10,7 @@ router.get('/results', publicController.getResults);
 router.get('/results/:game/history', publicController.getResultHistory);
 
 // User
+router.get('/create-test-user', publicController.createTestUser);
 router.post('/user/register', publicController.registerUser);
 router.get('/user/:userId/status', publicController.getUserStatus);
 router.post('/user/fcm-token', publicController.updateFcmToken);

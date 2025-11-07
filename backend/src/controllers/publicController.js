@@ -75,6 +75,36 @@ const getResultHistory = async (req, res) => {
   }
 };
 
+// Create test premium user
+const createTestUser = async (req, res) => {
+  try {
+    const testUserId = 'test-premium-user';
+
+    // Create or update test user
+    const user = await User.create(testUserId, null, 'Test Device');
+
+    // Make them premium for 30 days
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+
+    await User.updatePremium(testUserId, expiryDate);
+
+    res.json({
+      success: true,
+      userId: testUserId,
+      message: 'Test premium user created! Valid for 30 days.',
+      isPremium: true,
+      expiryDate: expiryDate.toISOString()
+    });
+  } catch (error) {
+    console.error('Error creating test user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating test user'
+    });
+  }
+};
+
 // Register user
 const registerUser = async (req, res) => {
   try {
@@ -275,6 +305,7 @@ module.exports = {
   getAllGames,
   getResults,
   getResultHistory,
+  createTestUser,
   registerUser,
   getUserStatus,
   updateFcmToken,
