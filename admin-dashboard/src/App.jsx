@@ -6,6 +6,7 @@ import Users from './pages/Users';
 import Predictions from './pages/Predictions';
 import Results from './pages/Results';
 import Notifications from './pages/Notifications';
+import Games from './pages/Games';
 import Layout from './components/Layout';
 import './App.css';
 
@@ -40,6 +41,7 @@ function App() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="users" element={<Users />} />
+          <Route path="games" element={<Games />} />
           <Route path="predictions" element={<Predictions />} />
           <Route path="results" element={<Results />} />
           <Route path="notifications" element={<Notifications />} />

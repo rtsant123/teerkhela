@@ -3,6 +3,7 @@ import { logout } from '../services/api';
 import {
   LayoutDashboard,
   Users,
+  Gamepad2,
   TrendingUp,
   ClipboardList,
   Bell,
@@ -15,6 +16,7 @@ const Layout = ({ onLogout }) => {
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/users', icon: Users, label: 'Users' },
+    { path: '/games', icon: Gamepad2, label: 'Games' },
     { path: '/predictions', icon: TrendingUp, label: 'Predictions' },
     { path: '/results', icon: ClipboardList, label: 'Results' },
     { path: '/notifications', icon: Bell, label: 'Notifications' },

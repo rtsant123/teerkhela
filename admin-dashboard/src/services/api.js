@@ -95,4 +95,40 @@ export const getNotificationHistory = async (page = 1, limit = 20) => {
   return response.data.data;
 };
 
+// Games Management
+export const getAllGames = async (includeInactive = false) => {
+  const response = await api.get(`/admin/games?includeInactive=${includeInactive}`);
+  return response.data.data;
+};
+
+export const getGame = async (id) => {
+  const response = await api.get(`/admin/games/${id}`);
+  return response.data.data;
+};
+
+export const createGame = async (data) => {
+  const response = await api.post('/admin/games', data);
+  return response.data;
+};
+
+export const updateGame = async (id, data) => {
+  const response = await api.put(`/admin/games/${id}`, data);
+  return response.data;
+};
+
+export const deleteGame = async (id) => {
+  const response = await api.delete(`/admin/games/${id}`);
+  return response.data;
+};
+
+export const toggleGameActive = async (id) => {
+  const response = await api.post(`/admin/games/${id}/toggle-active`);
+  return response.data;
+};
+
+export const toggleGameScraping = async (id) => {
+  const response = await api.post(`/admin/games/${id}/toggle-scraping`);
+  return response.data;
+};
+
 export default api;
