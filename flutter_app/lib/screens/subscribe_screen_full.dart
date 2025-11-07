@@ -45,7 +45,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
     print('Payment Success: ${response.paymentId}');
-    print('Subscription ID: ${response.subscriptionId}');
+    // Note: subscriptionId not available in response, using paymentId
 
     // Show success dialog
     showDialog(

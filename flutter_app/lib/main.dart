@@ -8,10 +8,10 @@ import 'services/notification_service.dart';
 import 'providers/user_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/predictions_screen.dart';
-import 'screens/dream_screen.dart';
-import 'screens/subscribe_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/predictions_screen_full.dart';
+import 'screens/dream_screen_full.dart';
+import 'screens/subscribe_screen_full.dart';
+import 'screens/profile_screen_full.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

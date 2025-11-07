@@ -46,7 +46,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.13.1
-  flutter_launcher_name: ^0.0.1
 
 flutter_launcher_icons:
   android: true
@@ -57,10 +56,6 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/images/
-    - assets/icon/
 
   # fonts:
   #   - family: CustomFont

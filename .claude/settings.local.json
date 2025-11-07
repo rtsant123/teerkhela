@@ -6,7 +6,21 @@
       "Bash(test -f:*)",
       "Bash(git init:*)",
       "Bash(git config:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Complete Teer Khela Application\n\n- Backend API with Node.js + Express + PostgreSQL\n- Web scraping for 6 Teer games\n- AI predictions engine\n- Multi-language dream bot (100+ symbols)\n- Razorpay auto-recurring subscriptions\n- Firebase Cloud Messaging\n- 5 automated cron jobs\n\n- Flutter mobile app with 10 screens\n- Complete API integration\n- Razorpay payment integration\n- Firebase push notifications\n- Provider state management\n\n- React admin dashboard with 6 pages\n- User management\n- Predictions override\n- Manual result entry\n- Push notifications\n\n- Complete documentation and deployment guides\n\n🤖 Generated with Claude Code\nEOF\n)\")",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter build:*)",
+      "Bash(dir:*)",
+      "Bash(flutter create:*)",
+      "Bash(timeout 10 sleep:*)",
+      "Bash(timeout 60 sleep:*)",
+      "Bash(timeout 120 sleep:*)",
+      "Bash(tee:*)",
+      "Bash(gradlew.bat:*)"
     ],
     "deny": [],
     "ask": []
