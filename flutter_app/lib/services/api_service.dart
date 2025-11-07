@@ -4,6 +4,7 @@ import '../models/result.dart';
 import '../models/prediction.dart';
 import '../models/user.dart';
 import '../models/dream_interpretation.dart';
+import '../models/game.dart';
 
 class ApiService {
   // Railway backend URL
@@ -44,6 +45,18 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Network error: $e');
+    }
+  }
+
+  // Get all games
+  static Future<List<TeerGame>> getGames() async {
+    final response = await _get('/games');
+
+    if (response['success']) {
+      final List<dynamic> data = response['data'];
+      return data.map((json) => TeerGame.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to get games');
     }
   }
 

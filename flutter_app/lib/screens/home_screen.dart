@@ -216,13 +216,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildResultCard(TeerResult result) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          // Navigate to result detail screen
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => ResultDetailScreen(game: result.game)));
+          // Navigate to game history screen
+          Navigator.pushNamed(
+            context,
+            '/game-history',
+            arguments: {'game': result.game, 'displayName': result.displayName},
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -280,19 +286,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const Spacer(),
 
-              // Status
-              if (!result.isComplete)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(4),
+              // View History Button
+              Container(
+                width: double.infinity,
+                height: 28,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/game-history',
+                      arguments: {'game': result.game, 'displayName': result.displayName},
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7c3aed),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    elevation: 0,
                   ),
-                  child: const Text(
-                    'Pending',
-                    style: TextStyle(fontSize: 10, color: Colors.orange),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.history, size: 14),
+                      SizedBox(width: 4),
+                      Text('History', style: TextStyle(fontSize: 11)),
+                    ],
                   ),
                 ),
+              ),
             ],
           ),
         ),

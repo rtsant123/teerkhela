@@ -12,6 +12,7 @@ import 'screens/predictions_screen_full.dart';
 import 'screens/dream_screen_full.dart';
 import 'screens/subscribe_screen_full.dart';
 import 'screens/profile_screen_full.dart';
+import 'screens/game_history_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,6 +79,7 @@ class MyApp extends StatelessWidget {
           '/dream': (context) => const DreamScreen(),
           '/subscribe': (context) => const SubscribeScreen(),
           '/profile': (context) => const ProfileScreen(),
+          '/game-history': (context) => const GameHistoryScreen(),
         },
       ),
     );
