@@ -81,6 +81,24 @@ class ApiService {
     }
   }
 
+  // Create test premium user
+  static Future<User> createTestUser() async {
+    final response = await _get('/create-test-user');
+
+    if (response['success']) {
+      return User(
+        userId: response['userId'],
+        email: null,
+        isPremium: response['isPremium'] ?? true,
+        expiryDate: response['expiryDate'],
+        daysLeft: 30,
+        subscriptionId: null,
+      );
+    } else {
+      throw Exception('Failed to create test user');
+    }
+  }
+
   // Update FCM token
   static Future<void> updateFcmToken(String userId, String fcmToken) async {
     await _post('/user/fcm-token', {

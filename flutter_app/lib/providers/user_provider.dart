@@ -113,6 +113,22 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  // Use test premium user
+  Future<void> useTestUser() async {
+    try {
+      final testUser = await ApiService.createTestUser();
+      _user = testUser;
+      await StorageService.setUser(testUser);
+      await StorageService.setUserId(testUser.userId);
+      _error = null;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      print('Error using test user: $e');
+      throw e;
+    }
+  }
+
   // Logout
   Future<void> logout() async {
     _user = null;
