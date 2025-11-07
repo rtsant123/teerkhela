@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
 const Notification = require('../models/Notification');
+const Game = require('../models/Game');
 const predictionService = require('../services/predictionService');
 const scraperService = require('../services/scraperService');
 const { sendNotificationToMultiple, sendNotificationToUser } = require('../config/firebase');
@@ -367,6 +368,231 @@ const getRevenueChart = async (req, res) => {
   }
 };
 
+// ========== GAME MANAGEMENT ==========
+
+// Get all games
+const getAllGames = async (req, res) => {
+  try {
+    const { includeInactive = false } = req.query;
+    const games = await Game.getAll(includeInactive === 'true');
+
+    // Get statistics for each game
+    const gamesWithStats = await Promise.all(
+      games.map(async (game) => {
+        const stats = await Game.getStats(game.name);
+        return { ...game, stats };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: gamesWithStats
+    });
+  } catch (error) {
+    console.error('Error getting games:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching games'
+    });
+  }
+};
+
+// Get single game
+const getGame = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const game = await Game.getById(id);
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        message: 'Game not found'
+      });
+    }
+
+    const stats = await Game.getStats(game.name);
+
+    res.json({
+      success: true,
+      data: { ...game, stats }
+    });
+  } catch (error) {
+    console.error('Error getting game:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching game'
+    });
+  }
+};
+
+// Create new game
+const createGame = async (req, res) => {
+  try {
+    const { name, display_name, region, scrape_url, is_active, scrape_enabled, fr_time, sr_time, display_order } = req.body;
+
+    if (!name || !display_name) {
+      return res.status(400).json({
+        success: false,
+        message: 'name and display_name are required'
+      });
+    }
+
+    // Check if game already exists
+    const existing = await Game.getByName(name);
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: 'Game with this name already exists'
+      });
+    }
+
+    const game = await Game.create({
+      name,
+      display_name,
+      region,
+      scrape_url,
+      is_active,
+      scrape_enabled,
+      fr_time,
+      sr_time,
+      display_order
+    });
+
+    res.json({
+      success: true,
+      message: 'Game created successfully',
+      data: game
+    });
+  } catch (error) {
+    console.error('Error creating game:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating game'
+    });
+  }
+};
+
+// Update game
+const updateGame = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { display_name, region, scrape_url, is_active, scrape_enabled, fr_time, sr_time, display_order } = req.body;
+
+    const game = await Game.update(id, {
+      display_name,
+      region,
+      scrape_url,
+      is_active,
+      scrape_enabled,
+      fr_time,
+      sr_time,
+      display_order
+    });
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        message: 'Game not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Game updated successfully',
+      data: game
+    });
+  } catch (error) {
+    console.error('Error updating game:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating game'
+    });
+  }
+};
+
+// Delete game (soft delete)
+const deleteGame = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const game = await Game.delete(id);
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        message: 'Game not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Game deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting game:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting game'
+    });
+  }
+};
+
+// Toggle game active status
+const toggleGameActive = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const game = await Game.toggleActive(id);
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        message: 'Game not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Game ${game.is_active ? 'activated' : 'deactivated'} successfully`,
+      data: game
+    });
+  } catch (error) {
+    console.error('Error toggling game:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error toggling game status'
+    });
+  }
+};
+
+// Toggle game scraping
+const toggleGameScraping = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const game = await Game.toggleScraping(id);
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        message: 'Game not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Scraping ${game.scrape_enabled ? 'enabled' : 'disabled'} for ${game.display_name}`,
+      data: game
+    });
+  } catch (error) {
+    console.error('Error toggling scraping:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error toggling scraping'
+    });
+  }
+};
+
 module.exports = {
   login,
   getStatistics,
@@ -377,5 +603,13 @@ module.exports = {
   manualResultEntry,
   sendPushNotification,
   getNotificationHistory,
-  getRevenueChart
+  getRevenueChart,
+  // Game management
+  getAllGames,
+  getGame,
+  createGame,
+  updateGame,
+  deleteGame,
+  toggleGameActive,
+  toggleGameScraping
 };

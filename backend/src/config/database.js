@@ -138,6 +138,37 @@ const initDatabase = async () => {
       );
     `);
 
+    // Games table (dynamic game management)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS games (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) UNIQUE NOT NULL,
+        display_name VARCHAR(100) NOT NULL,
+        region VARCHAR(50),
+        scrape_url VARCHAR(255),
+        is_active BOOLEAN DEFAULT true,
+        scrape_enabled BOOLEAN DEFAULT false,
+        fr_time TIME,
+        sr_time TIME,
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Insert default games if not exists
+    await pool.query(`
+      INSERT INTO games (name, display_name, region, scrape_url, is_active, scrape_enabled, display_order)
+      VALUES
+        ('shillong', 'Shillong Teer', 'Meghalaya', 'shillong-teer', true, true, 1),
+        ('khanapara', 'Khanapara Teer', 'Assam', 'khanapara-teer', true, true, 2),
+        ('juwai', 'Juwai Teer', 'Meghalaya', 'juwai-teer', true, true, 3),
+        ('shillong-morning', 'Shillong Morning Teer', 'Meghalaya', 'shillong-morning', true, true, 4),
+        ('juwai-morning', 'Juwai Morning Teer', 'Meghalaya', 'juwai-morning', true, true, 5),
+        ('khanapara-morning', 'Khanapara Morning Teer', 'Assam', 'khanapara-morning', true, true, 6)
+      ON CONFLICT (name) DO NOTHING;
+    `);
+
     console.log('✅ Database tables initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing database:', error);

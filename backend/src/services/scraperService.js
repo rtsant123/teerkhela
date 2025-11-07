@@ -1,16 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const Result = require('../models/Result');
-
-// Game names mapping
-const GAMES = {
-  'shillong-teer': 'shillong',
-  'khanapara-teer': 'khanapara',
-  'juwai-teer': 'juwai',
-  'shillong-morning': 'shillong-morning',
-  'juwai-morning': 'juwai-morning',
-  'khanapara-morning': 'khanapara-morning'
-};
+const Game = require('../models/Game');
 
 class ScraperService {
   constructor() {
@@ -27,15 +18,20 @@ class ScraperService {
       const today = new Date().toISOString().split('T')[0];
       const results = {};
 
+      // Get all active games with scraping enabled from database
+      const games = await Game.getActiveScrapableGames();
+
+      console.log(`Found ${games.length} games to scrape`);
+
       // Scrape each game
-      for (const [gameUrl, gameName] of Object.entries(GAMES)) {
+      for (const game of games) {
         try {
-          const result = await this.scrapeGame(gameUrl, gameName);
+          const result = await this.scrapeGame(game.scrape_url, game.name);
           if (result) {
-            results[gameName] = result;
+            results[game.name] = result;
             // Save to database
             await Result.upsert(
-              gameName,
+              game.name,
               today,
               result.fr,
               result.sr,
@@ -44,7 +40,7 @@ class ScraperService {
             );
           }
         } catch (error) {
-          console.error(`Error scraping ${gameName}:`, error.message);
+          console.error(`Error scraping ${game.name}:`, error.message);
         }
       }
 

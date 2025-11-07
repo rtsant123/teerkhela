@@ -1,7 +1,26 @@
 const scraperService = require('../services/scraperService');
 const User = require('../models/User');
 const Result = require('../models/Result');
+const Game = require('../models/Game');
 const { v4: uuidv4 } = require('uuid');
+
+// Get all active games
+const getAllGames = async (req, res) => {
+  try {
+    const games = await Game.getAll(false); // Only active games
+
+    res.json({
+      success: true,
+      data: games
+    });
+  } catch (error) {
+    console.error('Error getting games:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching games'
+    });
+  }
+};
 
 // Get all current results
 const getResults = async (req, res) => {
@@ -151,6 +170,7 @@ const updateFcmToken = async (req, res) => {
 };
 
 module.exports = {
+  getAllGames,
   getResults,
   getResultHistory,
   registerUser,
