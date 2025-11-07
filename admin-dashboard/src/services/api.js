@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Change this to your backend URL
-const API_BASE_URL = 'http://localhost:5000/api';
-// Production: const API_BASE_URL = 'https://your-railway-app.up.railway.app/api';
+// Production backend URL
+const API_BASE_URL = 'https://teerkhela-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
