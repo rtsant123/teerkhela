@@ -16,14 +16,24 @@ import 'screens/profile_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+  // Initialize Firebase (optional - will skip if not configured)
+  try {
+    await Firebase.initializeApp();
+    print('✅ Firebase initialized');
+  } catch (e) {
+    print('⚠️  Firebase not configured - Push notifications disabled');
+    print('   Add google-services.json to enable notifications');
+  }
 
   // Initialize Storage
   await StorageService.init();
 
-  // Initialize Notifications
-  await NotificationService.initialize();
+  // Initialize Notifications (will handle Firebase not being available)
+  try {
+    await NotificationService.initialize();
+  } catch (e) {
+    print('⚠️  Notification service not available');
+  }
 
   runApp(const MyApp());
 }

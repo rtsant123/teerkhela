@@ -17,9 +17,9 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
 
-  // Replace with your actual Razorpay keys
-  static const String razorpayKeyId = 'rzp_live_YOUR_KEY_ID'; // TODO: Replace with actual key
-  static const String planId = 'plan_xxxxx'; // TODO: Replace with actual plan ID
+  // Razorpay Test Keys
+  static const String razorpayKeyId = 'rzp_test_RcNQd80r82gwlm';
+  static const String planId = 'plan_temp_will_update_later';
 
   @override
   void initState() {

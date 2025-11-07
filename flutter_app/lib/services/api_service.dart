@@ -6,9 +6,8 @@ import '../models/user.dart';
 import '../models/dream_interpretation.dart';
 
 class ApiService {
-  // Change this to your Railway backend URL
-  static const String baseUrl = 'http://localhost:5000/api';
-  // Production: static const String baseUrl = 'https://your-railway-app.up.railway.app/api';
+  // Railway backend URL
+  static const String baseUrl = 'https://teerkhela-production.up.railway.app/api';
 
   // GET request helper
   static Future<Map<String, dynamic>> _get(String endpoint, {Map<String, String>? headers}) async {
