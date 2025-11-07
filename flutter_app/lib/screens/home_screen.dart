@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            '50% OFF - Just ₹29/month',
+                            '50% OFF - Just ₹49/month • 50% OFF',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 14,

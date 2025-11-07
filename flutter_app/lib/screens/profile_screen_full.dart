@@ -371,7 +371,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: const Text(
-                  'Upgrade Now - ₹29/month',
+                  'Upgrade Now - ₹49/month • 50% OFF',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),

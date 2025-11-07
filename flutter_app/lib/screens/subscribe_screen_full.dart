@@ -237,7 +237,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            '₹59',
+                            '₹99',
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.white70,
@@ -341,7 +341,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                              'Subscribe Now - ₹29/month',
+                              'Subscribe Now - ₹49 First Month',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

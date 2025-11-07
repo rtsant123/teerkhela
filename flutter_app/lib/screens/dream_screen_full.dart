@@ -208,7 +208,7 @@ class _DreamScreenState extends State<DreamScreen> {
 
             // Price
             const Text(
-              'Just ₹29/month • 50% OFF',
+              'Just ₹49/month • 50% OFF • 50% OFF',
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
@@ -303,7 +303,7 @@ class _DreamScreenState extends State<DreamScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: const Text(
-                'Upgrade to Premium - ₹29/month',
+                'Upgrade to Premium - ₹49/month • 50% OFF',
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),

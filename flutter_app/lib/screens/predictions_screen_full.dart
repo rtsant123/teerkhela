@@ -87,7 +87,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: const Text(
-                'Upgrade to Premium - ₹29/month',
+                'Upgrade to Premium - ₹49/month • 50% OFF',
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),

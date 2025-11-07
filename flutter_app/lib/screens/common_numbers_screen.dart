@@ -181,7 +181,7 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
 
             // Price
             const Text(
-              'Just ₹29/month • 50% OFF',
+              'Just ₹49/month • 50% OFF • 50% OFF',
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
