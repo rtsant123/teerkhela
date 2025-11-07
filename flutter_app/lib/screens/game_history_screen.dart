@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../models/result.dart';
+import '../utils/app_theme.dart';
 
 class GameHistoryScreen extends StatefulWidget {
   const GameHistoryScreen({super.key});
@@ -57,8 +58,10 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
     final displayName = args['displayName'] as String;
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text('$displayName History'),
+        backgroundColor: AppTheme.primary,
       ),
       body: Column(
         children: [
@@ -69,10 +72,15 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
               padding: const EdgeInsets.all(16),
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7c3aed), Color(0xFFa78bfa)],
-                ),
+                gradient: AppTheme.premiumGradient,
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.premiumGold.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -98,15 +106,17 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/subscribe');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF7c3aed),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text('Upgrade'),
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/subscribe');
+                      },
+                      icon: const Icon(Icons.arrow_forward, color: AppTheme.premiumGold),
+                    ),
                   ),
                 ],
               ),
@@ -239,7 +249,7 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF7c3aed),
+                    color: AppTheme.primary,
                   ),
                 ),
                 if (result.declaredTime != null)
@@ -270,26 +280,26 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppTheme.frColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
                       children: [
-                        const Text(
+                        Text(
                           'FR',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
+                            color: AppTheme.frColor.withOpacity(0.7),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           result.fr?.toString() ?? '--',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
+                            color: AppTheme.frColor,
                           ),
                         ),
                       ],
@@ -304,26 +314,26 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppTheme.srColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
                       children: [
-                        const Text(
+                        Text(
                           'SR',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
+                            color: AppTheme.srColor.withOpacity(0.7),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           result.sr?.toString() ?? '--',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green.shade700,
+                            color: AppTheme.srColor,
                           ),
                         ),
                       ],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../models/dream_interpretation.dart';
+import '../utils/app_theme.dart';
 
 class DreamScreen extends StatefulWidget {
   const DreamScreen({super.key});
@@ -79,16 +80,191 @@ class _DreamScreenState extends State<DreamScreen> {
     final userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Dream Bot'),
+        title: const Text('Dream AI Bot'),
+        backgroundColor: AppTheme.primary,
       ),
       body: userProvider.isPremium
           ? _buildDreamBotView()
-          : _buildPremiumGate(context),
+          : _buildPremiumLock(),
     );
   }
 
-  Widget _buildPremiumGate(BuildContext context) {
+  Widget _buildPremiumLock() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Premium Icon
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: AppTheme.premiumGradient,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.psychology,
+                size: 60,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Title
+            const Text(
+              'Dream AI Bot',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Description
+            const Text(
+              'AI-powered dream interpretation with Teer number predictions',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Features
+            _buildFeatureItem(
+              Icons.translate,
+              'Multi-Language Support',
+              'Works in English, Hindi, Bengali, Assamese & more',
+            ),
+            const SizedBox(height: 16),
+            _buildFeatureItem(
+              Icons.lightbulb_outline,
+              '100+ Dream Symbols',
+              'Comprehensive dream symbol database',
+            ),
+            const SizedBox(height: 16),
+            _buildFeatureItem(
+              Icons.auto_awesome,
+              'AI-Powered Analysis',
+              'Advanced AI interprets your dreams',
+            ),
+            const SizedBox(height: 16),
+            _buildFeatureItem(
+              Icons.numbers,
+              'Teer Number Predictions',
+              'Get FR & SR number suggestions',
+            ),
+            const SizedBox(height: 40),
+
+            // Upgrade Button
+            Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: AppTheme.premiumGradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.premiumGold.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/subscribe');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.workspace_premium, size: 24),
+                    SizedBox(width: 12),
+                    Text(
+                      'Unlock Dream AI',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Price
+            const Text(
+              'Just ₹29/month • 50% OFF',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem(IconData icon, String title, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: AppTheme.cardDecoration,
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppTheme.primary, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOldPremiumGate(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -145,33 +321,44 @@ class _DreamScreenState extends State<DreamScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Info Card
-            Card(
-              color: const Color(0xFF7c3aed).withOpacity(0.1),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: const [
-                    Icon(Icons.info_outline, color: Color(0xFF7c3aed)),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Describe your dream in any language. Our AI will interpret it and suggest Teer numbers.',
-                        style: TextStyle(fontSize: 14),
-                      ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.info_outline, color: AppTheme.primary),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Describe your dream in any language. Our AI will interpret it and suggest Teer numbers.',
+                      style: TextStyle(fontSize: 14, color: AppTheme.textPrimary),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // Language Selector
             DropdownButtonFormField<String>(
               value: _selectedLanguage,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Language',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.language),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                ),
+                prefixIcon: const Icon(Icons.language, color: AppTheme.primary),
               ),
               items: _languages.entries.map((entry) {
                 return DropdownMenuItem(
@@ -190,10 +377,20 @@ class _DreamScreenState extends State<DreamScreen> {
             // Game Selector
             DropdownButtonFormField<String>(
               value: _selectedGame,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Target Game',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.sports_esports),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                ),
+                prefixIcon: const Icon(Icons.sports_cricket, color: AppTheme.primary),
               ),
               items: _games.entries.map((entry) {
                 return DropdownMenuItem(
@@ -216,32 +413,59 @@ class _DreamScreenState extends State<DreamScreen> {
               decoration: InputDecoration(
                 labelText: 'Describe your dream',
                 hintText: 'Enter your dream in any language...\n\nExample:\nमैंने सपने में साँप देखा\nI saw a snake in my dream\nআমি স্বপ্নে সাপ দেখেছি',
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                ),
                 alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // Submit Button
-            ElevatedButton(
-              onPressed: _isLoading ? null : _interpretDream,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7c3aed),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            Container(
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _interpretDream,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.auto_awesome, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Interpret Dream',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                    )
-                  : const Text(
-                      'Interpret Dream',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
-                    ),
+              ),
             ),
             const SizedBox(height: 24),
 

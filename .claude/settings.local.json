@@ -20,7 +20,8 @@
       "Bash(timeout 60 sleep:*)",
       "Bash(timeout 120 sleep:*)",
       "Bash(tee:*)",
-      "Bash(gradlew.bat:*)"
+      "Bash(gradlew.bat:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

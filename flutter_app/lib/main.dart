@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/storage_service.dart';
 import 'services/notification_service.dart';
 import 'providers/user_provider.dart';
+import 'utils/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/predictions_screen_full.dart';
@@ -13,6 +14,7 @@ import 'screens/dream_screen_full.dart';
 import 'screens/subscribe_screen_full.dart';
 import 'screens/profile_screen_full.dart';
 import 'screens/game_history_screen.dart';
+import 'screens/common_numbers_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,11 +54,11 @@ class MyApp extends StatelessWidget {
         title: 'Teer Khela',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primarySwatch: Colors.purple,
-          primaryColor: const Color(0xFF7c3aed),
-          scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+          primarySwatch: Colors.cyan,
+          primaryColor: AppTheme.primary,
+          scaffoldBackgroundColor: AppTheme.background,
           appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF7c3aed),
+            backgroundColor: AppTheme.primary,
             elevation: 0,
             iconTheme: IconThemeData(color: Colors.white),
             titleTextStyle: TextStyle(
@@ -67,9 +69,16 @@ class MyApp extends StatelessWidget {
           ),
           textTheme: GoogleFonts.poppinsTextTheme(),
           colorScheme: ColorScheme.fromSwatch(
-            primarySwatch: Colors.purple,
+            primarySwatch: Colors.cyan,
           ).copyWith(
-            secondary: const Color(0xFFa78bfa),
+            secondary: AppTheme.secondary,
+          ),
+          cardTheme: CardThemeData(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            color: AppTheme.cardBg,
           ),
         ),
         home: const SplashScreen(),
@@ -80,6 +89,7 @@ class MyApp extends StatelessWidget {
           '/subscribe': (context) => const SubscribeScreen(),
           '/profile': (context) => const ProfileScreen(),
           '/game-history': (context) => const GameHistoryScreen(),
+          '/common-numbers': (context) => const CommonNumbersScreen(),
         },
       ),
     );
