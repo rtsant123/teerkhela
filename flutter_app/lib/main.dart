@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            color: AppTheme.cardBg,
+            color: AppTheme.surface,
           ),
         ),
         home: const SplashScreen(),
