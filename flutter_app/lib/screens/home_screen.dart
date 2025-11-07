@@ -4,6 +4,7 @@ import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../models/result.dart';
 import '../utils/app_theme.dart';
+import '../widgets/app_bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,7 +14,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
   Map<String, TeerResult> _results = {};
   bool _isLoading = true;
   String? _error;
@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,113 +58,114 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primary,
-        unselectedItemColor: AppTheme.textSecondary,
-        backgroundColor: Colors.white,
-        elevation: 8,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontSize: 11),
-        onTap: (index) {
-          if (index == 0) {
-            // Already on Results (Home)
-            return;
-          }
-
-          // Navigate based on index
-          switch (index) {
-            case 1:
-              // Common Numbers (Premium)
-              Navigator.pushNamed(context, '/common-numbers');
-              break;
-            case 2:
-              // Dream AI (Premium)
-              Navigator.pushNamed(context, '/dream');
-              break;
-            case 3:
-              // Profile
-              Navigator.pushNamed(context, '/profile');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_cricket),
-            label: 'Results',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.numbers),
-            label: 'Common Numbers',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.psychology),
-            label: 'Dream AI',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+      body: _buildBody(size),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
+      floatingActionButton: _buildFloatingMenu(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildFloatingMenu(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // AI Predictions Button
+        FloatingActionButton.extended(
+          heroTag: 'predictions',
+          onPressed: () {
+            Navigator.pushNamed(context, '/predictions');
+          },
+          backgroundColor: AppTheme.primary,
+          icon: const Icon(Icons.psychology_outlined, size: 20),
+          label: Text(
+            'AI Predictions',
+            style: AppTheme.bodySmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        SizedBox(height: AppTheme.space8),
+
+        // Formula Calculator Button
+        FloatingActionButton.extended(
+          heroTag: 'formula',
+          onPressed: () {
+            Navigator.pushNamed(context, '/formula-calculator');
+          },
+          backgroundColor: AppTheme.secondary,
+          icon: const Icon(Icons.calculate_outlined, size: 20),
+          label: Text(
+            'Formula',
+            style: AppTheme.bodySmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody(Size size) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final iconSize = size.width * 0.1;
+    final horizontalPadding = size.width * 0.04;
 
     return RefreshIndicator(
       onRefresh: _loadResults,
+      color: AppTheme.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            // Premium Banner for Free Users
+            // Premium Banner for Free Users - Responsive
             if (!userProvider.isPremium)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(horizontalPadding),
+                margin: EdgeInsets.all(horizontalPadding),
                 decoration: BoxDecoration(
                   gradient: AppTheme.premiumGradient,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.premiumGold.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.workspace_premium, color: Colors.white, size: 40),
-                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.workspace_premium,
+                      color: Colors.white,
+                      size: iconSize,
+                    ),
+                    SizedBox(width: AppTheme.space12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
                             'Unlock Premium',
-                            style: TextStyle(
+                            style: AppTheme.heading3.copyWith(
                               color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontSize: size.width * 0.045,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppTheme.space4),
                           Text(
                             'AI Predictions • Dream AI • 30 Days History',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                            style: AppTheme.bodySmall.copyWith(
+                              color: Colors.white70,
+                              fontSize: size.width * 0.03,
+                            ),
                           ),
-                          SizedBox(height: 2),
+                          SizedBox(height: AppTheme.space4),
                           Text(
-                            '50% OFF - Just ₹49/month • 50% OFF',
-                            style: TextStyle(
+                            '50% OFF - Just ₹49/month',
+                            style: AppTheme.bodyMedium.copyWith(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: size.width * 0.035,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -174,39 +175,60 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                       ),
                       child: IconButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/subscribe');
                         },
-                        icon: const Icon(Icons.arrow_forward, color: AppTheme.premiumGold),
+                        icon: Icon(
+                          Icons.arrow_forward,
+                          color: AppTheme.premiumPurple,
+                          size: iconSize * 0.6,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-            // Results Grid
+            // Results Grid - Responsive
             if (_isLoading)
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(),
+                  padding: EdgeInsets.all(size.width * 0.08),
+                  child: const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                  ),
                 ),
               )
             else if (_error != null)
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(32.0),
+                  padding: EdgeInsets.all(size.width * 0.08),
                   child: Column(
                     children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(_error!, textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
+                      Icon(
+                        Icons.error_outline,
+                        size: size.width * 0.12,
+                        color: AppTheme.error,
+                      ),
+                      SizedBox(height: AppTheme.space16),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: AppTheme.bodyMedium,
+                      ),
+                      SizedBox(height: AppTheme.space16),
                       ElevatedButton(
                         onPressed: _loadResults,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppTheme.space24,
+                            vertical: AppTheme.space12,
+                          ),
+                        ),
                         child: const Text('Retry'),
                       ),
                     ],
@@ -214,21 +236,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )
             else
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.2,
-                ),
-                itemCount: _results.length,
-                itemBuilder: (context, index) {
-                  final game = _results.keys.elementAt(index);
-                  final result = _results[game]!;
-                  return _buildResultCard(result);
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Responsive grid: 2 columns for narrow, 3 for wide
+                  final crossAxisCount = size.width > 600 ? 3 : 2;
+                  final spacing = size.width * 0.04;
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.all(spacing),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing,
+                      childAspectRatio: 1.15,
+                    ),
+                    itemCount: _results.length,
+                    itemBuilder: (context, index) {
+                      final game = _results.keys.elementAt(index);
+                      final result = _results[game]!;
+                      return _buildResultCard(result, size);
+                    },
+                  );
                 },
               ),
           ],
@@ -237,20 +267,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildResultCard(TeerResult result) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+  Widget _buildResultCard(TeerResult result, Size size) {
+    final cardPadding = size.width * 0.035;
+    final labelFontSize = size.width * 0.028;
+    final numberFontSize = size.width * 0.06;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -262,31 +288,30 @@ class _HomeScreenState extends State<HomeScreen> {
               arguments: {'game': result.game, 'displayName': result.displayName},
             );
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Game Name
+                // Game Name - Responsive
                 Row(
                   children: [
                     Container(
-                      width: 4,
-                      height: 20,
+                      width: 3,
+                      height: size.width * 0.045,
                       decoration: BoxDecoration(
                         gradient: AppTheme.primaryGradient,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: AppTheme.space8),
                     Expanded(
                       child: Text(
                         result.displayName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                        style: AppTheme.subtitle1.copyWith(
+                          fontSize: size.width * 0.036,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -294,34 +319,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
 
-                // FR & SR in Row
+                // FR & SR in Row - Responsive
                 Row(
                   children: [
                     // FR Box
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          vertical: size.width * 0.025,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.frColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                         ),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               'FR',
-                              style: TextStyle(
-                                fontSize: 11,
+                              style: AppTheme.bodySmall.copyWith(
+                                fontSize: labelFontSize,
                                 color: AppTheme.frColor.withOpacity(0.7),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: AppTheme.space4),
                             Text(
                               result.fr?.toString() ?? '--',
-                              style: const TextStyle(
-                                fontSize: 26,
+                              style: TextStyle(
+                                fontSize: numberFontSize,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.frColor,
                               ),
@@ -330,30 +357,33 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: AppTheme.space8),
                     // SR Box
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          vertical: size.width * 0.025,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.srColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                         ),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               'SR',
-                              style: TextStyle(
-                                fontSize: 11,
+                              style: AppTheme.bodySmall.copyWith(
+                                fontSize: labelFontSize,
                                 color: AppTheme.srColor.withOpacity(0.7),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: AppTheme.space4),
                             Text(
                               result.sr?.toString() ?? '--',
-                              style: const TextStyle(
-                                fontSize: 26,
+                              style: TextStyle(
+                                fontSize: numberFontSize,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.srColor,
                               ),
@@ -365,15 +395,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 12),
-
-                // View History Button
+                // View History Button - Responsive
                 Container(
                   width: double.infinity,
-                  height: 32,
+                  constraints: BoxConstraints(
+                    minHeight: size.width * 0.08,
+                    maxHeight: size.width * 0.1,
+                  ),
                   decoration: BoxDecoration(
                     gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                   ),
                   child: ElevatedButton(
                     onPressed: () {
@@ -387,19 +418,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                       ),
                       padding: EdgeInsets.zero,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.history, size: 16, color: Colors.white),
-                        SizedBox(width: 6),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.history,
+                          size: size.width * 0.035,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: AppTheme.space4),
                         Text(
-                          'View History',
+                          'History',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: size.width * 0.03,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
