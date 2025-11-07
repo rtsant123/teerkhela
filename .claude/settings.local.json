@@ -21,7 +21,14 @@
       "Bash(timeout 120 sleep:*)",
       "Bash(tee:*)",
       "Bash(gradlew.bat:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(for file in common_numbers_screen.dart dream_screen_full.dart formula_calculator_screen.dart home_screen.dart manage_subscription_screen.dart predictions_screen_full.dart profile_screen_full.dart result_detail_screen.dart)",
+      "Bash(do sed -i 's/₹29\\/month/₹49\\/month • 50% OFF/g' \"$file\")",
+      "Bash(done)",
+      "Bash(dream_screen.dart)",
+      "Bash(subscribe_screen.dart)",
+      "Bash(profile_screen.dart)"
     ],
     "deny": [],
     "ask": []
