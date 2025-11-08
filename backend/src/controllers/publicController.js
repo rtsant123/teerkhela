@@ -2,6 +2,7 @@ const scraperService = require('../services/scraperService');
 const User = require('../models/User');
 const Result = require('../models/Result');
 const Game = require('../models/Game');
+const PredictionResult = require('../models/PredictionResult');
 const { v4: uuidv4 } = require('uuid');
 
 // Get all active games
@@ -301,6 +302,79 @@ const calculateFormulas = async (req, res) => {
   }
 };
 
+// Get overall accuracy (all games)
+const getOverallAccuracy = async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    const accuracy = await PredictionResult.getOverallAccuracy(days);
+    const recentPredictions = await PredictionResult.getRecentPredictions(null, 10);
+    const bestGames = await PredictionResult.getBestGames(days);
+
+    res.json({
+      success: true,
+      days,
+      accuracy,
+      recentPredictions,
+      bestGames
+    });
+  } catch (error) {
+    console.error('Error getting overall accuracy:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching accuracy stats'
+    });
+  }
+};
+
+// Get accuracy for specific game
+const getGameAccuracy = async (req, res) => {
+  try {
+    const { game } = req.params;
+    const days = parseInt(req.query.days) || 30;
+
+    const accuracy = await PredictionResult.getAccuracy(game, days);
+    const recentPredictions = await PredictionResult.getRecentPredictions(game, 10);
+    const trend = await PredictionResult.getAccuracyTrend(game, 7);
+
+    res.json({
+      success: true,
+      game,
+      days,
+      accuracy,
+      recentPredictions,
+      trend
+    });
+  } catch (error) {
+    console.error('Error getting game accuracy:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching game accuracy'
+    });
+  }
+};
+
+// Get recent predictions with results
+const getRecentPredictions = async (req, res) => {
+  try {
+    const game = req.query.game || null;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const predictions = await PredictionResult.getRecentPredictions(game, limit);
+
+    res.json({
+      success: true,
+      predictions,
+      count: predictions.length
+    });
+  } catch (error) {
+    console.error('Error getting recent predictions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching recent predictions'
+    });
+  }
+};
+
 module.exports = {
   getAllGames,
   getResults,
@@ -309,5 +383,8 @@ module.exports = {
   registerUser,
   getUserStatus,
   updateFcmToken,
-  calculateFormulas
+  calculateFormulas,
+  getOverallAccuracy,
+  getGameAccuracy,
+  getRecentPredictions
 };

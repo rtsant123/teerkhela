@@ -18,4 +18,9 @@ router.post('/user/fcm-token', publicController.updateFcmToken);
 // Formula Calculator
 router.post('/formulas/calculate', publicController.calculateFormulas);
 
+// Prediction Accuracy (Public for transparency)
+router.get('/accuracy/overall', publicController.getOverallAccuracy);
+router.get('/accuracy/:game', publicController.getGameAccuracy);
+router.get('/accuracy/recent-predictions', publicController.getRecentPredictions);
+
 module.exports = router;

@@ -1,5 +1,6 @@
 const Result = require('../models/Result');
 const Prediction = require('../models/Prediction');
+const PredictionResult = require('../models/PredictionResult');
 
 class PredictionService {
   constructor() {
@@ -26,6 +27,15 @@ class PredictionService {
               prediction.fr,
               prediction.sr,
               prediction.analysis,
+              prediction.confidence
+            );
+
+            // Save to prediction_results for accuracy tracking
+            await PredictionResult.savePrediction(
+              game,
+              today,
+              prediction.fr,
+              prediction.sr,
               prediction.confidence
             );
           }
@@ -179,12 +189,13 @@ class PredictionService {
     const coldNumbers = analysis.coldNumbers[type];
     const hotLastDigits = analysis.hotLastDigits[type];
 
-    // Strategy: Mix hot numbers, pattern-based numbers, and strategic picks
+    // Strategy: Mix hot numbers, pattern-based numbers, cold numbers, and strategic picks
+    // Now generating 10 numbers for better variety
 
-    // 1. Add top 2 hot numbers
-    predictions.push(...hotNumbers.slice(0, 2));
+    // 1. Add top 3 hot numbers (most frequent)
+    predictions.push(...hotNumbers.slice(0, 3));
 
-    // 2. Add numbers with hot last digits
+    // 2. Add 3 numbers with hot last digits (pattern-based)
     for (const digit of hotLastDigits) {
       if (predictions.length >= 6) break;
 
@@ -198,23 +209,31 @@ class PredictionService {
       }
     }
 
-    // 3. Add some cold numbers (due for appearance)
-    if (predictions.length < 6 && coldNumbers.length > 0) {
-      const coldPick = coldNumbers[Math.floor(Math.random() * Math.min(5, coldNumbers.length))];
-      if (!predictions.includes(coldPick)) {
-        predictions.push(coldPick);
+    // 3. Add 2 cold numbers (due for appearance - contrarian strategy)
+    let coldAdded = 0;
+    for (let i = 0; i < coldNumbers.length && coldAdded < 2; i++) {
+      const coldNum = coldNumbers[i];
+      if (!predictions.includes(coldNum)) {
+        predictions.push(coldNum);
+        coldAdded++;
       }
     }
 
-    // 4. Fill remaining with strategic numbers
-    while (predictions.length < 6) {
+    // 4. Add 2 medium-frequency numbers (balanced approach)
+    const mediumNumbers = hotNumbers.slice(3, 7)
+      .filter(num => !predictions.includes(num));
+    predictions.push(...mediumNumbers.slice(0, 2));
+
+    // 5. Fill remaining with strategic random numbers (variety)
+    while (predictions.length < 10) {
       const num = Math.floor(Math.random() * 100);
       if (!predictions.includes(num)) {
         predictions.push(num);
       }
     }
 
-    return predictions.slice(0, 6);
+    // Return exactly 10 unique numbers
+    return predictions.slice(0, 10);
   }
 
   // Generate analysis text
@@ -226,22 +245,30 @@ class PredictionService {
     const recentFR = recent.map(r => r.fr).filter(n => n !== null);
     const recentSR = recent.map(r => r.sr).filter(n => n !== null);
 
-    let text = `Based on analysis of past ${analysis.totalResults} days of ${game.toUpperCase()} Teer results:\n\n`;
+    const gameName = game.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-    text += `📊 HOT NUMBERS:\n`;
-    text += `FR: ${hotFR} have appeared most frequently.\n`;
-    text += `SR: ${hotSR} have appeared most frequently.\n\n`;
+    let text = `📊 AI Analysis - ${gameName} Teer\n`;
+    text += `Based on ${analysis.totalResults} days of historical data\n\n`;
 
-    text += `📈 RECENT TREND:\n`;
-    text += `Last 5 FR results: ${recentFR.join(', ')}\n`;
-    text += `Last 5 SR results: ${recentSR.join(', ')}\n\n`;
+    text += `🔥 HOT NUMBERS (Most Frequent):\n`;
+    text += `FR: ${hotFR}\n`;
+    text += `SR: ${hotSR}\n\n`;
 
-    text += `💡 PREDICTION STRATEGY:\n`;
-    text += `Our AI combines hot number analysis, last digit patterns, and cold number probability to generate these predictions. `;
-    text += `These numbers have high potential based on historical data and pattern recognition.\n\n`;
+    text += `📈 RECENT PATTERN (Last 5 Days):\n`;
+    text += `FR: ${recentFR.join(', ')}\n`;
+    text += `SR: ${recentSR.join(', ')}\n\n`;
 
-    text += `⚠️ DISCLAIMER:\n`;
-    text += `Teer is a game of chance. These predictions are based on statistical analysis and should be used for informational purposes only. Play responsibly.`;
+    text += `🎯 10-NUMBER PREDICTION STRATEGY:\n`;
+    text += `• 3 Hot Numbers (highest frequency)\n`;
+    text += `• 3 Pattern-based (common endings)\n`;
+    text += `• 2 Cold Numbers (due for appearance)\n`;
+    text += `• 2 Medium picks (balanced approach)\n\n`;
+
+    text += `💡 WHY 10 NUMBERS?\n`;
+    text += `More numbers = better coverage! Any of these 10 numbers have high potential based on our AI analysis.\n\n`;
+
+    text += `⚠️ IMPORTANT DISCLAIMER:\n`;
+    text += `This is for entertainment only. Predictions are statistical estimates, not guarantees. Play responsibly and within your means.`;
 
     return text;
   }
@@ -283,6 +310,54 @@ class PredictionService {
       return { success: true };
     } catch (error) {
       console.error('Error overriding prediction:', error);
+      throw error;
+    }
+  }
+
+  // Auto-verify predictions when results come in
+  async verifyPredictionForResult(game, date, actualFR, actualSR) {
+    try {
+      if (actualFR === null || actualSR === null) {
+        console.log(`Skipping verification for ${game} on ${date} - incomplete results`);
+        return null;
+      }
+
+      const result = await PredictionResult.verifyPrediction(game, date, actualFR, actualSR);
+
+      if (result) {
+        console.log(`✅ Verified prediction for ${game} on ${date}: FR=${result.fr_hit ? 'HIT' : 'MISS'}, SR=${result.sr_hit ? 'HIT' : 'MISS'}`);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error verifying prediction:', error);
+      throw error;
+    }
+  }
+
+  // Verify all unverified predictions
+  async verifyAllPredictions() {
+    try {
+      console.log('🔍 Verifying all predictions against results...');
+      let verified = 0;
+
+      for (const game of this.games) {
+        // Get last 30 days of results
+        const results = await Result.getHistory(game, 30);
+
+        for (const result of results) {
+          if (result.fr !== null && result.sr !== null) {
+            const dateStr = new Date(result.date).toISOString().split('T')[0];
+            await this.verifyPredictionForResult(game, dateStr, result.fr, result.sr);
+            verified++;
+          }
+        }
+      }
+
+      console.log(`✅ Verified ${verified} predictions`);
+      return verified;
+    } catch (error) {
+      console.error('Error verifying all predictions:', error);
       throw error;
     }
   }

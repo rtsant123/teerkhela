@@ -169,6 +169,96 @@ const initDatabase = async () => {
       ON CONFLICT (name) DO NOTHING;
     `);
 
+    // Forum posts tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS forum_posts (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        username VARCHAR(100) DEFAULT 'Anonymous',
+        game VARCHAR(50) NOT NULL,
+        prediction_type VARCHAR(10) NOT NULL CHECK (prediction_type IN ('FR', 'SR')),
+        numbers INTEGER[] NOT NULL,
+        confidence INTEGER DEFAULT 50 CHECK (confidence >= 0 AND confidence <= 100),
+        description TEXT,
+        likes INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_forum_game ON forum_posts(game);
+      CREATE INDEX IF NOT EXISTS idx_forum_created ON forum_posts(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_forum_user ON forum_posts(user_id);
+
+      CREATE TABLE IF NOT EXISTS forum_likes (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(post_id, user_id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_likes_post ON forum_likes(post_id);
+      CREATE INDEX IF NOT EXISTS idx_likes_user ON forum_likes(user_id);
+    `);
+
+    // Prediction results tracking table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS prediction_results (
+        id SERIAL PRIMARY KEY,
+        game VARCHAR(50) NOT NULL,
+        date DATE NOT NULL,
+        prediction_fr INTEGER[] NOT NULL,
+        prediction_sr INTEGER[] NOT NULL,
+        actual_fr INTEGER,
+        actual_sr INTEGER,
+        fr_hit BOOLEAN,
+        sr_hit BOOLEAN,
+        confidence INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        verified_at TIMESTAMP,
+        UNIQUE(game, date)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_prediction_results_game ON prediction_results(game);
+      CREATE INDEX IF NOT EXISTS idx_prediction_results_date ON prediction_results(date DESC);
+      CREATE INDEX IF NOT EXISTS idx_prediction_results_verified ON prediction_results(verified_at DESC);
+    `);
+
+    // Referral tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS referrals (
+        id SERIAL PRIMARY KEY,
+        referrer_id VARCHAR(255) NOT NULL,
+        referred_id VARCHAR(255) NOT NULL,
+        referral_code VARCHAR(20) NOT NULL,
+        reward_days INTEGER DEFAULT 5,
+        is_claimed BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        claimed_at TIMESTAMP,
+        FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (referred_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(referred_id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+      CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code);
+
+      CREATE TABLE IF NOT EXISTS referral_codes (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL UNIQUE,
+        code VARCHAR(20) NOT NULL UNIQUE,
+        total_referrals INTEGER DEFAULT 0,
+        total_rewards_days INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_referral_codes_user ON referral_codes(user_id);
+      CREATE INDEX IF NOT EXISTS idx_referral_codes_code ON referral_codes(code);
+    `);
+
     console.log('✅ Database tables initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing database:', error);
