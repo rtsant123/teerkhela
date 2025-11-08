@@ -4,8 +4,7 @@
   "description": "Backend API for Teer Khela - Results and AI Predictions",
   "main": "src/server.js",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": "20.x"
   },
   "scripts": {
     "start": "node src/server.js",
@@ -25,7 +24,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "pg": "^8.11.3",
-    "axios": "^1.6.2",
+    "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
     "node-cron": "^3.0.3",
     "firebase-admin": "^12.0.0",
