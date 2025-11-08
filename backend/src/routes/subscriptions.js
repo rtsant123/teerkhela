@@ -14,29 +14,23 @@ router.post('/activate-test', async (req, res) => {
       });
     }
 
-    // Update user with premium status
-    const updateQuery = `
-      UPDATE users
+    // Create or update user with premium status
+    const upsertQuery = `
+      INSERT INTO users (id, is_premium, subscription_id, expiry_date, created_at, updated_at)
+      VALUES ($1, true, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT (id) DO UPDATE
       SET is_premium = true,
-          subscription_id = $1,
-          expiry_date = $2,
+          subscription_id = $2,
+          expiry_date = $3,
           updated_at = CURRENT_TIMESTAMP
-      WHERE id = $3
       RETURNING *
     `;
 
-    const result = await pool.query(updateQuery, [
+    const result = await pool.query(upsertQuery, [
+      userId,
       subscriptionId,
-      expiryDate,
-      userId
+      expiryDate
     ]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
 
     console.log(`Test subscription activated for user ${userId}, expires: ${expiryDate}`);
 
