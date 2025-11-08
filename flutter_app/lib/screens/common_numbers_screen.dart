@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../utils/app_theme.dart';
+import '../widgets/app_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 
 class CommonNumbersScreen extends StatefulWidget {
   const CommonNumbersScreen({super.key});
@@ -94,9 +96,11 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
             ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: userProvider.isPremium
           ? _buildPremiumContent(size)
           : _buildPremiumLock(size),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 

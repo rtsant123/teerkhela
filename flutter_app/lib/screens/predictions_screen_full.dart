@@ -5,6 +5,7 @@ import '../providers/predictions_provider.dart';
 import '../models/prediction.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 
 class PredictionsScreen extends StatefulWidget {
   const PredictionsScreen({super.key});
@@ -64,6 +65,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
             ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: userProvider.isPremium
           ? _buildPredictionsView(size)
           : _buildPremiumGate(size),

@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../models/result.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: _buildBody(size),
       bottomNavigationBar: const AppBottomNav(currentIndex: 0),
       floatingActionButton: _buildFloatingMenu(context),

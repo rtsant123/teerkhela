@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../models/dream_interpretation.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 
 class DreamScreen extends StatefulWidget {
   const DreamScreen({super.key});
@@ -93,6 +94,7 @@ class _DreamScreenState extends State<DreamScreen> {
         title: const Text('Dream AI Bot'),
         backgroundColor: AppTheme.primary,
       ),
+      drawer: const AppDrawer(),
       body: userProvider.isPremium
           ? _buildDreamBotView(size)
           : _buildPremiumLock(size),

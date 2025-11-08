@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 
 class SubscribeScreen extends StatefulWidget {
   const SubscribeScreen({super.key});
@@ -177,6 +178,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
         title: const Text('Upgrade to Premium'),
         backgroundColor: AppTheme.primary,
       ),
+      drawer: const AppDrawer(),
       body: _buildContent(size),
       bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
