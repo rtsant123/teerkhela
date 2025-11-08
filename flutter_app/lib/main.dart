@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/storage_service.dart';
 import 'services/notification_service.dart';
 import 'providers/user_provider.dart';
+import 'providers/predictions_provider.dart';
 import 'utils/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
@@ -15,6 +16,7 @@ import 'screens/subscribe_screen_full.dart';
 import 'screens/profile_screen_full.dart';
 import 'screens/game_history_screen.dart';
 import 'screens/common_numbers_screen.dart';
+import 'screens/formula_calculator_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +51,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => PredictionsProvider()),
       ],
       child: MaterialApp(
         title: 'Teer Khela',
@@ -90,6 +93,7 @@ class MyApp extends StatelessWidget {
           '/profile': (context) => const ProfileScreen(),
           '/game-history': (context) => const GameHistoryScreen(),
           '/common-numbers': (context) => const CommonNumbersScreen(),
+          '/formula-calculator': (context) => const FormulaCalculatorScreen(),
         },
       ),
     );
