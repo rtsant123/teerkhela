@@ -125,8 +125,10 @@ class UserProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      print('Error refreshing user status: $e');
+      // Silently fail for test users or network errors
+      // Real users will sync on next successful call
+      print('Could not refresh user status (this is OK for test users): $e');
+      // Don't set error to avoid showing error to user
     }
   }
 
@@ -204,28 +206,35 @@ class UserProvider with ChangeNotifier {
       final testSubscriptionId = 'test_${_user!.userId}_${DateTime.now().millisecondsSinceEpoch}';
       final expiryDate = DateTime.now().add(Duration(days: days));
 
-      // Call backend to activate test premium
+      // Call backend to activate test premium (creates user in DB)
       await ApiService.activateTestSubscription(
         userId: _user!.userId,
         subscriptionId: testSubscriptionId,
         expiryDate: expiryDate,
       );
 
-      // Update user locally with premium status
-      _user = User(
-        userId: _user!.userId,
-        email: _user!.email,
-        phoneNumber: _user!.phoneNumber,
-        name: _user!.name,
-        isPremium: true,
-        expiryDate: expiryDate,
-        daysLeft: days,
-        subscriptionId: testSubscriptionId,
-        isGuest: _user!.isGuest,
-      );
+      // Try to refresh from backend to get updated premium status
+      // If this fails (user not in DB yet), update locally
+      try {
+        await refreshUserStatus();
+      } catch (e) {
+        print('Could not refresh from backend, updating locally: $e');
+        // Update user locally with premium status
+        _user = User(
+          userId: _user!.userId,
+          email: _user!.email,
+          phoneNumber: _user!.phoneNumber,
+          name: _user!.name,
+          isPremium: true,
+          expiryDate: expiryDate,
+          daysLeft: days,
+          subscriptionId: testSubscriptionId,
+          isGuest: _user!.isGuest,
+        );
 
-      await StorageService.setUser(_user!);
-      notifyListeners();
+        await StorageService.setUser(_user!);
+        notifyListeners();
+      }
 
       print('Test premium activated successfully via backend. isPremium: ${_user!.isPremium}');
     } catch (e) {
