@@ -4,8 +4,10 @@ import '../providers/user_provider.dart';
 import '../providers/predictions_provider.dart';
 import '../models/prediction.dart';
 import '../utils/app_theme.dart';
+import '../utils/page_transitions.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/shimmer_widgets.dart';
 
 class PredictionsScreen extends StatefulWidget {
   const PredictionsScreen({super.key});
@@ -100,7 +102,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: AppTheme.space24),
+              SizedBox(height: AppTheme.space16),
               Text(
                 'AI Predictions',
                 style: AppTheme.heading1.copyWith(
@@ -108,7 +110,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: AppTheme.space12),
+              SizedBox(height: AppTheme.space8),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
                 child: Text(
@@ -119,7 +121,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: AppTheme.space32),
+              SizedBox(height: AppTheme.space16),
               Container(
                 width: double.infinity,
                 constraints: const BoxConstraints(maxWidth: 400),
@@ -163,10 +165,12 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
     return Consumer<PredictionsProvider>(
       builder: (context, predictionsProvider, child) {
         if (predictionsProvider.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-            ),
+          return ListView.builder(
+            padding: EdgeInsets.all(size.width * 0.04),
+            itemCount: 4, // Show 4 shimmer cards
+            itemBuilder: (context, index) {
+              return ShimmerPredictionCard(size: size);
+            },
           );
         }
 
@@ -269,7 +273,15 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
 
     return Container(
       margin: EdgeInsets.only(bottom: size.width * 0.04),
-      decoration: AppTheme.elevatedCard,
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.elevatedShadow,
+        border: Border.all(
+          color: AppTheme.primary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: EdgeInsets.all(cardPadding),
         child: Column(
@@ -295,35 +307,27 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
             // FR Predictions
             Text(
               'First Round (FR) Predictions',
-              style: AppTheme.bodySmall.copyWith(
-                fontSize: size.width * 0.033,
+              style: AppTheme.bodyMedium.copyWith(
+                fontSize: size.width * 0.038,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textSecondary,
               ),
             ),
-            SizedBox(height: AppTheme.space8),
-            Wrap(
-              spacing: AppTheme.space8,
-              runSpacing: AppTheme.space8,
-              children: prediction.fr.map((num) => _buildNumberChip(num, size)).toList(),
-            ),
-            SizedBox(height: AppTheme.space16),
+            SizedBox(height: AppTheme.space12),
+            _buildNumberGrid(prediction.fr, size),
+            SizedBox(height: AppTheme.space20),
 
             // SR Predictions
             Text(
               'Second Round (SR) Predictions',
-              style: AppTheme.bodySmall.copyWith(
-                fontSize: size.width * 0.033,
+              style: AppTheme.bodyMedium.copyWith(
+                fontSize: size.width * 0.038,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textSecondary,
               ),
             ),
-            SizedBox(height: AppTheme.space8),
-            Wrap(
-              spacing: AppTheme.space8,
-              runSpacing: AppTheme.space8,
-              children: prediction.sr.map((num) => _buildNumberChip(num, size)).toList(),
-            ),
+            SizedBox(height: AppTheme.space12),
+            _buildNumberGrid(prediction.sr, size),
             SizedBox(height: AppTheme.space16),
 
             // Analysis
@@ -373,23 +377,63 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
     );
   }
 
+  Widget _buildNumberGrid(List<int> numbers, Size size) {
+    // Display 10 numbers in 2 rows of 5
+    return Column(
+      children: [
+        // First row - 5 numbers
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: numbers.take(5).map((num) => _buildNumberChip(num, size)).toList(),
+        ),
+        SizedBox(height: AppTheme.space12),
+        // Second row - remaining numbers (up to 5)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: numbers.skip(5).take(5).map((num) => _buildNumberChip(num, size)).toList(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildNumberChip(int number, Size size) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.width * 0.02,
+        horizontal: size.width * 0.058,
+        vertical: size.width * 0.038,
       ),
       decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
+        gradient: AppTheme.numberGradient,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        boxShadow: AppTheme.buttonShadow(AppTheme.primary),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: AppTheme.primary.withOpacity(0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Text(
         number.toString().padLeft(2, '0'),
         style: TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: size.width * 0.04,
+          fontWeight: FontWeight.w800,
+          fontSize: size.width * 0.05,
+          letterSpacing: 0.8,
+          shadows: [
+            Shadow(
+              color: Colors.black.withOpacity(0.2),
+              offset: const Offset(0, 2),
+              blurRadius: 4,
+            ),
+          ],
         ),
       ),
     );

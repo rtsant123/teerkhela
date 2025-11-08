@@ -5,6 +5,8 @@ import '../models/prediction.dart';
 import '../models/user.dart';
 import '../models/dream_interpretation.dart';
 import '../models/game.dart';
+import '../models/forum_post.dart';
+import '../models/accuracy_stats.dart';
 
 class ApiService {
   // Railway backend URL
@@ -239,5 +241,172 @@ class ApiService {
       'userId': userId,
       'subscriptionId': subscriptionId,
     });
+  }
+
+  // Activate test subscription (for testing purposes)
+  static Future<void> activateTestSubscription({
+    required String userId,
+    required String subscriptionId,
+    required DateTime expiryDate,
+  }) async {
+    await _post('/subscriptions/activate-test', {
+      'userId': userId,
+      'subscriptionId': subscriptionId,
+      'expiryDate': expiryDate.toIso8601String(),
+      'isTest': true,
+    });
+  }
+
+  // ========== COMMUNITY FORUM METHODS ==========
+
+  // Get forum posts for a specific game (or all games if game is null/empty)
+  static Future<List<ForumPost>> getForumPosts({String? game}) async {
+    String endpoint;
+    if (game != null && game.isNotEmpty && game != 'all') {
+      endpoint = '/forum/posts/game/$game';
+    } else {
+      endpoint = '/forum/posts/latest';
+    }
+
+    final response = await _get(endpoint);
+
+    if (response['success']) {
+      final List<dynamic> posts = response['posts'] ?? response['data'] ?? [];
+      return posts.map((json) => ForumPost.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to get forum posts');
+    }
+  }
+
+  // Create a new forum post
+  static Future<ForumPost> createForumPost({
+    required String userId,
+    required String username,
+    required String game,
+    required String predictionType,
+    required List<int> numbers,
+    required int confidence,
+    required String description,
+  }) async {
+    final response = await _post('/forum/posts', {
+      'userId': userId,
+      'username': username,
+      'game': game,
+      'predictionType': predictionType,
+      'numbers': numbers,
+      'confidence': confidence,
+      'description': description,
+    });
+
+    if (response['success']) {
+      return ForumPost.fromJson(response['data']);
+    } else {
+      throw Exception('Failed to create forum post');
+    }
+  }
+
+  // Like a post
+  static Future<void> likePost(String postId, String userId) async {
+    await _post('/forum/posts/$postId/like', {
+      'userId': userId,
+    });
+  }
+
+  // Unlike a post
+  static Future<void> unlikePost(String postId, String userId) async {
+    await _post('/forum/posts/$postId/unlike', {
+      'userId': userId,
+    });
+  }
+
+  // Get community trends for a game (most common predicted numbers)
+  static Future<Map<String, dynamic>> getCommunityTrends({
+    required String game,
+    required String predictionType,
+  }) async {
+    final response = await _get('/forum/trends?game=$game&predictionType=$predictionType');
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to get community trends');
+    }
+  }
+
+  // ========== REFERRAL PROGRAM METHODS ==========
+
+  // Get referral stats for a user
+  static Future<Map<String, dynamic>> getReferralStats(String userId) async {
+    final response = await _get('/referral/$userId/code');
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to get referral stats');
+    }
+  }
+
+  // Apply a referral code
+  static Future<bool> applyReferralCode(String userId, String code) async {
+    final response = await _post('/referral/$userId/apply', {
+      'code': code,
+    });
+
+    if (response['success']) {
+      return true;
+    } else {
+      throw Exception(response['message'] ?? 'Failed to apply referral code');
+    }
+  }
+
+  // Claim referral rewards
+  static Future<Map<String, dynamic>> claimReferralRewards(String userId) async {
+    final response = await _post('/referral/$userId/claim', {});
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to claim referral rewards');
+    }
+  }
+
+  // Get referral leaderboard
+  static Future<List> getReferralLeaderboard() async {
+    final response = await _get('/referral/leaderboard');
+
+    if (response['success']) {
+      return response['data'] as List;
+    } else {
+      throw Exception('Failed to get referral leaderboard');
+    }
+  }
+
+  // ========== ACCURACY STATS METHODS ==========
+
+  // Get overall accuracy stats
+  static Future<AccuracyStats> getAccuracyStats({String? game, int days = 30}) async {
+    String endpoint = '/accuracy/overall?days=$days';
+    if (game != null && game.isNotEmpty) {
+      endpoint = '/accuracy/$game?days=$days';
+    }
+
+    final response = await _get(endpoint);
+
+    if (response['success']) {
+      return AccuracyStats.fromJson(response['data']);
+    } else {
+      throw Exception('Failed to get accuracy stats');
+    }
+  }
+
+  // Get accuracy stats for a specific game
+  static Future<AccuracyStats> getGameAccuracyStats(String game, {int days = 30}) async {
+    final response = await _get('/accuracy/$game?days=$days');
+
+    if (response['success']) {
+      return AccuracyStats.fromJson(response['data']);
+    } else {
+      throw Exception('Failed to get game accuracy stats');
+    }
   }
 }
