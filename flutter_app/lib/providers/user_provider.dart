@@ -211,8 +211,21 @@ class UserProvider with ChangeNotifier {
         expiryDate: expiryDate,
       );
 
-      // Refresh user status from backend
-      await refreshUserStatus();
+      // Update user locally with premium status
+      _user = User(
+        userId: _user!.userId,
+        email: _user!.email,
+        phoneNumber: _user!.phoneNumber,
+        name: _user!.name,
+        isPremium: true,
+        expiryDate: expiryDate,
+        daysLeft: days,
+        subscriptionId: testSubscriptionId,
+        isGuest: _user!.isGuest,
+      );
+
+      await StorageService.setUser(_user!);
+      notifyListeners();
 
       print('Test premium activated successfully via backend. isPremium: ${_user!.isPremium}');
     } catch (e) {
