@@ -259,6 +259,17 @@ const initDatabase = async () => {
       CREATE INDEX IF NOT EXISTS idx_referral_codes_code ON referral_codes(code);
     `);
 
+    // App Config Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_config (
+        id SERIAL PRIMARY KEY,
+        config_data JSONB NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        updated_by VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log('✅ Database tables initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing database:', error);
