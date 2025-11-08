@@ -4,6 +4,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../models/user.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
@@ -20,9 +21,10 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
 
-  // Razorpay Test Keys
-  static const String razorpayKeyId = 'rzp_test_RcNQd80r82gwlm';
-  static const String planId = 'plan_temp_will_update_later';
+  // Razorpay Production Keys
+  static const String razorpayKeyId = 'rzp_test_RcNQd80r82gwlm'; // TODO: Replace with live key
+  static const String planId = 'plan_PUmwDBdxGxFw5h'; // Monthly subscription plan
+  static const bool testMode = false; // Production mode - real Razorpay payments
 
   @override
   void initState() {
@@ -127,7 +129,77 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
       await StorageService.setEmail(email);
       userProvider.updateEmail(email);
 
-      // Create subscription on backend
+      // TEST MODE: Skip payment and activate premium directly
+      if (testMode) {
+        if (!mounted) return;
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.info, color: Colors.orange, size: 32),
+                SizedBox(width: 12),
+                Text('Test Mode'),
+              ],
+            ),
+            content: const Text(
+              'This is test mode. Payment integration is not configured yet.\n\nWould you like to activate premium for testing?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _isLoading = false;
+                  });
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    // Activate premium locally for testing (no backend call)
+                    await userProvider.activateTestPremium(30);
+
+                    if (!mounted) return;
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); // Go back
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('✓ Premium activated for testing (30 days)'),
+                        backgroundColor: AppTheme.success,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    Navigator.pop(context); // Close dialog
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to activate: ${e.toString()}'),
+                        backgroundColor: AppTheme.error,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Activate Premium'),
+              ),
+            ],
+          ),
+        );
+
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // PRODUCTION MODE: Real payment flow
       final subscriptionData = await ApiService.createSubscription(
         userId,
         email,
@@ -154,11 +226,12 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Unable to process subscription. Please try again later.'),
             backgroundColor: Colors.red,
           ),
         );
       }
+      print('Subscription error: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -457,7 +530,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                           ),
                           SizedBox(width: AppTheme.space8),
                           Text(
-                            'Subscribe Now - ₹29',
+                            'Subscribe Now - ₹49/month',
                             style: AppTheme.buttonText.copyWith(
                               fontSize: size.width * 0.042,
                             ),
@@ -467,6 +540,45 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
               ),
             ),
             SizedBox(height: AppTheme.space16),
+
+            // Test Account Button (for demo purposes)
+            TextButton.icon(
+              onPressed: () async {
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+                try {
+                  setState(() => _isLoading = true);
+                  await userProvider.activateTestPremium(30);
+
+                  if (!mounted) return;
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✓ Test premium activated for 30 days'),
+                      backgroundColor: AppTheme.success,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed: ${e.toString()}'),
+                      backgroundColor: AppTheme.error,
+                    ),
+                  );
+                } finally {
+                  if (mounted) setState(() => _isLoading = false);
+                }
+              },
+              icon: const Icon(Icons.science, size: 16),
+              label: const Text('Try Demo Account (30 Days)'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.textSecondary,
+              ),
+            ),
+            SizedBox(height: AppTheme.space8),
 
             // Terms
             Container(
