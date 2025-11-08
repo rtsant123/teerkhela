@@ -17,6 +17,7 @@ const paymentRoutes = require('./routes/payment');
 const adminRoutes = require('./routes/admin');
 const forumRoutes = require('./routes/forum');
 const referralRoutes = require('./routes/referral');
+const subscriptionsRoutes = require('./routes/subscriptions');
 
 // Import services for cron jobs
 const scraperService = require('./services/scraperService');
@@ -77,6 +78,7 @@ app.use('/api', premiumRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/referral', referralRoutes);
 
 // 404 handler
