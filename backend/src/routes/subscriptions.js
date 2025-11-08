@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
+const { pool } = require('../config/database');
 
 // Activate test subscription
 router.post('/activate-test', async (req, res) => {
@@ -14,27 +14,20 @@ router.post('/activate-test', async (req, res) => {
       });
     }
 
-    // Calculate days left
-    const expiry = new Date(expiryDate);
-    const now = new Date();
-    const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-
     // Update user with premium status
     const updateQuery = `
       UPDATE users
       SET is_premium = true,
           subscription_id = $1,
           expiry_date = $2,
-          days_left = $3,
           updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $4
+      WHERE id = $3
       RETURNING *
     `;
 
     const result = await pool.query(updateQuery, [
       subscriptionId,
       expiryDate,
-      daysLeft,
       userId
     ]);
 
@@ -47,14 +40,19 @@ router.post('/activate-test', async (req, res) => {
 
     console.log(`Test subscription activated for user ${userId}, expires: ${expiryDate}`);
 
+    // Calculate days left
+    const expiry = new Date(result.rows[0].expiry_date);
+    const now = new Date();
+    const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+
     res.json({
       success: true,
       message: 'Test subscription activated successfully',
       user: {
-        userId: result.rows[0].user_id,
+        userId: result.rows[0].id,
         isPremium: result.rows[0].is_premium,
         expiryDate: result.rows[0].expiry_date,
-        daysLeft: result.rows[0].days_left,
+        daysLeft: daysLeft,
         subscriptionId: result.rows[0].subscription_id
       }
     });
