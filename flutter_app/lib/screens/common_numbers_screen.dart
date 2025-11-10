@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/shimmer_widgets.dart';
 
 class CommonNumbersScreen extends StatefulWidget {
   const CommonNumbersScreen({super.key});
@@ -117,7 +118,7 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: size.height * 0.05),
+            SizedBox(height: size.height * 0.02),
 
             // Premium Icon - Responsive
             Container(
@@ -133,7 +134,7 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: AppTheme.space24),
+            SizedBox(height: AppTheme.space16),
 
             // Title - Responsive
             Text(
@@ -303,9 +304,43 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
 
   Widget _buildPremiumContent(Size size) {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+      return SingleChildScrollView(
+        padding: EdgeInsets.all(AppTheme.space12),
+        child: Column(
+          children: [
+            // Game selector shimmer
+            Container(
+              padding: EdgeInsets.all(AppTheme.space12),
+              decoration: AppTheme.cardDecoration,
+              child: AppShimmer(
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppTheme.space12),
+            // Info card shimmer
+            AppShimmer(
+              child: Container(
+                padding: EdgeInsets.all(AppTheme.space12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                ),
+                height: 40,
+              ),
+            ),
+            SizedBox(height: AppTheme.space16),
+            // Hot numbers shimmer
+            ShimmerCommonNumbersCard(size: size),
+            SizedBox(height: AppTheme.space16),
+            // Cold numbers shimmer
+            ShimmerCommonNumbersCard(size: size),
+          ],
         ),
       );
     }
@@ -506,7 +541,7 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
             children: [
               Text(
                 emoji,
-                style: TextStyle(fontSize: size.width * 0.065),
+                style: TextStyle(fontSize: size.width * 0.05),
               ),
               SizedBox(width: AppTheme.space8),
               Expanded(
@@ -531,55 +566,53 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
             ],
           ),
           SizedBox(height: AppTheme.space12),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Calculate optimal number chip size based on screen width
-              final availableWidth = constraints.maxWidth;
-              final spacing = AppTheme.space8;
-              final chipsPerRow = (availableWidth / 70).floor().clamp(3, 6);
-              final chipWidth = (availableWidth - (spacing * (chipsPerRow - 1))) / chipsPerRow;
-
-              return Wrap(
-                spacing: spacing,
-                runSpacing: spacing,
-                children: numbers.map((item) {
-                  final number = item['number'] as int;
-                  final count = item['count'] as int;
-                  return Container(
-                    width: chipWidth,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppTheme.space8,
-                      vertical: AppTheme.space8,
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              childAspectRatio: 1.0,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: numbers.length,
+            itemBuilder: (context, index) {
+              final item = numbers[index];
+              final number = item['number'] as int;
+              final count = item['count'] as int;
+              return Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.space8,
+                  vertical: AppTheme.space8,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(AppTheme.opacityMedium),
+                  border: Border.all(color: color, width: 1.5),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      number.toString().padLeft(2, '0'),
+                      style: TextStyle(
+                        fontSize: AppTheme.numberSizeSmall(size.width),
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      border: Border.all(color: color, width: 1.5),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                    SizedBox(height: AppTheme.space4),
+                    Text(
+                      '$count×',
+                      style: TextStyle(
+                        fontSize: size.width * 0.027,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          number.toString().padLeft(2, '0'),
-                          style: TextStyle(
-                            fontSize: size.width * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        ),
-                        SizedBox(height: AppTheme.space4),
-                        Text(
-                          '$count×',
-                          style: TextStyle(
-                            fontSize: size.width * 0.027,
-                            color: AppTheme.textSecondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                  ],
+                ),
               );
             },
           ),

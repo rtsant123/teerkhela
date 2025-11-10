@@ -171,18 +171,8 @@ class DreamService {
       // Step 5: Generate analysis in English
       let englishAnalysis = this.generateAnalysis(foundSymbols, symbolMeanings, hotNumbers, targetGame);
 
-      // Step 6: Translate analysis back to user's language
-      let finalAnalysis = englishAnalysis;
-      if (detectedLang !== 'en') {
-        try {
-          const translatedAnalysis = await translate(englishAnalysis, { to: detectedLang });
-          finalAnalysis = translatedAnalysis.text;
-        } catch (error) {
-          console.error('Translation error for analysis:', error.message);
-          // Keep English if translation fails
-          finalAnalysis = englishAnalysis;
-        }
-      }
+      // Step 6: Generate multilingual responses (7 languages)
+      const multilingualAnalysis = await this.generateMultilingualResponse(englishAnalysis);
 
       // Step 7: Calculate confidence
       const confidence = this.calculateConfidence(foundSymbols.length, pastResults.length);
@@ -194,7 +184,7 @@ class DreamService {
         detectedLang,
         foundSymbols,
         finalNumbers,
-        finalAnalysis,
+        englishAnalysis,
         confidence,
         targetGame
       );
@@ -205,7 +195,8 @@ class DreamService {
         symbols: foundSymbols,
         symbolMeanings: symbolMeanings,
         numbers: finalNumbers,
-        analysis: finalAnalysis,
+        analysis: multilingualAnalysis.en, // Default English for legacy support
+        multilingualAnalysis: multilingualAnalysis, // New multilingual field
         confidence: confidence,
         basedOnPastResults: pastResults.length > 0,
         recentHotNumbers: hotNumbers.slice(0, 5),
@@ -316,6 +307,172 @@ class DreamService {
   // Get dream dictionary (for admin management)
   getDreamDictionary() {
     return dreamDictionary;
+  }
+
+  // Generate native multilingual responses (7 languages)
+  async generateMultilingualResponse(englishText) {
+    const responses = {
+      en: englishText,
+      hi: '',
+      hinglish: '',
+      bn: '',
+      as: '',
+      kha: '',
+      ne: ''
+    };
+
+    try {
+      // Translate to each language in parallel with better context
+      const translations = await Promise.allSettled([
+        translate(englishText, { to: 'hi', from: 'en' }), // Hindi
+        translate(englishText, { to: 'bn', from: 'en' }), // Bengali
+        translate(englishText, { to: 'as', from: 'en' }), // Assamese
+        translate(englishText, { to: 'ne', from: 'en' }), // Nepali
+      ]);
+
+      // Process translations with improvements
+      if (translations[0].status === 'fulfilled') {
+        responses.hi = this.improveHindi(translations[0].value.text);
+      }
+      if (translations[1].status === 'fulfilled') {
+        responses.bn = this.improveBengali(translations[1].value.text);
+      }
+      if (translations[2].status === 'fulfilled') {
+        responses.as = this.improveAssamese(translations[2].value.text);
+      }
+      if (translations[3].status === 'fulfilled') {
+        responses.ne = this.improveNepali(translations[3].value.text);
+      }
+
+      // Generate natural Hinglish (popular in Northeast India)
+      responses.hinglish = this.generateNaturalHinglish(englishText);
+
+      // Generate Khasi (native language of Meghalaya - where Shillong Teer is played)
+      responses.kha = this.generateKhasi(englishText);
+
+      return responses;
+    } catch (error) {
+      console.error('Multilingual translation error:', error);
+      // Generate fallbacks with some localization
+      return {
+        en: englishText,
+        hi: this.generateBasicHindi(englishText),
+        hinglish: this.generateNaturalHinglish(englishText),
+        bn: englishText,
+        as: englishText,
+        kha: this.generateKhasi(englishText),
+        ne: englishText
+      };
+    }
+  }
+
+  // Improve Hindi translation to sound more natural
+  improveHindi(text) {
+    return text
+      .replace(/टीर/g, 'Teer')  // Keep Teer in English
+      .replace(/शिलांग/g, 'Shillong')  // Keep place names in English
+      .replace(/FR/g, 'FR')
+      .replace(/SR/g, 'SR')
+      .replace(/एफआर/g, 'FR')
+      .replace(/एसआर/g, 'SR');
+  }
+
+  // Improve Bengali translation
+  improveBengali(text) {
+    return text
+      .replace(/টির/g, 'Teer')
+      .replace(/শিলং/g, 'Shillong')
+      .replace(/এফআর/g, 'FR')
+      .replace(/এসআর/g, 'SR');
+  }
+
+  // Improve Assamese translation
+  improveAssamese(text) {
+    return text
+      .replace(/টীৰ/g, 'Teer')
+      .replace(/শ্বিলং/g, 'Shillong')
+      .replace(/এফআৰ/g, 'FR')
+      .replace(/এছআৰ/g, 'SR');
+  }
+
+  // Improve Nepali translation
+  improveNepali(text) {
+    return text
+      .replace(/टियर/g, 'Teer')
+      .replace(/शिलोङ/g, 'Shillong')
+      .replace(/एफआर/g, 'FR')
+      .replace(/एसआर/g, 'SR');
+  }
+
+  // Generate natural Hinglish (very popular in India)
+  generateNaturalHinglish(english) {
+    // Hinglish keeps English technical terms but uses Hindi grammar and common words
+    let hinglish = english;
+
+    // Common replacements for natural Hinglish
+    const replacements = {
+      'Your dream': 'Aapka dream',
+      'contains': 'mein hai',
+      'powerful symbols': 'powerful symbols',
+      'represents': 'represent karta hai',
+      'These symbols suggest': 'Ye symbols batate hain ki',
+      'based on': 'ke base par',
+      'traditional dream interpretation': 'traditional dream interpretation',
+      'Combined with': 'Iske saath',
+      'recent hot numbers': 'recent hot numbers',
+      'these predictions have': 'ye predictions hai',
+      'strong potential': 'bahut strong',
+      'The recommended numbers are': 'Recommended numbers hain',
+      'statistical analysis': 'statistical analysis',
+      'past results': 'past results',
+      'Use these numbers wisely': 'In numbers ko samajhdari se use karein',
+      'Good luck': 'Best of luck',
+      'Teer': 'Teer'
+    };
+
+    for (const [eng, hing] of Object.entries(replacements)) {
+      hinglish = hinglish.replace(new RegExp(eng, 'gi'), hing);
+    }
+
+    return hinglish;
+  }
+
+  // Generate Khasi language response (native to Meghalaya, Shillong)
+  generateKhasi(english) {
+    // Khasi is the native language of Shillong, Meghalaya where Teer is played
+    // Mix English with Khasi terms for authenticity
+    let khasi = english;
+
+    const khasiTerms = {
+      'dream': 'ieiñkynmaw',
+      'numbers': 'thoh',
+      'luck': 'suk',
+      'symbols': 'ki jiingsngewthuh',
+      'powerful': 'ba lah',
+      'Good luck': 'Suk ha phi',
+      'represents': 'pynsuk',
+      'suggests': 'pynthiah',
+      'predictions': 'ka jingsngewbha',
+      'analysis': 'ka jingpyndep',
+      'results': 'ki jingïap'
+    };
+
+    for (const [eng, kha] of Object.entries(khasiTerms)) {
+      khasi = khasi.replace(new RegExp(eng, 'gi'), kha);
+    }
+
+    // Add Khasi greeting/closing
+    khasi = 'Kumno! ' + khasi + ' Suk ha phi!';
+
+    return khasi;
+  }
+
+  // Generate basic Hindi when translation fails
+  generateBasicHindi(english) {
+    // Simple Hindi version as fallback
+    return 'आपका स्वप्न विशेष प्रतीकों से भरा है। ' +
+           'ये संख्याएं पारंपरिक स्वप्न व्याख्या और Teer के पिछले परिणामों के आधार पर हैं। ' +
+           'इन संख्याओं का बुद्धिमानी से उपयोग करें। शुभकामनाएं!';
   }
 }
 

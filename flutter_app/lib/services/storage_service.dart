@@ -77,6 +77,51 @@ class StorageService {
     return _prefs?.getBool('notificationsEnabled') ?? true;
   }
 
+  // Onboarding complete
+  static Future<void> setOnboardingComplete(bool complete) async {
+    await _prefs?.setBool('onboarding_complete', complete);
+  }
+
+  static bool getOnboardingComplete() {
+    return _prefs?.getBool('onboarding_complete') ?? false;
+  }
+
+  // Phone number
+  static Future<void> setPhoneNumber(String phoneNumber) async {
+    await _prefs?.setString('phoneNumber', phoneNumber);
+  }
+
+  static String? getPhoneNumber() {
+    return _prefs?.getString('phoneNumber');
+  }
+
+  // Login state
+  static Future<void> setIsLoggedIn(bool isLoggedIn) async {
+    await _prefs?.setBool('isLoggedIn', isLoggedIn);
+  }
+
+  static bool getIsLoggedIn() {
+    return _prefs?.getBool('isLoggedIn') ?? false;
+  }
+
+  // Dark Mode preference
+  static Future<void> setDarkMode(bool isDarkMode) async {
+    await _prefs?.setBool('darkMode', isDarkMode);
+  }
+
+  static Future<bool> getDarkMode() async {
+    return _prefs?.getBool('darkMode') ?? false;
+  }
+
+  // Device ID (for device-based premium)
+  static Future<void> setDeviceId(String deviceId) async {
+    await _prefs?.setString('deviceId', deviceId);
+  }
+
+  static String? getDeviceId() {
+    return _prefs?.getString('deviceId');
+  }
+
   // Clear all data
   static Future<void> clearAll() async {
     await _prefs?.clear();
@@ -86,5 +131,7 @@ class StorageService {
   static Future<void> clearUserData() async {
     await _prefs?.remove('user');
     await _prefs?.remove('email');
+    await _prefs?.remove('phoneNumber');
+    await _prefs?.remove('isLoggedIn');
   }
 }

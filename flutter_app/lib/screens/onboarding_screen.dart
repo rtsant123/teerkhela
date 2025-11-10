@@ -141,7 +141,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.sports_cricket,
+              Icons.track_changes,
               size: 60,
               color: Colors.white,
             ),
@@ -162,7 +162,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           // Description
           const Text(
-            'Get real-time results for all 6 Teer games including Shillong, Khanapara, and Juwai',
+            'Get real-time Teer results & AI predictions for Shillong, Khanapara, Juwai & more',
             style: TextStyle(
               fontSize: 16,
               color: AppTheme.textSecondary,
@@ -221,12 +221,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 32),
 
-          // Sample Numbers
+          // Sample Numbers (Real Teer prediction examples)
           Wrap(
             spacing: 8,
             runSpacing: 8,
             alignment: WrapAlignment.center,
-            children: ['45', '78', '23', '91', '67', '12', '88', '54']
+            children: ['12', '34', '56', '78', '90', '23', '45', '67', '89', '01']
                 .map((num) => Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

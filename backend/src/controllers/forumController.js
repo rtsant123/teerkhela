@@ -116,7 +116,8 @@ const getUserPosts = async (req, res) => {
 // Like a post
 const likePost = async (req, res) => {
   try {
-    const { postId, userId } = req.body;
+    const { postId } = req.params;
+    const { userId } = req.body;
 
     if (!postId || !userId) {
       return res.status(400).json({
@@ -143,7 +144,8 @@ const likePost = async (req, res) => {
 // Unlike a post
 const unlikePost = async (req, res) => {
   try {
-    const { postId, userId } = req.body;
+    const { postId } = req.params;
+    const { userId } = req.body;
 
     if (!postId || !userId) {
       return res.status(400).json({

@@ -327,9 +327,9 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                         ),
                       ),
                       Text(
-                        '29',
+                        '49',
                         style: TextStyle(
-                          fontSize: size.width * 0.15,
+                          fontSize: size.width * 0.08,
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           height: 1,
@@ -372,59 +372,49 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
             ),
             SizedBox(height: AppTheme.space24),
 
-            // Features Section
+            // Features Section - Simplified to 3 Key Benefits
             Container(
-              padding: EdgeInsets.all(AppTheme.space16),
+              padding: EdgeInsets.all(AppTheme.space20),
               decoration: AppTheme.cardDecoration,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Premium Features',
-                    style: AppTheme.heading3.copyWith(
-                      fontSize: size.width * 0.05,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.workspace_premium,
+                        color: AppTheme.premiumPurple,
+                        size: size.width * 0.065,
+                      ),
+                      SizedBox(width: AppTheme.space12),
+                      Text(
+                        'What You Get',
+                        style: AppTheme.heading3.copyWith(
+                          fontSize: size.width * 0.055,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: AppTheme.space20),
+                  _buildFeatureItem(
+                    Icons.auto_graph,
+                    'AI Predictions (10 Numbers)',
+                    'Daily AI predictions for FR & SR in all 6 Teer games',
+                    size,
                   ),
                   SizedBox(height: AppTheme.space16),
                   _buildFeatureItem(
-                    Icons.auto_graph,
-                    'AI Predictions',
-                    'Daily AI-powered predictions for all 6 Teer games',
-                    size,
-                  ),
-                  SizedBox(height: AppTheme.space12),
-                  _buildFeatureItem(
                     Icons.nights_stay,
-                    'Dream Bot',
-                    'Multi-language dream interpretation with number suggestions',
+                    'Dream Interpreter Bot',
+                    '100+ symbols in Hindi, Bengali, English & more',
                     size,
                   ),
-                  SizedBox(height: AppTheme.space12),
+                  SizedBox(height: AppTheme.space16),
                   _buildFeatureItem(
                     Icons.bar_chart,
-                    'Advanced Analytics',
-                    '30 days result history with hot/cold numbers analysis',
-                    size,
-                  ),
-                  SizedBox(height: AppTheme.space12),
-                  _buildFeatureItem(
-                    Icons.calculate,
-                    'Formula Calculator',
-                    'House, Ending, and Sum formula calculations',
-                    size,
-                  ),
-                  SizedBox(height: AppTheme.space12),
-                  _buildFeatureItem(
-                    Icons.notifications_active,
-                    'Push Notifications',
-                    'Daily predictions and instant result alerts',
-                    size,
-                  ),
-                  SizedBox(height: AppTheme.space12),
-                  _buildFeatureItem(
-                    Icons.support_agent,
-                    'Priority Support',
-                    '24/7 premium customer support',
+                    'Complete Analytics',
+                    '30-day history • Common numbers • Formula calculator',
                     size,
                   ),
                 ],

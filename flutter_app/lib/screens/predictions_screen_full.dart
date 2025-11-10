@@ -283,7 +283,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.all(cardPadding),
+        padding: EdgeInsets.all(AppTheme.space16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -294,7 +294,6 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                   child: Text(
                     prediction.displayName,
                     style: AppTheme.heading3.copyWith(
-                      fontSize: size.width * 0.045,
                       color: AppTheme.primary,
                     ),
                   ),
@@ -307,9 +306,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
             // FR Predictions
             Text(
               'First Round (FR) Predictions',
-              style: AppTheme.bodyMedium.copyWith(
-                fontSize: size.width * 0.038,
-                fontWeight: FontWeight.bold,
+              style: AppTheme.subtitle1.copyWith(
                 color: AppTheme.textSecondary,
               ),
             ),
@@ -320,9 +317,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
             // SR Predictions
             Text(
               'Second Round (SR) Predictions',
-              style: AppTheme.bodyMedium.copyWith(
-                fontSize: size.width * 0.038,
-                fontWeight: FontWeight.bold,
+              style: AppTheme.subtitle1.copyWith(
                 color: AppTheme.textSecondary,
               ),
             ),
@@ -332,7 +327,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
 
             // Analysis
             Container(
-              padding: EdgeInsets.all(cardPadding * 0.75),
+              padding: EdgeInsets.all(AppTheme.space12),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
@@ -355,7 +350,6 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                         'AI Analysis',
                         style: AppTheme.bodyMedium.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: size.width * 0.033,
                         ),
                       ),
                     ],
@@ -363,10 +357,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                   SizedBox(height: AppTheme.space8),
                   Text(
                     prediction.analysis,
-                    style: AppTheme.bodySmall.copyWith(
-                      fontSize: size.width * 0.032,
-                      height: 1.5,
-                    ),
+                    style: AppTheme.bodySmall,
                   ),
                 ],
               ),
@@ -378,30 +369,25 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
   }
 
   Widget _buildNumberGrid(List<int> numbers, Size size) {
-    // Display 10 numbers in 2 rows of 5
-    return Column(
-      children: [
-        // First row - 5 numbers
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: numbers.take(5).map((num) => _buildNumberChip(num, size)).toList(),
-        ),
-        SizedBox(height: AppTheme.space12),
-        // Second row - remaining numbers (up to 5)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: numbers.skip(5).take(5).map((num) => _buildNumberChip(num, size)).toList(),
-        ),
-      ],
+    // Display 10 numbers in 2 rows of 5 using GridView
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 5,
+        crossAxisSpacing: AppTheme.space8,
+        mainAxisSpacing: AppTheme.space8,
+        childAspectRatio: 1.0,
+      ),
+      itemCount: numbers.length,
+      itemBuilder: (context, index) {
+        return _buildNumberChip(numbers[index], size);
+      },
     );
   }
 
   Widget _buildNumberChip(int number, Size size) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.058,
-        vertical: size.width * 0.038,
-      ),
       decoration: BoxDecoration(
         gradient: AppTheme.numberGradient,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -420,20 +406,22 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
           ),
         ],
       ),
-      child: Text(
-        number.toString().padLeft(2, '0'),
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: size.width * 0.05,
-          letterSpacing: 0.8,
-          shadows: [
-            Shadow(
-              color: Colors.black.withOpacity(0.2),
-              offset: const Offset(0, 2),
-              blurRadius: 4,
-            ),
-          ],
+      child: Center(
+        child: Text(
+          number.toString().padLeft(2, '0'),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: AppTheme.numberSize(size.width),
+            letterSpacing: 0.8,
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.2),
+                offset: const Offset(0, 2),
+                blurRadius: 4,
+              ),
+            ],
+          ),
         ),
       ),
     );

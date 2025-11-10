@@ -10,6 +10,7 @@ import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/shimmer_widgets.dart';
 import '../widgets/accuracy_banner_widget.dart';
+import '../models/accuracy_stats.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,11 +23,27 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, TeerResult> _results = {};
   bool _isLoading = true;
   String? _error;
+  AccuracyStats? _hitStats;
 
   @override
   void initState() {
     super.initState();
     _loadResults();
+    _loadHitStats();
+  }
+
+  Future<void> _loadHitStats() async {
+    try {
+      final stats = await ApiService.getAccuracyStats(days: 1);
+      if (mounted) {
+        setState(() {
+          _hitStats = stats;
+        });
+      }
+    } catch (e) {
+      // Silently fail - hit stats are optional
+      print('Could not load hit stats: $e');
+    }
   }
 
   Future<void> _loadResults() async {
@@ -268,6 +285,112 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const AccuracyBannerWidget(),
             ),
 
+            // Hit Numbers Banner for Premium Users
+            if (userProvider.isPremium && _hitStats != null)
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/hit-numbers');
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(horizontalPadding * 1.2),
+                  margin: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: AppTheme.space8,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.success,
+                        AppTheme.success.withOpacity(0.7),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.success.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(AppTheme.space12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        ),
+                        child: Icon(
+                          Icons.track_changes,
+                          color: Colors.white,
+                          size: iconSize * 0.7,
+                        ),
+                      ),
+                      SizedBox(width: AppTheme.space12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  '🎯 Today\'s Hits',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: size.width * 0.042,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                if (_hitStats!.successfulPredictions > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                      ),
+                                      child: Text(
+                                        '${_hitStats!.overallAccuracy.toStringAsFixed(0)}%',
+                                        style: TextStyle(
+                                          color: AppTheme.success,
+                                          fontSize: size.width * 0.028,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            SizedBox(height: AppTheme.space4),
+                            Text(
+                              '${_hitStats!.successfulPredictions}/${_hitStats!.totalPredictions} predictions matched',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: size.width * 0.032,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: AppTheme.iconSmall(size.width),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // Premium Banner for Free Users - Enhanced
             if (!userProvider.isPremium)
               Container(
@@ -295,10 +418,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(AppTheme.space12),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                       ),
                       child: Icon(
                         Icons.workspace_premium,
@@ -334,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(AppTheme.space20),
                             ),
                             child: Text(
                               '50% OFF - Just ₹49/month',
@@ -354,7 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withOpacity(AppTheme.opacityMedium),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -394,12 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 12),
                   Text(
                     'Today\'s Results',
-                    style: TextStyle(
-                      fontSize: size.width * 0.05,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
-                      letterSpacing: 0.5,
-                    ),
+                    style: AppTheme.heading2,
                   ),
                   const Spacer(),
                   Text(
@@ -435,9 +553,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all(AppTheme.space24),
                         decoration: BoxDecoration(
-                          color: AppTheme.error.withOpacity(0.1),
+                          color: AppTheme.error.withOpacity(AppTheme.opacityMedium),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -532,27 +650,8 @@ class _HomeScreenState extends State<HomeScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
-            spreadRadius: -4,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: gameGradient.colors.first.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-            spreadRadius: -2,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppTheme.space20),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -564,9 +663,9 @@ class _HomeScreenState extends State<HomeScreen> {
               arguments: {'game': result.game, 'displayName': result.displayName},
             );
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.space20),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppTheme.space20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -579,7 +678,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 56,
                       decoration: BoxDecoration(
                         gradient: gameGradient,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                         boxShadow: [
                           BoxShadow(
                             color: gameGradient.colors.first.withOpacity(0.3),
@@ -603,12 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             result.displayName,
-                            style: TextStyle(
-                              fontSize: size.width * 0.048,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1F2937),
-                              letterSpacing: 0.3,
-                            ),
+                            style: AppTheme.heading3,
                           ),
                           const SizedBox(height: 4),
                           Row(
@@ -637,7 +731,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: statusColor,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppTheme.space20),
                         boxShadow: [
                           BoxShadow(
                             color: statusColor.withOpacity(0.3),
@@ -663,10 +757,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Results: FR & SR - Big and Clear
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppTheme.space20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                     border: Border.all(
                       color: Colors.grey.shade200,
                       width: 2,
@@ -680,52 +774,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               'FIRST ROUND',
-                              style: TextStyle(
-                                fontSize: size.width * 0.028,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textSecondary,
-                                letterSpacing: 0.8,
-                              ),
+                              style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF4F46E5), Color(0xFF3B82F6), Color(0xFF2563EB)],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  stops: [0.0, 0.5, 1.0],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF3B82F6).withOpacity(0.4),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 8),
-                                    spreadRadius: 0,
-                                  ),
-                                  BoxShadow(
-                                    color: const Color(0xFF3B82F6).withOpacity(0.2),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                    spreadRadius: 0,
-                                  ),
-                                ],
+                                gradient: AppTheme.frGradient,
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                boxShadow: AppTheme.buttonShadow(AppTheme.frColor),
                               ),
                               child: Text(
                                 result.fr?.toString().padLeft(2, '0') ?? '--',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: size.width * 0.10,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: AppTheme.numberSize(size.width),
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   letterSpacing: 2,
                                   height: 1.0,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withOpacity(AppTheme.opacityMedium),
                                       offset: const Offset(0, 2),
                                       blurRadius: 4,
                                     ),
@@ -745,52 +816,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               'SECOND ROUND',
-                              style: TextStyle(
-                                fontSize: size.width * 0.028,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textSecondary,
-                                letterSpacing: 0.8,
-                              ),
+                              style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF10B981), Color(0xFF059669), Color(0xFF047857)],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  stops: [0.0, 0.5, 1.0],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF10B981).withOpacity(0.4),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 8),
-                                    spreadRadius: 0,
-                                  ),
-                                  BoxShadow(
-                                    color: const Color(0xFF10B981).withOpacity(0.2),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                    spreadRadius: 0,
-                                  ),
-                                ],
+                                gradient: AppTheme.srGradient,
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                boxShadow: AppTheme.buttonShadow(AppTheme.srColor),
                               ),
                               child: Text(
                                 result.sr?.toString().padLeft(2, '0') ?? '--',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: size.width * 0.10,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: AppTheme.numberSize(size.width),
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   letterSpacing: 2,
                                   height: 1.0,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withOpacity(AppTheme.opacityMedium),
                                       offset: const Offset(0, 2),
                                       blurRadius: 4,
                                     ),

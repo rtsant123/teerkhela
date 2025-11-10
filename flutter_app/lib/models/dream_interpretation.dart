@@ -5,6 +5,7 @@ class DreamInterpretation {
   final Map<String, String> symbolMeanings;
   final List<int> numbers;
   final String analysis;
+  final Map<String, String>? multilingualAnalysis; // NEW: 7 languages
   final int confidence;
   final bool basedOnPastResults;
   final List<int> recentHotNumbers;
@@ -17,6 +18,7 @@ class DreamInterpretation {
     required this.symbolMeanings,
     required this.numbers,
     required this.analysis,
+    this.multilingualAnalysis,
     required this.confidence,
     required this.basedOnPastResults,
     required this.recentHotNumbers,
@@ -31,6 +33,9 @@ class DreamInterpretation {
       symbolMeanings: Map<String, String>.from(json['symbolMeanings'] ?? {}),
       numbers: List<int>.from(json['numbers'] ?? []),
       analysis: json['analysis'] ?? '',
+      multilingualAnalysis: json['multilingualAnalysis'] != null
+          ? Map<String, String>.from(json['multilingualAnalysis'])
+          : null,
       confidence: json['confidence'] ?? 0,
       basedOnPastResults: json['basedOnPastResults'] ?? false,
       recentHotNumbers: List<int>.from(json['recentHotNumbers'] ?? []),
@@ -46,6 +51,7 @@ class DreamInterpretation {
       'symbolMeanings': symbolMeanings,
       'numbers': numbers,
       'analysis': analysis,
+      'multilingualAnalysis': multilingualAnalysis,
       'confidence': confidence,
       'basedOnPastResults': basedOnPastResults,
       'recentHotNumbers': recentHotNumbers,

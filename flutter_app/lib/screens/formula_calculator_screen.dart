@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
+import '../utils/app_theme.dart';
+import 'package:shimmer/shimmer.dart';
 
 class FormulaCalculatorScreen extends StatefulWidget {
   const FormulaCalculatorScreen({super.key});
@@ -116,8 +118,11 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
     final userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Formula Calculator'),
+        backgroundColor: AppTheme.primary,
+        elevation: 0,
       ),
       body: userProvider.isPremium
           ? _buildCalculatorView()
@@ -126,46 +131,71 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
   }
 
   Widget _buildPremiumGate() {
+    final size = MediaQuery.of(context).size;
+    final iconSize = size.width * 0.2;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(AppTheme.space24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.calculate,
-              size: 80,
-              color: Color(0xFF7c3aed),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Premium Feature',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+            Container(
+              width: iconSize,
+              height: iconSize,
+              decoration: const BoxDecoration(
+                gradient: AppTheme.premiumGradient,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.calculate,
+                size: iconSize * 0.5,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: AppTheme.space24),
+            Text(
+              'Premium Feature',
+              style: AppTheme.heading1.copyWith(
+                fontSize: size.width * 0.065,
+              ),
+            ),
+            SizedBox(height: AppTheme.space12),
+            Text(
               'Formula calculator is available for premium members only',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondary,
               ),
             ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/subscribe');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7c3aed),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            SizedBox(height: AppTheme.space32),
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 400),
+              decoration: BoxDecoration(
+                gradient: AppTheme.premiumGradient,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
               ),
-              child: const Text(
-                'Upgrade to Premium - ₹49/month • 50% OFF',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/subscribe');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.space24,
+                    vertical: AppTheme.space16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                ),
+                child: Text(
+                  'Upgrade to Premium - ₹49/month',
+                  style: AppTheme.buttonText.copyWith(color: Colors.white),
+                ),
               ),
             ),
           ],
@@ -175,40 +205,64 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
   }
 
   Widget _buildCalculatorView() {
+    final size = MediaQuery.of(context).size;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppTheme.space16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Info Card
-          Card(
-            color: Colors.blue.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: const [
-                  Icon(Icons.info_outline, color: Colors.blue),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Enter previous results to calculate predictions based on traditional Teer formulas',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
+          Container(
+            padding: EdgeInsets.all(AppTheme.space16),
+            decoration: BoxDecoration(
+              color: AppTheme.info.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              border: Border.all(
+                color: AppTheme.info.withOpacity(0.3),
+                width: 1,
               ),
             ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: AppTheme.info, size: size.width * 0.05),
+                SizedBox(width: AppTheme.space12),
+                Expanded(
+                  child: Text(
+                    'Enter previous results to calculate predictions based on traditional Teer formulas',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppTheme.space20),
 
           // Game Selector
           DropdownButtonFormField<String>(
             value: _selectedGame,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Select Game',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.sports_esports),
+              labelStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                borderSide: BorderSide(color: AppTheme.primary.withOpacity(0.3)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                borderSide: BorderSide(color: AppTheme.primary, width: 2),
+              ),
+              prefixIcon: Icon(Icons.sports_esports, color: AppTheme.primary),
+              filled: true,
+              fillColor: AppTheme.surface,
             ),
+            style: AppTheme.bodyMedium,
             items: _games.entries.map((entry) {
               return DropdownMenuItem(
                 value: entry.key,
@@ -221,16 +275,31 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
               });
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppTheme.space16),
 
           // Formula Selector
           DropdownButtonFormField<String>(
             value: _selectedFormula,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Select Formula',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.functions),
+              labelStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                borderSide: BorderSide(color: AppTheme.primary.withOpacity(0.3)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                borderSide: BorderSide(color: AppTheme.primary, width: 2),
+              ),
+              prefixIcon: Icon(Icons.functions, color: AppTheme.primary),
+              filled: true,
+              fillColor: AppTheme.surface,
             ),
+            style: AppTheme.bodyMedium,
             items: _formulas.entries.map((entry) {
               return DropdownMenuItem(
                 value: entry.key,
@@ -243,55 +312,85 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
               });
             },
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: AppTheme.space24),
 
           // Previous Results Section
           Row(
             children: [
-              const Text(
+              Text(
                 'Previous Results',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                style: AppTheme.heading3.copyWith(
+                  fontSize: size.width * 0.048,
                 ),
               ),
               const Spacer(),
-              TextButton.icon(
-                onPressed: _addResultField,
-                icon: const Icon(Icons.add),
-                label: const Text('Add'),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+                child: TextButton.icon(
+                  onPressed: _addResultField,
+                  icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                  label: Text(
+                    'Add',
+                    style: AppTheme.buttonText.copyWith(color: Colors.white),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppTheme.space16,
+                      vertical: AppTheme.space8,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppTheme.space16),
 
           // Result Input Fields
           ..._resultControllers.asMap().entries.map((entry) {
             final index = entry.key;
             final controllers = entry.value;
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
+            return Container(
+              margin: EdgeInsets.only(bottom: AppTheme.space12),
+              decoration: AppTheme.cardDecoration,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(AppTheme.space16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Text(
-                          'Result ${index + 1}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppTheme.space12,
+                            vertical: AppTheme.space4,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                          ),
+                          child: Text(
+                            'Result ${index + 1}',
+                            style: AppTheme.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                         const Spacer(),
                         if (_resultControllers.length > 1)
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                            icon: Icon(Icons.delete_outline, color: AppTheme.error, size: 24),
                             onPressed: () => _removeResultField(index),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: AppTheme.space16),
                     Row(
                       children: [
                         Expanded(
@@ -299,23 +398,57 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
                             controller: controllers['fr'],
                             keyboardType: TextInputType.number,
                             maxLength: 2,
-                            decoration: const InputDecoration(
-                              labelText: 'FR',
-                              border: OutlineInputBorder(),
+                            style: AppTheme.bodyLarge.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: size.width * 0.045,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'FR (First Round)',
+                              labelStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                borderSide: BorderSide(color: AppTheme.primary, width: 2),
+                              ),
                               counterText: '',
+                              filled: true,
+                              fillColor: AppTheme.surfaceVariant.withOpacity(0.3),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: AppTheme.space16),
                         Expanded(
                           child: TextField(
                             controller: controllers['sr'],
                             keyboardType: TextInputType.number,
                             maxLength: 2,
-                            decoration: const InputDecoration(
-                              labelText: 'SR',
-                              border: OutlineInputBorder(),
+                            style: AppTheme.bodyLarge.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: size.width * 0.045,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'SR (Second Round)',
+                              labelStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                borderSide: BorderSide(color: AppTheme.textSecondary.withOpacity(0.3)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                borderSide: BorderSide(color: AppTheme.primary, width: 2),
+                              ),
                               counterText: '',
+                              filled: true,
+                              fillColor: AppTheme.surfaceVariant.withOpacity(0.3),
                             ),
                           ),
                         ),
@@ -327,43 +460,77 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
             );
           }).toList(),
 
-          const SizedBox(height: 24),
+          SizedBox(height: AppTheme.space24),
 
           // Calculate Button
-          ElevatedButton(
-            onPressed: _isLoading ? null : _calculate,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF7c3aed),
-              padding: const EdgeInsets.symmetric(vertical: 16),
+          Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: _isLoading ? null : AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              boxShadow: _isLoading ? null : AppTheme.buttonShadow(AppTheme.primary),
             ),
-            child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _calculate,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isLoading ? AppTheme.textSecondary.withOpacity(0.5) : Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: EdgeInsets.symmetric(vertical: AppTheme.space16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+              ),
+              child: _isLoading
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: AppTheme.space12),
+                        Text(
+                          'Calculating...',
+                          style: AppTheme.buttonText.copyWith(
+                            color: Colors.white,
+                            fontSize: size.width * 0.042,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      'Calculate Predictions',
+                      style: AppTheme.buttonText.copyWith(
+                        color: Colors.white,
+                        fontSize: size.width * 0.042,
+                      ),
                     ),
-                  )
-                : const Text(
-                    'Calculate',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
+            ),
           ),
 
           // Results
           if (_calculationResult != null) ...[
-            const SizedBox(height: 24),
-            const Divider(thickness: 2),
-            const SizedBox(height: 16),
-            _buildResults(_calculationResult!),
+            SizedBox(height: AppTheme.space32),
+            Container(
+              height: 2,
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+              ),
+            ),
+            SizedBox(height: AppTheme.space24),
+            _buildResults(_calculationResult!, size),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildResults(Map<String, dynamic> result) {
+  Widget _buildResults(Map<String, dynamic> result, Size size) {
     final formulaType = result['formulaType'] as String;
     final calculation = result['calculation'] as String;
     final predictedNumbers = (result['predictedNumbers'] as List).cast<int>();
@@ -372,145 +539,234 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Header
         Row(
           children: [
-            const Icon(Icons.auto_awesome, color: Color(0xFF7c3aed), size: 28),
-            const SizedBox(width: 12),
-            const Text(
+            Container(
+              padding: EdgeInsets.all(AppTheme.space8),
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+              ),
+              child: Icon(Icons.auto_awesome, color: Colors.white, size: size.width * 0.06),
+            ),
+            SizedBox(width: AppTheme.space12),
+            Text(
               'Calculation Results',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              style: AppTheme.heading2.copyWith(
+                fontSize: size.width * 0.055,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: AppTheme.space20),
+
+        // Predicted Numbers - MAIN DISPLAY
+        Container(
+          padding: EdgeInsets.all(AppTheme.space20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.primary.withOpacity(0.1),
+                AppTheme.primaryLight.withOpacity(0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            border: Border.all(
+              color: AppTheme.primary.withOpacity(0.3),
+              width: 2,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.stars, color: AppTheme.primary, size: size.width * 0.06),
+                  SizedBox(width: AppTheme.space8),
+                  Text(
+                    'Predicted Numbers',
+                    style: AppTheme.heading3.copyWith(
+                      fontSize: size.width * 0.048,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: AppTheme.space20),
+              // Display numbers in 2 rows of 5
+              _buildPredictedNumbersGrid(predictedNumbers, size),
+            ],
+          ),
+        ),
+        SizedBox(height: AppTheme.space16),
 
         // Formula Type
-        Card(
+        Container(
+          decoration: AppTheme.cardDecoration,
           child: ListTile(
-            leading: const Icon(Icons.functions, color: Color(0xFF7c3aed)),
-            title: const Text('Formula Type'),
-            subtitle: Text(_formulas[formulaType] ?? formulaType),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: AppTheme.space16,
+              vertical: AppTheme.space8,
+            ),
+            leading: Container(
+              padding: EdgeInsets.all(AppTheme.space8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+              ),
+              child: Icon(Icons.functions, color: AppTheme.primary, size: 24),
+            ),
+            title: Text(
+              'Formula Type',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            subtitle: Text(
+              _formulas[formulaType] ?? formulaType,
+              style: AppTheme.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: size.width * 0.042,
+              ),
+            ),
           ),
         ),
+        SizedBox(height: AppTheme.space12),
 
         // Calculation
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.calculate, color: Colors.orange),
-                    SizedBox(width: 8),
-                    Text(
-                      'Calculation',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+        Container(
+          decoration: AppTheme.cardDecoration,
+          padding: EdgeInsets.all(AppTheme.space16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(AppTheme.space8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     ),
-                  ],
+                    child: Icon(Icons.calculate, color: AppTheme.accent, size: 20),
+                  ),
+                  SizedBox(width: AppTheme.space8),
+                  Text(
+                    'Calculation Steps',
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: size.width * 0.04,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: AppTheme.space12),
+              Container(
+                padding: EdgeInsets.all(AppTheme.space12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
-                const SizedBox(height: 8),
-                Text(
+                child: Text(
                   calculation,
-                  style: const TextStyle(fontSize: 14),
+                  style: AppTheme.bodyMedium.copyWith(
+                    fontFamily: 'monospace',
+                    height: 1.5,
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-
-        // Predicted Numbers
-        Card(
-          color: const Color(0xFF7c3aed).withOpacity(0.1),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.stars, color: Color(0xFF7c3aed)),
-                    SizedBox(width: 8),
-                    Text(
-                      'Predicted Numbers',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: predictedNumbers.map((num) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF7c3aed),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF7c3aed).withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        num.toString().padLeft(2, '0'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ),
+        SizedBox(height: AppTheme.space12),
 
         // Explanation
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.amber),
-                    SizedBox(width: 8),
-                    Text(
-                      'Explanation',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+        Container(
+          decoration: AppTheme.cardDecoration,
+          padding: EdgeInsets.all(AppTheme.space16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(AppTheme.space8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warning.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     ),
-                  ],
+                    child: Icon(Icons.lightbulb_outline, color: AppTheme.warning, size: 20),
+                  ),
+                  SizedBox(width: AppTheme.space8),
+                  Text(
+                    'How it Works',
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: size.width * 0.04,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: AppTheme.space12),
+              Text(
+                explanation,
+                style: AppTheme.bodyMedium.copyWith(
+                  height: 1.6,
+                  color: AppTheme.textPrimary,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  explanation,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPredictedNumbersGrid(List<int> numbers, Size size) {
+    // Display up to 10 numbers in 2 rows of 5
+    return Column(
+      children: [
+        // First row - up to 5 numbers
+        if (numbers.isNotEmpty)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: numbers.take(5).map((num) => _buildPredictedNumberChip(num, size)).toList(),
+          ),
+        if (numbers.length > 5) ...[
+          SizedBox(height: AppTheme.space16),
+          // Second row - remaining numbers (up to 5)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: numbers.skip(5).take(5).map((num) => _buildPredictedNumberChip(num, size)).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPredictedNumberChip(int number, Size size) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.055,
+        vertical: size.width * 0.04,
+      ),
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.buttonShadow(AppTheme.primary),
+      ),
+      child: Text(
+        number.toString().padLeft(2, '0'),
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: size.width * 0.06,
+          letterSpacing: 1,
+        ),
+      ),
     );
   }
 

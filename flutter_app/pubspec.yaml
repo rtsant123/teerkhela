@@ -20,6 +20,7 @@ dependencies:
 
   # Local Storage
   shared_preferences: ^2.2.2
+  device_info_plus: ^9.1.0
 
   # Firebase
   firebase_core: ^2.24.2
@@ -38,6 +39,7 @@ dependencies:
   uuid: ^4.2.1
   intl: ^0.18.1
   url_launcher: ^6.2.2
+  share_plus: ^7.2.1
 
   # Icons
   cupertino_icons: ^1.0.2

@@ -189,6 +189,19 @@ class AppDrawer extends StatelessWidget {
                     size: size,
                   ),
 
+                  // Community Forum
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.forum,
+                    title: 'Community Forum',
+                    subtitle: 'Share & Discuss',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/community-forum');
+                    },
+                    size: size,
+                  ),
+
                   const Divider(height: 1),
 
                   // Profile

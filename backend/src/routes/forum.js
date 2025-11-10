@@ -15,8 +15,8 @@ router.get('/posts/latest', forumController.getLatestPosts);
 router.get('/posts/user/:userId', forumController.getUserPosts);
 
 // Like/Unlike post
-router.post('/posts/like', forumController.likePost);
-router.post('/posts/unlike', forumController.unlikePost);
+router.post('/posts/:postId/like', forumController.likePost);
+router.post('/posts/:postId/unlike', forumController.unlikePost);
 
 // Delete post
 router.delete('/posts/:postId', forumController.deletePost);

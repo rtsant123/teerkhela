@@ -28,7 +28,19 @@
       "Bash(done)",
       "Bash(dream_screen.dart)",
       "Bash(subscribe_screen.dart)",
-      "Bash(profile_screen.dart)"
+      "Bash(profile_screen.dart)",
+      "Bash(taskkill:*)",
+      "Bash(nul)",
+      "WebFetch(domain:play.google.com)",
+      "Bash(flutter analyze:*)",
+      "Bash(railway:*)",
+      "Bash(git remote add:*)",
+      "Bash(git remote set-url:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl:*)",
+      "WebSearch",
+      "Bash(timeout 3 sleep:*)",
+      "Bash(timeout 30 sleep:*)"
     ],
     "deny": [],
     "ask": []

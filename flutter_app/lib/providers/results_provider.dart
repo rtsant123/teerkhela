@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/result.dart';
 import '../services/api_service.dart';
-import 'user_provider.dart';
 
 class ResultsProvider with ChangeNotifier {
   Map<String, TeerResult> _results = {};

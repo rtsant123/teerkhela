@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/user_provider.dart';
 import '../providers/results_provider.dart';
 import '../models/result.dart';
+import '../utils/app_theme.dart';
 
 class ResultDetailScreen extends StatefulWidget {
   final String game;
@@ -125,20 +126,14 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Text(
+                    Text(
                       'Past Results',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTheme.heading3,
                     ),
                     const Spacer(),
                     Text(
                       userProvider.isPremium ? 'Last 30 days' : 'Last 7 days',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: AppTheme.bodyMedium,
                     ),
                   ],
                 ),
@@ -189,17 +184,14 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
   }
 
   Widget _buildTodayResultCard(TeerResult result) {
+    final size = MediaQuery.of(context).size;
     return Card(
       margin: const EdgeInsets.all(16),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF7c3aed), Color(0xFFa78bfa)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppTheme.primaryGradient,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(24),
@@ -248,28 +240,27 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
   }
 
   Widget _buildResultBox(String label, int? value) {
+    final size = MediaQuery.of(context).size;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withOpacity(AppTheme.opacityHigh),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: AppTheme.bodyMedium.copyWith(
               color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             value?.toString().padLeft(2, '0') ?? '--',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 36,
+              fontSize: AppTheme.numberSizeLarge(size.width),
               fontWeight: FontWeight.bold,
             ),
           ),

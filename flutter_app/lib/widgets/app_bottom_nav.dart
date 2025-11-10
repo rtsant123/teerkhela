@@ -45,13 +45,13 @@ class AppBottomNav extends StatelessWidget {
         onTap: onTap ?? (index) => _handleNavigation(context, index),
         items: [
           const BottomNavigationBarItem(
-            icon: Icon(Icons.sports_cricket),
-            label: 'Results',
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               children: [
-                const Icon(Icons.numbers),
+                const Icon(Icons.lightbulb_outline),
                 if (!isPremium)
                   Positioned(
                     right: 0,
@@ -70,12 +70,16 @@ class AppBottomNav extends StatelessWidget {
                   ),
               ],
             ),
-            label: 'Numbers',
+            label: 'Predictions',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.forum_rounded),
+            label: 'Forum',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               children: [
-                const Icon(Icons.psychology),
+                const Icon(Icons.psychology_rounded),
                 if (!isPremium)
                   Positioned(
                     right: 0,
@@ -97,7 +101,7 @@ class AppBottomNav extends StatelessWidget {
             label: 'Dream AI',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_rounded),
             label: 'Profile',
           ),
         ],
@@ -115,12 +119,15 @@ class AppBottomNav extends StatelessWidget {
         route = '/home';
         break;
       case 1:
-        route = '/common-numbers';
+        route = '/predictions';
         break;
       case 2:
-        route = '/dream';
+        route = '/community-forum';
         break;
       case 3:
+        route = '/dream';
+        break;
+      case 4:
         route = '/profile';
         break;
       default:
