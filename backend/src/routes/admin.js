@@ -6,6 +6,9 @@ const { adminAuth } = require('../middleware/auth');
 // Login (no auth needed)
 router.post('/login', adminController.login);
 
+// Manual result entry (no auth - for simple admin app)
+router.post('/results/manual-entry', adminController.manualResultEntry);
+
 // All routes below require admin auth
 router.use(adminAuth);
 
@@ -22,8 +25,7 @@ router.post('/user/:userId/deactivate', adminController.deactivatePremium);
 router.post('/predictions/override', adminController.overridePrediction);
 router.post('/predictions/generate', adminController.generatePredictions);
 
-// Results
-router.post('/results/manual-entry', adminController.manualResultEntry);
+// Results (authenticated)
 router.post('/results/bulk-add', adminController.bulkAddResults);
 router.post('/results/bulk-upload', adminController.bulkUploadResults); // Flexible format for past results
 
