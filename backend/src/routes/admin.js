@@ -12,6 +12,10 @@ router.post('/results/manual-entry', adminController.manualResultEntry);
 // Bulk historical upload (no auth - for simple admin app)
 router.post('/results/bulk-historical', adminController.bulkHistoricalUpload);
 
+// Games Management (no auth - for simple admin app)
+router.post('/games', adminController.createGame);
+router.get('/games', adminController.getAllGames);
+
 // All routes below require admin auth
 router.use(adminAuth);
 
@@ -36,10 +40,8 @@ router.post('/results/bulk-upload', adminController.bulkUploadResults); // Flexi
 router.post('/notification/send', adminController.sendPushNotification);
 router.get('/notifications/history', adminController.getNotificationHistory);
 
-// Games Management
-router.get('/games', adminController.getAllGames);
+// Games Management (authenticated routes)
 router.get('/games/:id', adminController.getGame);
-router.post('/games', adminController.createGame);
 router.put('/games/:id', adminController.updateGame);
 router.delete('/games/:id', adminController.deleteGame);
 router.post('/games/:id/toggle-active', adminController.toggleGameActive);
