@@ -64,10 +64,10 @@ class ApiService {
     } catch (e) {
       // Return default games if API fails
       return [
-        TeerGame(name: 'shillong', displayName: 'Shillong Teer', region: 'Meghalaya'),
-        TeerGame(name: 'khanapara', displayName: 'Khanapara Teer', region: 'Assam'),
-        TeerGame(name: 'juwai', displayName: 'Juwai Teer', region: 'Meghalaya'),
-        TeerGame(name: 'bhutan', displayName: 'Bhutan Teer', region: 'Bhutan'),
+        TeerGame(id: 1, name: 'shillong', displayName: 'Shillong Teer', region: 'Meghalaya', isActive: true, scrapeEnabled: true, displayOrder: 1),
+        TeerGame(id: 2, name: 'khanapara', displayName: 'Khanapara Teer', region: 'Assam', isActive: true, scrapeEnabled: true, displayOrder: 2),
+        TeerGame(id: 3, name: 'juwai', displayName: 'Juwai Teer', region: 'Meghalaya', isActive: true, scrapeEnabled: true, displayOrder: 3),
+        TeerGame(id: 4, name: 'bhutan', displayName: 'Bhutan Teer', region: 'Bhutan', isActive: true, scrapeEnabled: true, displayOrder: 4),
       ];
     }
   }
