@@ -9,6 +9,9 @@ router.post('/login', adminController.login);
 // Manual result entry (no auth - for simple admin app)
 router.post('/results/manual-entry', adminController.manualResultEntry);
 
+// Bulk historical upload (no auth - for simple admin app)
+router.post('/results/bulk-historical', adminController.bulkHistoricalUpload);
+
 // All routes below require admin auth
 router.use(adminAuth);
 

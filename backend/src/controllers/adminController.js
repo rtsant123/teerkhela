@@ -388,6 +388,46 @@ const bulkAddResults = async (req, res) => {
   }
 };
 
+// Bulk upload historical results (30 days for one house)
+const bulkHistoricalUpload = async (req, res) => {
+  try {
+    const { game, results } = req.body;
+
+    if (!game || !results || !Array.isArray(results)) {
+      return res.status(400).json({
+        success: false,
+        message: 'game and results array are required'
+      });
+    }
+
+    const addedResults = [];
+
+    // Process each date's result
+    for (const result of results) {
+      const { date, fr, sr } = result;
+
+      if (!date || fr === undefined || sr === undefined) continue;
+
+      // Add result (no notification for historical data)
+      await scraperService.manualEntry(game, date, fr, sr, new Date(date).toISOString());
+
+      addedResults.push({ date, fr, sr });
+    }
+
+    res.json({
+      success: true,
+      message: `${addedResults.length} historical results uploaded for ${game}`,
+      results: addedResults
+    });
+  } catch (error) {
+    console.error('Error uploading historical results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading historical results'
+    });
+  }
+};
+
 // Send push notification
 const sendPushNotification = async (req, res) => {
   try {
@@ -756,6 +796,7 @@ module.exports = {
   manualResultEntry,
   bulkAddResults,
   bulkUploadResults,
+  bulkHistoricalUpload,
   sendPushNotification,
   getNotificationHistory,
   getRevenueChart,
