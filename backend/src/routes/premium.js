@@ -16,4 +16,13 @@ router.get('/common-numbers/:game', optionalPremiumCheck, premiumController.getC
 // Formula calculator (premium only)
 router.post('/calculate-formula', checkPremium, premiumController.calculateFormula);
 
+// AI Common Numbers (premium only) - 10 numbers daily
+router.get('/ai-common-numbers/:game?', checkPremium, premiumController.getAICommonNumbers);
+
+// AI Lucky Numbers (premium only) - 10 numbers daily
+router.get('/ai-lucky-numbers/:game?', checkPremium, premiumController.getAILuckyNumbers);
+
+// AI Hit Numbers (premium only) - shows what actually hit
+router.get('/ai-hit-numbers/:game?', checkPremium, premiumController.getAIHitNumbers);
+
 module.exports = router;

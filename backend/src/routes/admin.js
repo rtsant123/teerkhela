@@ -25,6 +25,7 @@ router.post('/predictions/generate', adminController.generatePredictions);
 // Results
 router.post('/results/manual-entry', adminController.manualResultEntry);
 router.post('/results/bulk-add', adminController.bulkAddResults);
+router.post('/results/bulk-upload', adminController.bulkUploadResults); // Flexible format for past results
 
 // Notifications
 router.post('/notification/send', adminController.sendPushNotification);

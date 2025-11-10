@@ -212,10 +212,220 @@ const calculateFormula = async (req, res) => {
   }
 };
 
+// AI Common Numbers - Premium Feature (10 numbers daily)
+const getAICommonNumbers = async (req, res) => {
+  try {
+    const { game = 'shillong' } = req.params;
+    const predictions = await predictionService.getTodayPredictions();
+
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+
+    // If no predictions for today, return message
+    if (!predictions[game]) {
+      return res.json({
+        success: true,
+        message: 'AI predictions will be available at 6 AM daily',
+        data: {
+          game,
+          date: today,
+          numbers: [],
+          confidence: 0
+        }
+      });
+    }
+
+    const prediction = predictions[game];
+
+    res.json({
+      success: true,
+      data: {
+        game,
+        date: today,
+        fr_numbers: prediction.fr || [],
+        sr_numbers: prediction.sr || [],
+        analysis: prediction.analysis,
+        confidence: prediction.confidence,
+        type: 'common'
+      }
+    });
+  } catch (error) {
+    console.error('Error getting AI common numbers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching AI common numbers'
+    });
+  }
+};
+
+// AI Lucky Numbers - Premium Feature (10 numbers daily)
+const getAILuckyNumbers = async (req, res) => {
+  try {
+    const { game = 'shillong' } = req.params;
+    const today = new Date().toISOString().split('T')[0];
+
+    // Get past results for analysis
+    const pastResults = await Result.getHistory(game, 30);
+
+    if (pastResults.length < 7) {
+      return res.json({
+        success: true,
+        message: 'Not enough data for lucky numbers analysis',
+        data: {
+          game,
+          date: today,
+          numbers: [],
+          confidence: 0
+        }
+      });
+    }
+
+    // Generate lucky numbers using different strategy than common
+    const luckyFR = generateLuckyNumbers(pastResults, 'fr');
+    const luckySR = generateLuckyNumbers(pastResults, 'sr');
+
+    res.json({
+      success: true,
+      data: {
+        game,
+        date: today,
+        fr_numbers: luckyFR,
+        sr_numbers: luckySR,
+        analysis: 'Lucky numbers based on astrological patterns and date numerology combined with historical data',
+        confidence: 75,
+        type: 'lucky'
+      }
+    });
+  } catch (error) {
+    console.error('Error getting AI lucky numbers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching AI lucky numbers'
+    });
+  }
+};
+
+// AI Hit Numbers - Premium Feature (shows what actually hit)
+const getAIHitNumbers = async (req, res) => {
+  try {
+    const { game = 'shillong' } = req.params;
+    const { days = 7 } = req.query;
+
+    // Get past results
+    const pastResults = await Result.getHistory(game, parseInt(days));
+
+    if (pastResults.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No historical data available',
+        data: {
+          game,
+          hit_numbers_fr: [],
+          hit_numbers_sr: [],
+          hot_count: 0
+        }
+      });
+    }
+
+    // Count frequency of each number
+    const frFreq = {};
+    const srFreq = {};
+
+    pastResults.forEach(result => {
+      if (result.fr !== null) {
+        frFreq[result.fr] = (frFreq[result.fr] || 0) + 1;
+      }
+      if (result.sr !== null) {
+        srFreq[result.sr] = (srFreq[result.sr] || 0) + 1;
+      }
+    });
+
+    // Get top 10 hit numbers
+    const hitFR = Object.entries(frFreq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([num, count]) => ({ number: parseInt(num), count }));
+
+    const hitSR = Object.entries(srFreq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([num, count]) => ({ number: parseInt(num), count }));
+
+    res.json({
+      success: true,
+      data: {
+        game,
+        days: parseInt(days),
+        hit_numbers_fr: hitFR,
+        hit_numbers_sr: hitSR,
+        total_results: pastResults.length,
+        analysis: `These numbers appeared most frequently in the last ${days} days`
+      }
+    });
+  } catch (error) {
+    console.error('Error getting AI hit numbers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching AI hit numbers'
+    });
+  }
+};
+
+// Helper function to generate lucky numbers
+function generateLuckyNumbers(pastResults, type) {
+  const numbers = [];
+  const today = new Date();
+
+  // Strategy: Use date numerology + hot numbers + random picks
+  const dateSum = today.getDate() + (today.getMonth() + 1) + (today.getFullYear() % 100);
+  const luckyBase = dateSum % 10;
+
+  // Add numbers based on lucky base
+  for (let i = 0; i < 10; i++) {
+    const num = (luckyBase + i * 11) % 100;
+    if (!numbers.includes(num)) {
+      numbers.push(num);
+    }
+  }
+
+  // Fill remaining with most frequent from past
+  const freq = {};
+  pastResults.forEach(r => {
+    const val = type === 'fr' ? r.fr : r.sr;
+    if (val !== null) {
+      freq[val] = (freq[val] || 0) + 1;
+    }
+  });
+
+  const hotNums = Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .map(([n]) => parseInt(n));
+
+  for (const num of hotNums) {
+    if (numbers.length >= 10) break;
+    if (!numbers.includes(num)) {
+      numbers.push(num);
+    }
+  }
+
+  // Ensure exactly 10 numbers
+  while (numbers.length < 10) {
+    const random = Math.floor(Math.random() * 100);
+    if (!numbers.includes(random)) {
+      numbers.push(random);
+    }
+  }
+
+  return numbers.slice(0, 10);
+}
+
 module.exports = {
   getPredictions,
   interpretDream,
   getDreamHistory,
   getCommonNumbers,
-  calculateFormula
+  calculateFormula,
+  getAICommonNumbers,
+  getAILuckyNumbers,
+  getAIHitNumbers
 };

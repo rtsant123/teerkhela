@@ -198,6 +198,39 @@ class ApiService {
     }
   }
 
+  // AI Common Numbers (premium only)
+  static Future<Map<String, dynamic>> getAICommonNumbers(String game) async {
+    final response = await _get('/ai-common-numbers/$game');
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to get AI common numbers');
+    }
+  }
+
+  // AI Lucky Numbers (premium only)
+  static Future<Map<String, dynamic>> getAILuckyNumbers(String game) async {
+    final response = await _get('/ai-lucky-numbers/$game');
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to get AI lucky numbers');
+    }
+  }
+
+  // AI Hit Numbers (premium only)
+  static Future<Map<String, dynamic>> getAIHitNumbers(String game, {int days = 7}) async {
+    final response = await _get('/ai-hit-numbers/$game?days=$days');
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to get AI hit numbers');
+    }
+  }
+
   // Calculate formula (premium only)
   static Future<Map<String, dynamic>> calculateFormula(String userId, String game, String formulaType, List<Map<String, int>> previousResults) async {
     final response = await _post('/calculate-formula', {

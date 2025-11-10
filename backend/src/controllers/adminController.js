@@ -50,6 +50,53 @@ const login = async (req, res) => {
   }
 };
 
+// Bulk upload past results (admin only)
+const bulkUploadResults = async (req, res) => {
+  try {
+    const { results } = req.body; // Array of {game, date, fr, sr}
+
+    if (!Array.isArray(results) || results.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'results array is required'
+      });
+    }
+
+    let uploaded = 0;
+    let errors = [];
+
+    for (const result of results) {
+      try {
+        const { game, date, fr, sr } = result;
+
+        if (!game || !date) {
+          errors.push({ result, error: 'Missing game or date' });
+          continue;
+        }
+
+        await Result.upsert(game, date, fr, sr);
+        uploaded++;
+      } catch (error) {
+        errors.push({ result, error: error.message });
+      }
+    }
+
+    res.json({
+      success: true,
+      uploaded,
+      total: results.length,
+      errors: errors.length > 0 ? errors : undefined,
+      message: `Uploaded ${uploaded} of ${results.length} results`
+    });
+  } catch (error) {
+    console.error('Error bulk uploading results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading results'
+    });
+  }
+};
+
 // Get dashboard statistics
 const getStatistics = async (req, res) => {
   try {
@@ -708,6 +755,7 @@ module.exports = {
   generatePredictions,
   manualResultEntry,
   bulkAddResults,
+  bulkUploadResults,
   sendPushNotification,
   getNotificationHistory,
   getRevenueChart,
