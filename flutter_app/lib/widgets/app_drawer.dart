@@ -148,6 +148,48 @@ class AppDrawer extends StatelessWidget {
                     size: size,
                   ),
 
+                  // AI Common Numbers
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.trending_up,
+                    title: 'AI Common Numbers',
+                    subtitle: '10 Daily Numbers',
+                    isPremiumFeature: !userProvider.isPremium,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/ai-common');
+                    },
+                    size: size,
+                  ),
+
+                  // AI Lucky Numbers
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.star,
+                    title: 'AI Lucky Numbers',
+                    subtitle: 'Astrology + Data',
+                    isPremiumFeature: !userProvider.isPremium,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/ai-lucky');
+                    },
+                    size: size,
+                  ),
+
+                  // AI Hit Numbers
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.check_circle,
+                    title: 'AI Hit Numbers',
+                    subtitle: 'Past Winners',
+                    isPremiumFeature: !userProvider.isPremium,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/ai-hit');
+                    },
+                    size: size,
+                  ),
+
                   // Dream Number
                   _buildMenuItem(
                     context,
