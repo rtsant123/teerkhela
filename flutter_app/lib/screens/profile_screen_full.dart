@@ -494,64 +494,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               SizedBox(height: AppTheme.space16),
 
-              // Test User Button (for testing without payment)
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.premiumGradient,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final provider = Provider.of<UserProvider>(context, listen: false);
-                    try {
-                      await provider.useTestUser();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Test account activated! All premium features unlocked for 30 days.'),
-                            backgroundColor: AppTheme.success,
-                            duration: Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to activate test account: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  icon: Icon(
-                    Icons.science,
-                    size: size.width * 0.05,
-                  ),
-                  label: Text(
-                    'Use Test Account (30 Days Premium)',
-                    style: AppTheme.buttonText.copyWith(
-                      fontSize: size.width * 0.038,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppTheme.space12,
-                      horizontal: AppTheme.space16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: AppTheme.space16),
-
               // Logout Button
               SizedBox(
                 width: double.infinity,

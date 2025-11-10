@@ -1,0 +1,82 @@
+╔══════════════════════════════════════════════════════════════╗
+║              TEER KHELA - 2 APPS READY TO INSTALL            ║
+╚══════════════════════════════════════════════════════════════╝
+
+📱 APP 1: USER APP (For Customers)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Location: D:\Riogold\flutter_app\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk
+Size: 12.5 MB
+Install on: Customer phones
+
+Features:
+✓ Live Results
+✓ AI Predictions (Hot Numbers)
+✓ AI Common Numbers
+✓ AI Lucky Numbers
+✓ AI Hit Numbers
+✓ AI Dream Number
+✓ Formula Calculator
+✓ VIP Subscription (₹49/month)
+
+📱 APP 2: ADMIN APP (For You Only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Location: D:\Riogold\admin_app\build\app\outputs\flutter-apk\app-release.apk
+Size: 20.4 MB
+Install on: YOUR phone only
+
+Features:
+✓ Add Results (FR/SR)
+✓ Select House
+✓ Simple & Fast
+✓ No Login Required
+
+🚀 HOW TO USE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1: Install ADMIN APP on your phone
+   → Open: admin_app\build\app\outputs\flutter-apk\app-release.apk
+   → Test: Add a result for any house
+
+Step 2: Distribute USER APP to customers
+   → Send: flutter_app\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk
+   → They see results you add
+   → They can subscribe for AI features (₹49/month)
+
+🎯 DAILY WORKFLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Open YOUR admin app
+2. Select house (e.g., Shillong Teer)
+3. Enter FR (e.g., 45)
+4. Enter SR (e.g., 78)
+5. Tap SUBMIT
+6. Done! All users see result instantly
+
+💡 ALTERNATIVE OPTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Option A: Mobile Admin App (This)
+   → Install admin_app APK on your phone
+
+Option B: Web Admin Dashboard
+   → Already deployed on Railway
+   → Has more features (user management, analytics)
+   → Access from Railway project URL
+
+Option C: Simple HTML Admin
+   → File: D:\Riogold\admin_simple.html
+   → Open in any browser
+   → No installation needed
+
+🔧 BACKEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+URL: https://teerkhela-production.up.railway.app
+Health: https://teerkhela-production.up.railway.app/api/health
+
+Both apps connect to same backend
+When you add results, all users see updates instantly
+
+✅ EVERYTHING IS READY - JUST INSTALL AND USE!
+
+For detailed guide, see: 2_APPS_GUIDE.md

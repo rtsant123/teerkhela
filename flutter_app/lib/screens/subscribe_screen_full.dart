@@ -129,73 +129,32 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
       await StorageService.setEmail(email);
       userProvider.updateEmail(email);
 
-      // TEST MODE: Skip payment and activate premium directly
+      // TEST MODE: Show error - payment must be configured
       if (testMode) {
         if (!mounted) return;
+        setState(() => _isLoading = false);
 
         showDialog(
           context: context,
-          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Row(
               children: [
-                Icon(Icons.info, color: Colors.orange, size: 32),
+                Icon(Icons.error, color: Colors.red, size: 32),
                 SizedBox(width: 12),
-                Text('Test Mode'),
+                Text('Payment Not Available'),
               ],
             ),
             content: const Text(
-              'This is test mode. Payment integration is not configured yet.\n\nWould you like to activate premium for testing?',
+              'Payment integration is not configured.\n\nPlease contact support to activate premium.',
             ),
             actions: [
               TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _isLoading = false;
-                  });
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  try {
-                    // Activate premium locally for testing (no backend call)
-                    await userProvider.activateTestPremium(30);
-
-                    if (!mounted) return;
-                    Navigator.pop(context); // Close dialog
-                    Navigator.pop(context); // Go back
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('✓ Premium activated for testing (30 days)'),
-                        backgroundColor: AppTheme.success,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    Navigator.pop(context); // Close dialog
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to activate: ${e.toString()}'),
-                        backgroundColor: AppTheme.error,
-                        duration: const Duration(seconds: 4),
-                      ),
-                    );
-                  }
-                },
-                child: const Text('Activate Premium'),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
               ),
             ],
           ),
         );
-
-        setState(() {
-          _isLoading = false;
-        });
         return;
       }
 
@@ -530,45 +489,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
               ),
             ),
             SizedBox(height: AppTheme.space16),
-
-            // Test Account Button (for demo purposes)
-            TextButton.icon(
-              onPressed: () async {
-                final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-                try {
-                  setState(() => _isLoading = true);
-                  await userProvider.activateTestPremium(30);
-
-                  if (!mounted) return;
-                  Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✓ Test premium activated for 30 days'),
-                      backgroundColor: AppTheme.success,
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                } catch (e) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed: ${e.toString()}'),
-                      backgroundColor: AppTheme.error,
-                    ),
-                  );
-                } finally {
-                  if (mounted) setState(() => _isLoading = false);
-                }
-              },
-              icon: const Icon(Icons.science, size: 16),
-              label: const Text('Try Demo Account (30 Days)'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.textSecondary,
-              ),
-            ),
-            SizedBox(height: AppTheme.space8),
 
             // Terms
             Container(

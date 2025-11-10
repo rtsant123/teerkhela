@@ -134,63 +134,49 @@ class AppDrawer extends StatelessWidget {
 
                   const Divider(height: 1),
 
-                  // Hit Number (Data-Based)
+                  // Common Numbers
                   _buildMenuItem(
                     context,
-                    icon: Icons.trending_up,
-                    title: 'Hot Numbers',
-                    subtitle: 'Based on Past Results',
+                    icon: Icons.numbers,
+                    title: 'Common Numbers',
+                    subtitle: 'Most Frequent',
                     isPremiumFeature: !userProvider.isPremium,
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.pushNamed(context, '/predictions');
+                      Navigator.pushNamed(context, '/common-numbers');
                     },
                     size: size,
                   ),
 
-                  // AI Common Numbers
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.trending_up,
-                    title: 'AI Common Numbers',
-                    subtitle: '10 Daily Numbers',
-                    isPremiumFeature: !userProvider.isPremium,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/ai-common');
-                    },
-                    size: size,
-                  ),
-
-                  // AI Lucky Numbers
+                  // Lucky Numbers
                   _buildMenuItem(
                     context,
                     icon: Icons.star,
-                    title: 'AI Lucky Numbers',
-                    subtitle: 'Astrology + Data',
+                    title: 'Lucky Numbers',
+                    subtitle: 'Randomly Generated',
                     isPremiumFeature: !userProvider.isPremium,
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.pushNamed(context, '/ai-lucky');
+                      Navigator.pushNamed(context, '/lucky-numbers');
                     },
                     size: size,
                   ),
 
-                  // AI Hit Numbers
+                  // Hit Numbers
                   _buildMenuItem(
                     context,
                     icon: Icons.check_circle,
-                    title: 'AI Hit Numbers',
+                    title: 'Hit Numbers',
                     subtitle: 'Past Winners',
                     isPremiumFeature: !userProvider.isPremium,
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.pushNamed(context, '/ai-hit');
+                      Navigator.pushNamed(context, '/hit-numbers');
                     },
                     size: size,
                   ),
 
-                  // Dream Number
+                  // AI Dream Number
                   _buildMenuItem(
                     context,
                     icon: Icons.nightlight_round,
@@ -210,6 +196,7 @@ class AppDrawer extends StatelessWidget {
                     icon: Icons.calculate,
                     title: 'Formula Calculator',
                     subtitle: 'Calculate Numbers',
+                    isPremiumFeature: !userProvider.isPremium,
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, '/formula-calculator');
