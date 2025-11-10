@@ -21,7 +21,7 @@ import 'screens/profile_screen_full.dart';
 import 'screens/game_history_screen.dart';
 import 'screens/common_numbers_screen.dart';
 import 'screens/formula_calculator_screen.dart';
-import 'screens/community_forum_screen.dart';
+import 'screens/community_forum_simple.dart';
 import 'screens/create_forum_post_screen.dart';
 import 'screens/accuracy_stats_screen.dart';
 import 'screens/hit_numbers_screen.dart';
@@ -108,7 +108,7 @@ class MyApp extends StatelessWidget {
               '/game-history': (context) => const GameHistoryScreen(),
               '/common-numbers': (context) => const CommonNumbersScreen(),
               '/formula-calculator': (context) => const FormulaCalculatorScreen(),
-              '/community-forum': (context) => const CommunityForumScreen(),
+              '/community-forum': (context) => const SimpleCommunityForum(),
               '/create-forum-post': (context) => const CreateForumPostScreen(),
               '/accuracy-stats': (context) => const AccuracyStatsScreen(),
               '/hit-numbers': (context) => const HitNumbersScreen(),

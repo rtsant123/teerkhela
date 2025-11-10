@@ -393,7 +393,22 @@ class ApiService {
     final response = await _get(endpoint);
 
     if (response['success']) {
-      return AccuracyStats.fromJson(response['data']);
+      // Backend returns: { success, days, accuracy, recentPredictions, bestGames }
+      // We need to extract and transform to match AccuracyStats model
+      final accuracy = response['accuracy'] ?? {};
+      final recentPredictions = response['recentPredictions'] ?? [];
+
+      return AccuracyStats.fromJson({
+        'overallAccuracy': accuracy['overall'] ?? 0.0,
+        'frAccuracy': accuracy['fr'] ?? 0.0,
+        'srAccuracy': accuracy['sr'] ?? 0.0,
+        'totalPredictions': accuracy['totalPredictions'] ?? 0,
+        'successfulPredictions': accuracy['successful'] ?? 0,
+        'bestPerformingGame': response['bestGames'] != null && (response['bestGames'] as List).isNotEmpty
+            ? response['bestGames'][0]['game']
+            : null,
+        'lastPredictions': recentPredictions,
+      });
     } else {
       throw Exception('Failed to get accuracy stats');
     }
