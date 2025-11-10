@@ -190,6 +190,33 @@ class AppDrawer extends StatelessWidget {
                     size: size,
                   ),
 
+                  // Dream Number
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.nightlight_round,
+                    title: 'AI Dream Number',
+                    subtitle: 'Dream to Numbers',
+                    isPremiumFeature: !userProvider.isPremium,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/dream');
+                    },
+                    size: size,
+                  ),
+
+                  // Formula Calculator
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.calculate,
+                    title: 'Formula Calculator',
+                    subtitle: 'Calculate Numbers',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/formula-calculator');
+                    },
+                    size: size,
+                  ),
+
                   const Divider(height: 1),
 
                   // Profile
