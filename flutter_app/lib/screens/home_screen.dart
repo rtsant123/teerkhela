@@ -143,22 +143,22 @@ class _HomeScreenState extends State<HomeScreen> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // AI Predictions Button with enhanced visibility
+        // Results History Button
         AnimatedScaleButton(
           onPressed: () {
-            Navigator.pushNamed(context, '/predictions');
+            Navigator.pushNamed(context, '/hit-numbers');
           },
           child: Container(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                colors: [Color(0xFF10B981), Color(0xFF059669)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.4),
+                  color: const Color(0xFF10B981).withOpacity(0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -168,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  Navigator.pushNamed(context, '/predictions');
+                  Navigator.pushNamed(context, '/hit-numbers');
                 },
                 borderRadius: BorderRadius.circular(30),
                 child: Padding(
@@ -176,10 +176,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.psychology_outlined, size: 24, color: Colors.white),
+                      const Icon(Icons.show_chart, size: 24, color: Colors.white),
                       const SizedBox(width: 8),
                       const Text(
-                        'AI Predictions',
+                        'Hit Analysis',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -445,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           SizedBox(height: AppTheme.space4),
                           Text(
-                            'AI Predictions • Dream AI • 30 Days History',
+                            'Hit Analysis • Results History • Dream Bot',
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: size.width * 0.032,

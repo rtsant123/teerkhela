@@ -57,7 +57,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('AI Predictions'),
+        title: const Text('Hot Numbers'),
         backgroundColor: AppTheme.primary,
         actions: [
           if (userProvider.isPremium)
@@ -104,7 +104,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
               ),
               SizedBox(height: AppTheme.space16),
               Text(
-                'AI Predictions',
+                'Hot Numbers',
                 style: AppTheme.heading1.copyWith(
                   fontSize: size.width * 0.065,
                 ),
@@ -114,7 +114,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
                 child: Text(
-                  'Get AI-powered predictions based on 30 days historical analysis',
+                  'See hot numbers based on 30 days of real results data',
                   textAlign: TextAlign.center,
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: size.width * 0.037,

@@ -134,12 +134,12 @@ class AppDrawer extends StatelessWidget {
 
                   const Divider(height: 1),
 
-                  // Hit Number (AI Predictions)
+                  // Hit Number (Data-Based)
                   _buildMenuItem(
                     context,
-                    icon: Icons.psychology,
-                    title: 'Hit Number',
-                    subtitle: 'AI Predictions',
+                    icon: Icons.trending_up,
+                    title: 'Hot Numbers',
+                    subtitle: 'Based on Past Results',
                     isPremiumFeature: !userProvider.isPremium,
                     onTap: () {
                       Navigator.pop(context);

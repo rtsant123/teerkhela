@@ -70,7 +70,7 @@ class AppBottomNav extends StatelessWidget {
                   ),
               ],
             ),
-            label: 'Predictions',
+            label: 'Hot Numbers',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.forum_rounded),
@@ -98,7 +98,7 @@ class AppBottomNav extends StatelessWidget {
                   ),
               ],
             ),
-            label: 'Dream AI',
+            label: 'Dream',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.person_rounded),
