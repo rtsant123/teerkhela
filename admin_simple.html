@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teer Admin - Add Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .number-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .number-input {
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .fr-input {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .sr-input {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .date-display {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Teer Admin</h1>
+        <p class="subtitle">Add today's results quickly</p>
+
+        <div class="date-display" id="dateDisplay"></div>
+
+        <div class="form-group">
+            <label for="game">Select House</label>
+            <select id="game">
+                <option value="shillong">Shillong Teer</option>
+                <option value="khanapara">Khanapara Teer</option>
+                <option value="juwai">Juwai Teer</option>
+                <option value="bhutan">Bhutan Teer</option>
+                <option value="shillong-morning">Shillong Morning</option>
+                <option value="juwai-morning">Juwai Morning</option>
+                <option value="khanapara-morning">Khanapara Morning</option>
+                <option value="shillong-night">Shillong Night</option>
+                <option value="night">Night Teer</option>
+                <option value="first">First Teer</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Results (00-99)</label>
+            <div class="number-inputs">
+                <div>
+                    <input type="number"
+                           id="fr"
+                           class="number-input fr-input"
+                           placeholder="FR"
+                           min="0"
+                           max="99"
+                           required>
+                </div>
+                <div>
+                    <input type="number"
+                           id="sr"
+                           class="number-input sr-input"
+                           placeholder="SR"
+                           min="0"
+                           max="99"
+                           required>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="submitResult()">Submit Result</button>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        // Display today's date
+        function updateDate() {
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = today.toLocaleDateString('en-IN', options);
+        }
+
+        updateDate();
+
+        // API Base URL - CHANGE THIS TO YOUR BACKEND URL
+        const API_URL = 'https://teerkhela-production.up.railway.app/api';
+
+        async function submitResult() {
+            const game = document.getElementById('game').value;
+            const fr = parseInt(document.getElementById('fr').value);
+            const sr = parseInt(document.getElementById('sr').value);
+            const messageDiv = document.getElementById('message');
+
+            // Validation
+            if (isNaN(fr) || isNaN(sr)) {
+                showMessage('Please enter both FR and SR', 'error');
+                return;
+            }
+
+            if (fr < 0 || fr > 99 || sr < 0 || sr > 99) {
+                showMessage('Numbers must be between 0 and 99', 'error');
+                return;
+            }
+
+            try {
+                const date = new Date().toISOString().split('T')[0];
+
+                const response = await fetch(`${API_URL}/admin/results/manual-entry`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        game: game,
+                        date: date,
+                        fr: fr,
+                        sr: sr
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(`✅ Result added for ${game}!`, 'success');
+                    document.getElementById('fr').value = '';
+                    document.getElementById('sr').value = '';
+                } else {
+                    showMessage(`❌ Error: ${data.message || 'Failed to add result'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('sr').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitResult();
+            }
+        });
+    </script>
+</body>
+</html>

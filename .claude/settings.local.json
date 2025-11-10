@@ -40,7 +40,11 @@
       "Bash(curl:*)",
       "WebSearch",
       "Bash(timeout 3 sleep:*)",
-      "Bash(timeout 30 sleep:*)"
+      "Bash(timeout 30 sleep:*)",
+      "Bash(timeout /t 3)",
+      "Bash(git rm:*)",
+      "Bash(del nul 2)",
+      "Bash(npm test)"
     ],
     "deny": [],
     "ask": []

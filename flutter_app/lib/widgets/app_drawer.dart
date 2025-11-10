@@ -246,22 +246,6 @@ class AppDrawer extends StatelessWidget {
 
                   const Divider(height: 1),
 
-                  // Admin Panel
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.admin_panel_settings,
-                    title: 'Admin Panel',
-                    subtitle: 'Manage Houses & Results',
-                    isAdmin: true,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/admin-login');
-                    },
-                    size: size,
-                  ),
-
-                  const Divider(height: 1),
-
                   // Profile
                   _buildMenuItem(
                     context,
