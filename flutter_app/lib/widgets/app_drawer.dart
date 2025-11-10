@@ -190,60 +190,6 @@ class AppDrawer extends StatelessWidget {
                     size: size,
                   ),
 
-                  // Dream Number
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.nightlight_round,
-                    title: 'Dream Number',
-                    subtitle: 'Dream Interpretation',
-                    isPremiumFeature: !userProvider.isPremium,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/dream');
-                    },
-                    size: size,
-                  ),
-
-                  // Common Number
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.numbers,
-                    title: 'Common Number',
-                    subtitle: 'Hot & Cold Numbers',
-                    isPremiumFeature: !userProvider.isPremium,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/common-numbers');
-                    },
-                    size: size,
-                  ),
-
-                  // Formula Calculator
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.calculate,
-                    title: 'Formula Calculator',
-                    subtitle: 'House, Ending, Sum',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/formula-calculator');
-                    },
-                    size: size,
-                  ),
-
-                  // Community Forum
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.forum,
-                    title: 'Community Forum',
-                    subtitle: 'Share & Discuss',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/community-forum');
-                    },
-                    size: size,
-                  ),
-
                   const Divider(height: 1),
 
                   // Profile

@@ -44,7 +44,10 @@
       "Bash(timeout /t 3)",
       "Bash(git rm:*)",
       "Bash(del nul 2)",
-      "Bash(npm test)"
+      "Bash(npm test)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
