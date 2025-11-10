@@ -52,13 +52,23 @@ class ApiService {
 
   // Get all games
   static Future<List<TeerGame>> getGames() async {
-    final response = await _get('/games');
+    try {
+      final response = await _get('/games');
 
-    if (response['success']) {
-      final List<dynamic> data = response['data'];
-      return data.map((json) => TeerGame.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to get games');
+      if (response['success']) {
+        final List<dynamic> data = response['data'];
+        return data.map((json) => TeerGame.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to get games');
+      }
+    } catch (e) {
+      // Return default games if API fails
+      return [
+        TeerGame(name: 'shillong', displayName: 'Shillong Teer', region: 'Meghalaya'),
+        TeerGame(name: 'khanapara', displayName: 'Khanapara Teer', region: 'Assam'),
+        TeerGame(name: 'juwai', displayName: 'Juwai Teer', region: 'Meghalaya'),
+        TeerGame(name: 'bhutan', displayName: 'Bhutan Teer', region: 'Bhutan'),
+      ];
     }
   }
 

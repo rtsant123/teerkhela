@@ -24,10 +24,36 @@ class _AINumbersScreenState extends State<AINumbersScreen> {
   Map<String, dynamic>? _data;
   String? _error;
   String _selectedGame = 'shillong';
+  List<Map<String, String>> _games = [];
 
   @override
   void initState() {
     super.initState();
+    _loadGames();
+  }
+
+  Future<void> _loadGames() async {
+    try {
+      final games = await ApiService.getGames();
+      if (mounted) {
+        setState(() {
+          _games = games.map((g) => {'name': g.name, 'displayName': g.displayName}).toList();
+        });
+      }
+    } catch (e) {
+      // Use default games
+      setState(() {
+        _games = [
+          {'name': 'shillong', 'displayName': 'Shillong Teer'},
+          {'name': 'khanapara', 'displayName': 'Khanapara Teer'},
+          {'name': 'juwai', 'displayName': 'Juwai Teer'},
+          {'name': 'bhutan', 'displayName': 'Bhutan Teer'},
+          {'name': 'shillong-night', 'displayName': 'Shillong Night Teer'},
+          {'name': 'night', 'displayName': 'Night Teer'},
+          {'name': 'first', 'displayName': 'First Teer'},
+        ];
+      });
+    }
     _loadNumbers();
   }
 
@@ -262,6 +288,39 @@ class _AINumbersScreenState extends State<AINumbersScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Game Selector Dropdown
+            if (_games.isNotEmpty)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: AppTheme.space16, vertical: AppTheme.space8),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: AppTheme.cardShadow,
+                ),
+                child: DropdownButton<String>(
+                  value: _selectedGame,
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.arrow_drop_down),
+                  style: AppTheme.subtitle1,
+                  items: _games.map((game) {
+                    return DropdownMenuItem<String>(
+                      value: game['name'],
+                      child: Text(game['displayName'] ?? game['name']!),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null && newValue != _selectedGame) {
+                      setState(() {
+                        _selectedGame = newValue;
+                      });
+                      _loadNumbers();
+                    }
+                  },
+                ),
+              ),
+            SizedBox(height: AppTheme.space16),
+
             // Date & Confidence Card
             _buildInfoCard(size),
             SizedBox(height: AppTheme.space20),

@@ -355,11 +355,14 @@ const getAIHitNumbers = async (req, res) => {
       success: true,
       data: {
         game,
+        date: new Date().toISOString().split('T')[0],
+        fr_numbers: hitFR,
+        sr_numbers: hitSR,
         days: parseInt(days),
-        hit_numbers_fr: hitFR,
-        hit_numbers_sr: hitSR,
         total_results: pastResults.length,
-        analysis: `These numbers appeared most frequently in the last ${days} days`
+        analysis: `These numbers appeared most frequently in the last ${days} days of actual results`,
+        confidence: 85,
+        type: 'hit'
       }
     });
   } catch (error) {

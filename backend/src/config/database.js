@@ -163,9 +163,13 @@ const initDatabase = async () => {
         ('shillong', 'Shillong Teer', 'Meghalaya', 'shillong-teer', true, true, 1),
         ('khanapara', 'Khanapara Teer', 'Assam', 'khanapara-teer', true, true, 2),
         ('juwai', 'Juwai Teer', 'Meghalaya', 'juwai-teer', true, true, 3),
-        ('shillong-morning', 'Shillong Morning Teer', 'Meghalaya', 'shillong-morning', true, true, 4),
-        ('juwai-morning', 'Juwai Morning Teer', 'Meghalaya', 'juwai-morning', true, true, 5),
-        ('khanapara-morning', 'Khanapara Morning Teer', 'Assam', 'khanapara-morning', true, true, 6)
+        ('bhutan', 'Bhutan Teer', 'Bhutan', 'bhutan-teer', true, true, 4),
+        ('shillong-morning', 'Shillong Morning Teer', 'Meghalaya', 'shillong-morning', true, true, 5),
+        ('juwai-morning', 'Juwai Morning Teer', 'Meghalaya', 'juwai-morning', true, true, 6),
+        ('khanapara-morning', 'Khanapara Morning Teer', 'Assam', 'khanapara-morning', true, true, 7),
+        ('shillong-night', 'Shillong Night Teer', 'Meghalaya', 'shillong-night', true, true, 8),
+        ('night', 'Night Teer', 'General', 'night-teer', true, true, 9),
+        ('first', 'First Teer', 'General', 'first-teer', true, true, 10)
       ON CONFLICT (name) DO NOTHING;
     `);
 
