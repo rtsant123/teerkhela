@@ -246,6 +246,22 @@ class AppDrawer extends StatelessWidget {
 
                   const Divider(height: 1),
 
+                  // Admin Panel
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.admin_panel_settings,
+                    title: 'Admin Panel',
+                    subtitle: 'Manage Houses & Results',
+                    isAdmin: true,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/admin-login');
+                    },
+                    size: size,
+                  ),
+
+                  const Divider(height: 1),
+
                   // Profile
                   _buildMenuItem(
                     context,
@@ -334,6 +350,7 @@ class AppDrawer extends StatelessWidget {
     required Size size,
     bool isPremium = false,
     bool isPremiumFeature = false,
+    bool isAdmin = false,
   }) {
     return ListTile(
       leading: Container(
@@ -342,17 +359,21 @@ class AppDrawer extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isPremium
               ? AppTheme.premiumGradient
-              : LinearGradient(
-                  colors: [
-                    AppTheme.primary.withOpacity(0.1),
-                    AppTheme.primaryLight.withOpacity(0.1),
-                  ],
-                ),
+              : isAdmin
+                  ? const LinearGradient(
+                      colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+                    )
+                  : LinearGradient(
+                      colors: [
+                        AppTheme.primary.withOpacity(0.1),
+                        AppTheme.primaryLight.withOpacity(0.1),
+                      ],
+                    ),
           borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
         ),
         child: Icon(
           icon,
-          color: isPremium ? Colors.white : AppTheme.primary,
+          color: (isPremium || isAdmin) ? Colors.white : AppTheme.primary,
           size: size.width * 0.055,
         ),
       ),

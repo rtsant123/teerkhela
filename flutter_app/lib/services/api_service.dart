@@ -467,4 +467,80 @@ class ApiService {
       throw Exception('Failed to get game accuracy stats');
     }
   }
+
+  // ========== ADMIN METHODS ==========
+
+  // Admin: Add result manually
+  static Future<void> adminAddResult({
+    required String game,
+    required int fr,
+    required int sr,
+    String? date,
+  }) async {
+    final response = await _post('/admin/results/manual-entry', {
+      'game': game,
+      'date': date ?? DateTime.now().toIso8601String().split('T')[0],
+      'fr': fr,
+      'sr': sr,
+    });
+
+    if (!response['success']) {
+      throw Exception('Failed to add result');
+    }
+  }
+
+  // Admin: Create new house
+  static Future<TeerGame> adminCreateHouse({
+    required String name,
+    required String displayName,
+    String? region,
+  }) async {
+    final response = await _post('/admin/games', {
+      'name': name,
+      'display_name': displayName,
+      'region': region,
+      'is_active': true,
+      'scrape_enabled': false,
+    });
+
+    if (response['success']) {
+      return TeerGame.fromJson(response['data']);
+    } else {
+      throw Exception('Failed to create house');
+    }
+  }
+
+  // Admin: Update house
+  static Future<TeerGame> adminUpdateHouse({
+    required int id,
+    String? name,
+    String? displayName,
+    String? region,
+    bool? isActive,
+  }) async {
+    final Map<String, dynamic> updates = {};
+    if (name != null) updates['name'] = name;
+    if (displayName != null) updates['display_name'] = displayName;
+    if (region != null) updates['region'] = region;
+    if (isActive != null) updates['is_active'] = isActive;
+
+    final response = await _post('/admin/games/$id', updates);
+
+    if (response['success']) {
+      return TeerGame.fromJson(response['data']);
+    } else {
+      throw Exception('Failed to update house');
+    }
+  }
+
+  // Admin: Toggle house active status
+  static Future<void> adminToggleHouse(int id, bool isActive) async {
+    final response = await _post('/admin/games/$id', {
+      'is_active': isActive,
+    });
+
+    if (!response['success']) {
+      throw Exception('Failed to toggle house status');
+    }
+  }
 }

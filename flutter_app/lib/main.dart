@@ -25,6 +25,11 @@ import 'screens/community_forum_simple.dart';
 import 'screens/create_forum_post_screen.dart';
 import 'screens/accuracy_stats_screen.dart';
 import 'screens/hit_numbers_screen.dart';
+import 'screens/ai_numbers_screen.dart';
+import 'screens/admin_login_screen.dart';
+import 'screens/admin_dashboard_screen.dart';
+import 'screens/admin_add_result_screen.dart';
+import 'screens/admin_manage_houses_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -112,6 +117,13 @@ class MyApp extends StatelessWidget {
               '/create-forum-post': (context) => const CreateForumPostScreen(),
               '/accuracy-stats': (context) => const AccuracyStatsScreen(),
               '/hit-numbers': (context) => const HitNumbersScreen(),
+              '/ai-common': (context) => const AINumbersScreen(type: 'common'),
+              '/ai-lucky': (context) => const AINumbersScreen(type: 'lucky'),
+              '/ai-hit': (context) => const AINumbersScreen(type: 'hit'),
+              '/admin-login': (context) => const AdminLoginScreen(),
+              '/admin-dashboard': (context) => const AdminDashboardScreen(),
+              '/admin-add-result': (context) => const AdminAddResultScreen(),
+              '/admin-manage-houses': (context) => const AdminManageHousesScreen(),
             },
           );
         },
