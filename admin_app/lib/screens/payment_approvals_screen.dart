@@ -191,30 +191,6 @@ class _PaymentApprovalsScreenState extends State<PaymentApprovalsScreen> with Si
     }
   }
 
-  void viewProof(String proofUrl) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppBar(
-              title: const Text('Payment Proof'),
-              leading: IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: Text('Image: $proofUrl\n\n(In production, this would show the actual image)'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Color getStatusColor(String status) {
     switch (status) {
@@ -305,13 +281,13 @@ class _PaymentApprovalsScreenState extends State<PaymentApprovalsScreen> with Si
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Row(
+Row(
                                             children: [
                                               Icon(Icons.person, size: 16, color: Colors.grey[600]),
                                               const SizedBox(width: 4),
                                               Expanded(
                                                 child: Text(
-                                                  payment['user_id'],
+                                                  payment['user_name'] ?? 'N/A',
                                                   style: const TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w500,
@@ -321,25 +297,6 @@ class _PaymentApprovalsScreenState extends State<PaymentApprovalsScreen> with Si
                                               ),
                                             ],
                                           ),
-                                          if (payment['user_email']?.isNotEmpty ?? false) ...[
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              children: [
-                                                Icon(Icons.email, size: 16, color: Colors.grey[600]),
-                                                const SizedBox(width: 4),
-                                                Expanded(
-                                                  child: Text(
-                                                    payment['user_email'],
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
                                         ],
                                       ),
                                     ),
@@ -433,21 +390,10 @@ class _PaymentApprovalsScreenState extends State<PaymentApprovalsScreen> with Si
                                     ),
                                   ),
                                 ],
-                                const SizedBox(height: 16),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed: () => viewProof(payment['proof_image_url']),
-                                        icon: const Icon(Icons.image, size: 18),
-                                        label: const Text('View Proof'),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: const Color(0xFF667eea),
-                                        ),
-                                      ),
-                                    ),
-                                    if (payment['status'] == 'pending') ...[
-                                      const SizedBox(width: 8),
+if (payment['status'] == 'pending') ...[
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
                                       Expanded(
                                         child: ElevatedButton.icon(
                                           onPressed: () => approvePayment(payment['id']),
@@ -472,8 +418,8 @@ class _PaymentApprovalsScreenState extends State<PaymentApprovalsScreen> with Si
                                         ),
                                       ),
                                     ],
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

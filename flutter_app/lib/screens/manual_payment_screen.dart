@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../services/api_service.dart';
 import '../utils/device_info.dart';
 
@@ -18,9 +16,8 @@ class _ManualPaymentScreenState extends State<ManualPaymentScreen> {
   List<dynamic> paymentMethods = [];
   bool isLoading = true;
   int? selectedMethodId;
+  final nameController = TextEditingController();
   final transactionIdController = TextEditingController();
-  File? selectedImage;
-  final ImagePicker _picker = ImagePicker();
   bool isSubmitting = false;
 
   @override
@@ -47,26 +44,6 @@ class _ManualPaymentScreenState extends State<ManualPaymentScreen> {
     }
   }
 
-  Future<void> pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 70,
-      );
-      if (image != null) {
-        setState(() {
-          selectedImage = File(image.path);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
-        );
-      }
-    }
-  }
-
   Future<void> submitPayment() async {
     if (selectedMethodId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -75,16 +52,16 @@ class _ManualPaymentScreenState extends State<ManualPaymentScreen> {
       return;
     }
 
-    if (transactionIdController.text.isEmpty) {
+    if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter transaction ID')),
+        const SnackBar(content: Text('Please enter your name')),
       );
       return;
     }
 
-    if (selectedImage == null) {
+    if (transactionIdController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload payment proof')),
+        const SnackBar(content: Text('Please enter transaction ID')),
       );
       return;
     }
@@ -94,18 +71,15 @@ class _ManualPaymentScreenState extends State<ManualPaymentScreen> {
     try {
       final deviceId = await DeviceInfo.getDeviceId();
 
-      // In production, you would upload the image to a server first
-      // For now, we'll use a mock URL
-      final proofImageUrl = '/uploads/payment_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
       final data = {
         'user_id': deviceId,
         'package_id': widget.package['id'],
         'package_name': widget.package['name'],
         'amount': widget.package['price'],
         'payment_method_id': selectedMethodId,
-        'transaction_id': transactionIdController.text,
-        'proof_image_url': proofImageUrl,
+        'user_name': nameController.text.trim(),
+        'transaction_id': transactionIdController.text.trim(),
+        'proof_image_url': null,
         'user_email': '',
       };
 
@@ -136,70 +110,56 @@ class _ManualPaymentScreenState extends State<ManualPaymentScreen> {
   void showUploadDialog() {
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Upload Payment Proof'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: transactionIdController,
-                  decoration: const InputDecoration(
-                    labelText: 'Transaction ID *',
-                    hintText: 'Enter UPI/Bank transaction ID',
-                    border: OutlineInputBorder(),
-                  ),
+      builder: (context) => AlertDialog(
+        title: const Text('Submit Payment Details'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name *',
+                  hintText: 'Enter your name',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 16),
-                if (selectedImage != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      selectedImage!,
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    await pickImage();
-                    setDialogState(() {});
-                  },
-                  icon: const Icon(Icons.image),
-                  label: Text(selectedImage == null ? 'Select Screenshot' : 'Change Screenshot'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () {
-                      Navigator.pop(context);
-                      submitPayment();
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667eea),
               ),
-              child: isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('Submit'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: transactionIdController,
+                decoration: const InputDecoration(
+                  labelText: 'Transaction ID *',
+                  hintText: 'Enter UPI/Bank transaction ID',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: isSubmitting
+                ? null
+                : () {
+                    Navigator.pop(context);
+                    submitPayment();
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF667eea),
+            ),
+            child: isSubmitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Text('Submit Payment'),
+          ),
+        ],
       ),
     );
   }
@@ -515,6 +475,7 @@ class _ManualPaymentScreenState extends State<ManualPaymentScreen> {
 
   @override
   void dispose() {
+    nameController.dispose();
     transactionIdController.dispose();
     super.dispose();
   }
