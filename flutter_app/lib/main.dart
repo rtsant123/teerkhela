@@ -30,6 +30,8 @@ import 'screens/admin_login_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/admin_add_result_screen.dart';
 import 'screens/admin_manage_houses_screen.dart';
+import 'screens/manual_payment_screen.dart';
+import 'screens/payment_status_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -122,6 +124,16 @@ class MyApp extends StatelessWidget {
               '/admin-dashboard': (context) => const AdminDashboardScreen(),
               '/admin-add-result': (context) => const AdminAddResultScreen(),
               '/admin-manage-houses': (context) => const AdminManageHousesScreen(),
+              '/payment-status': (context) => const PaymentStatusScreen(),
+            },
+            onGenerateRoute: (settings) {
+              if (settings.name == '/manual-payment') {
+                final package = settings.arguments as Map<String, dynamic>;
+                return MaterialPageRoute(
+                  builder: (context) => ManualPaymentScreen(package: package),
+                );
+              }
+              return null;
             },
           );
         },

@@ -554,4 +554,41 @@ class ApiService {
       throw Exception('Failed to get subscription packages');
     }
   }
+
+  // ==========================================
+  // MANUAL PAYMENT SYSTEM METHODS
+  // ==========================================
+
+  // Get active payment methods (for user app)
+  static Future<List<dynamic>> getPaymentMethods() async {
+    final response = await _get('/payment/methods');
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to get payment methods');
+    }
+  }
+
+  // Create payment request (user uploads proof)
+  static Future<Map<String, dynamic>> createPaymentRequest(Map<String, dynamic> data) async {
+    final response = await _post('/payment/request', data);
+
+    if (response['success']) {
+      return response;
+    } else {
+      throw Exception('Failed to create payment request');
+    }
+  }
+
+  // Get user's payment history
+  static Future<List<dynamic>> getUserPayments(String userId) async {
+    final response = await _get('/payment/user/$userId');
+
+    if (response['success']) {
+      return response['data'];
+    } else {
+      throw Exception('Failed to get user payments');
+    }
+  }
 }

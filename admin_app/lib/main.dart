@@ -8,6 +8,8 @@ import 'screens/manage_houses_screen.dart';
 import 'screens/send_bonus_screen.dart';
 import 'screens/manage_subscriptions_screen.dart';
 import 'screens/manage_fomo_screen.dart';
+import 'screens/manage_payment_methods_screen.dart';
+import 'screens/payment_approvals_screen.dart';
 
 void main() {
   runApp(const TeerAdminApp());
@@ -35,6 +37,8 @@ class TeerAdminApp extends StatelessWidget {
         '/manage-subscriptions': (context) => const ManageSubscriptionsScreen(),
         '/manage-fomo': (context) => const ManageFomoScreen(),
         '/send-bonus': (context) => const SendBonusScreen(),
+        '/manage-payment-methods': (context) => const ManagePaymentMethodsScreen(),
+        '/payment-approvals': (context) => const PaymentApprovalsScreen(),
       },
     );
   }

@@ -204,6 +204,14 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       return;
     }
 
+    // MANUAL PAYMENT: Navigate to manual payment screen
+    Navigator.pushNamed(
+      context,
+      '/manual-payment',
+      arguments: package,
+    );
+    return;
+
     // TEST MODE: Activate premium for testing (no payment required)
     if (testMode) {
       try {

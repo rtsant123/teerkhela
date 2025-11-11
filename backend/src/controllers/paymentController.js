@@ -8,6 +8,10 @@ const User = require('../models/User');
 const Payment = require('../models/Payment');
 const { sendNotificationToUser } = require('../config/firebase');
 
+// ===========================================
+// RAZORPAY SUBSCRIPTION METHODS (EXISTING)
+// ===========================================
+
 // Create subscription
 const createPaymentSubscription = async (req, res) => {
   try {
@@ -298,8 +302,495 @@ const cancelUserSubscription = async (req, res) => {
   }
 };
 
+// ===========================================
+// MANUAL PAYMENT SYSTEM (NEW)
+// ===========================================
+
+// Mock data storage
+let paymentMethods = [
+  {
+    id: 1,
+    name: 'PhonePe',
+    type: 'upi',
+    details: 'UPI ID: 9876543210@phonepe',
+    qr_code_url: null,
+    instructions: 'Scan QR or send to UPI ID. Make sure to enter your device ID in remarks.',
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    name: 'Google Pay',
+    type: 'upi',
+    details: 'UPI ID: 9876543210@okaxis',
+    qr_code_url: null,
+    instructions: 'Send payment to the UPI ID and upload screenshot.',
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 3,
+    name: 'Bank Transfer',
+    type: 'bank',
+    details: 'Account: 1234567890, IFSC: SBIN0001234, Name: RioGold',
+    qr_code_url: null,
+    instructions: 'Transfer to bank account and upload the receipt.',
+    is_active: true,
+    created_at: new Date().toISOString()
+  }
+];
+
+let paymentRequests = [
+  {
+    id: 1,
+    user_id: 'device123',
+    package_id: 1,
+    package_name: 'Monthly Premium',
+    amount: 49,
+    payment_method_id: 1,
+    payment_method_name: 'PhonePe',
+    transaction_id: 'TXN123456789',
+    proof_image_url: '/uploads/payment_proof_123.jpg',
+    status: 'pending',
+    rejection_reason: null,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    approved_at: null,
+    approved_by: null,
+    user_email: 'user@example.com'
+  },
+  {
+    id: 2,
+    user_id: 'device456',
+    package_id: 2,
+    package_name: 'Yearly Premium',
+    amount: 499,
+    payment_method_id: 2,
+    payment_method_name: 'Google Pay',
+    transaction_id: 'TXN987654321',
+    proof_image_url: '/uploads/payment_proof_456.jpg',
+    status: 'approved',
+    rejection_reason: null,
+    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    approved_at: new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString(),
+    approved_by: 'admin',
+    user_email: 'user2@example.com'
+  }
+];
+
+let paymentMethodIdCounter = 4;
+let paymentRequestIdCounter = 3;
+
+// Payment Methods Management
+const getPaymentMethods = async (req, res) => {
+  try {
+    // Return only active payment methods for public endpoint
+    const activeMethods = paymentMethods.filter(method => method.is_active);
+    res.json({
+      success: true,
+      data: activeMethods
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching payment methods',
+      error: error.message
+    });
+  }
+};
+
+const getAllPaymentMethods = async (req, res) => {
+  try {
+    // Return all payment methods for admin
+    res.json({
+      success: true,
+      data: paymentMethods
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching payment methods',
+      error: error.message
+    });
+  }
+};
+
+const createPaymentMethod = async (req, res) => {
+  try {
+    const { name, type, details, qr_code_url, instructions } = req.body;
+
+    if (!name || !type || !details) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, type, and details are required'
+      });
+    }
+
+    const newMethod = {
+      id: paymentMethodIdCounter++,
+      name,
+      type,
+      details,
+      qr_code_url: qr_code_url || null,
+      instructions: instructions || '',
+      is_active: true,
+      created_at: new Date().toISOString()
+    };
+
+    paymentMethods.push(newMethod);
+
+    res.status(201).json({
+      success: true,
+      message: 'Payment method created successfully',
+      data: newMethod
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error creating payment method',
+      error: error.message
+    });
+  }
+};
+
+const updatePaymentMethod = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type, details, qr_code_url, instructions, is_active } = req.body;
+
+    const methodIndex = paymentMethods.findIndex(m => m.id === parseInt(id));
+
+    if (methodIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment method not found'
+      });
+    }
+
+    // Update fields if provided
+    if (name) paymentMethods[methodIndex].name = name;
+    if (type) paymentMethods[methodIndex].type = type;
+    if (details) paymentMethods[methodIndex].details = details;
+    if (qr_code_url !== undefined) paymentMethods[methodIndex].qr_code_url = qr_code_url;
+    if (instructions !== undefined) paymentMethods[methodIndex].instructions = instructions;
+    if (is_active !== undefined) paymentMethods[methodIndex].is_active = is_active;
+
+    res.json({
+      success: true,
+      message: 'Payment method updated successfully',
+      data: paymentMethods[methodIndex]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating payment method',
+      error: error.message
+    });
+  }
+};
+
+const deletePaymentMethod = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const methodIndex = paymentMethods.findIndex(m => m.id === parseInt(id));
+
+    if (methodIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment method not found'
+      });
+    }
+
+    // Soft delete by setting is_active to false
+    paymentMethods[methodIndex].is_active = false;
+
+    res.json({
+      success: true,
+      message: 'Payment method deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting payment method',
+      error: error.message
+    });
+  }
+};
+
+const togglePaymentMethodActive = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const methodIndex = paymentMethods.findIndex(m => m.id === parseInt(id));
+
+    if (methodIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment method not found'
+      });
+    }
+
+    paymentMethods[methodIndex].is_active = !paymentMethods[methodIndex].is_active;
+
+    res.json({
+      success: true,
+      message: `Payment method ${paymentMethods[methodIndex].is_active ? 'activated' : 'deactivated'} successfully`,
+      data: paymentMethods[methodIndex]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error toggling payment method status',
+      error: error.message
+    });
+  }
+};
+
+// Payment Requests Management
+const getUserPayments = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const userPayments = paymentRequests.filter(p => p.user_id === userId);
+
+    res.json({
+      success: true,
+      data: userPayments
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user payments',
+      error: error.message
+    });
+  }
+};
+
+const createPaymentRequest = async (req, res) => {
+  try {
+    const {
+      user_id,
+      package_id,
+      package_name,
+      amount,
+      payment_method_id,
+      transaction_id,
+      proof_image_url,
+      user_email
+    } = req.body;
+
+    if (!user_id || !package_id || !amount || !payment_method_id || !transaction_id || !proof_image_url) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
+      });
+    }
+
+    // Find payment method name
+    const paymentMethod = paymentMethods.find(m => m.id === parseInt(payment_method_id));
+    const payment_method_name = paymentMethod ? paymentMethod.name : 'Unknown';
+
+    const newRequest = {
+      id: paymentRequestIdCounter++,
+      user_id,
+      package_id: parseInt(package_id),
+      package_name: package_name || 'Unknown Package',
+      amount: parseFloat(amount),
+      payment_method_id: parseInt(payment_method_id),
+      payment_method_name,
+      transaction_id,
+      proof_image_url,
+      status: 'pending',
+      rejection_reason: null,
+      created_at: new Date().toISOString(),
+      approved_at: null,
+      approved_by: null,
+      user_email: user_email || ''
+    };
+
+    paymentRequests.push(newRequest);
+
+    res.status(201).json({
+      success: true,
+      message: 'Payment request submitted successfully. Please wait for admin approval.',
+      data: newRequest
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error creating payment request',
+      error: error.message
+    });
+  }
+};
+
+const getPendingPayments = async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    let filteredPayments = paymentRequests;
+
+    if (status) {
+      filteredPayments = paymentRequests.filter(p => p.status === status);
+    }
+
+    // Sort by created_at desc
+    filteredPayments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json({
+      success: true,
+      data: filteredPayments
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching pending payments',
+      error: error.message
+    });
+  }
+};
+
+const approvePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { admin_name } = req.body;
+
+    const paymentIndex = paymentRequests.findIndex(p => p.id === parseInt(id));
+
+    if (paymentIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment request not found'
+      });
+    }
+
+    if (paymentRequests[paymentIndex].status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment request is not pending'
+      });
+    }
+
+    paymentRequests[paymentIndex].status = 'approved';
+    paymentRequests[paymentIndex].approved_at = new Date().toISOString();
+    paymentRequests[paymentIndex].approved_by = admin_name || 'admin';
+    paymentRequests[paymentIndex].rejection_reason = null;
+
+    // Here you would typically:
+    // 1. Activate user's premium subscription
+    // 2. Send notification to user
+    // 3. Update user's subscription end date
+
+    res.json({
+      success: true,
+      message: 'Payment approved successfully. User premium activated.',
+      data: paymentRequests[paymentIndex]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error approving payment',
+      error: error.message
+    });
+  }
+};
+
+const rejectPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rejection_reason, admin_name } = req.body;
+
+    if (!rejection_reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required'
+      });
+    }
+
+    const paymentIndex = paymentRequests.findIndex(p => p.id === parseInt(id));
+
+    if (paymentIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment request not found'
+      });
+    }
+
+    if (paymentRequests[paymentIndex].status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment request is not pending'
+      });
+    }
+
+    paymentRequests[paymentIndex].status = 'rejected';
+    paymentRequests[paymentIndex].rejection_reason = rejection_reason;
+    paymentRequests[paymentIndex].approved_at = new Date().toISOString();
+    paymentRequests[paymentIndex].approved_by = admin_name || 'admin';
+
+    // Here you would typically:
+    // 1. Send notification to user with rejection reason
+    // 2. Log the rejection
+
+    res.json({
+      success: true,
+      message: 'Payment rejected successfully',
+      data: paymentRequests[paymentIndex]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error rejecting payment',
+      error: error.message
+    });
+  }
+};
+
+// Get payment statistics
+const getPaymentStats = async (req, res) => {
+  try {
+    const stats = {
+      total_requests: paymentRequests.length,
+      pending: paymentRequests.filter(p => p.status === 'pending').length,
+      approved: paymentRequests.filter(p => p.status === 'approved').length,
+      rejected: paymentRequests.filter(p => p.status === 'rejected').length,
+      total_amount_approved: paymentRequests
+        .filter(p => p.status === 'approved')
+        .reduce((sum, p) => sum + p.amount, 0)
+    };
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching payment statistics',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
+  // Razorpay methods
   createPaymentSubscription,
   handleWebhook,
-  cancelUserSubscription
+  cancelUserSubscription,
+
+  // Manual payment methods - Payment Methods
+  getPaymentMethods,
+  getAllPaymentMethods,
+  createPaymentMethod,
+  updatePaymentMethod,
+  deletePaymentMethod,
+  togglePaymentMethodActive,
+
+  // Manual payment methods - Payment Requests
+  getUserPayments,
+  createPaymentRequest,
+  getPendingPayments,
+  approvePayment,
+  rejectPayment,
+  getPaymentStats
 };
