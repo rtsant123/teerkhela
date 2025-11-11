@@ -543,4 +543,15 @@ class ApiService {
       throw Exception('Failed to toggle house status');
     }
   }
+
+  // Get subscription packages
+  static Future<List<Map<String, dynamic>>> getSubscriptionPackages() async {
+    final response = await _get('/admin/subscription-packages');
+
+    if (response['success']) {
+      return List<Map<String, dynamic>>.from(response['data']);
+    } else {
+      throw Exception('Failed to get subscription packages');
+    }
+  }
 }

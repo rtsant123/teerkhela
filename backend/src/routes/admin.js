@@ -15,6 +15,11 @@ router.post('/results/bulk-historical', adminController.bulkHistoricalUpload);
 // Games Management (no auth - for simple admin app)
 router.post('/games', adminController.createGame);
 router.get('/games', adminController.getAllGames);
+router.get('/games/:id', adminController.getGame);
+router.put('/games/:id', adminController.updateGame);
+router.delete('/games/:id', adminController.deleteGame);
+router.post('/games/:id/toggle-active', adminController.toggleGameActive);
+router.post('/games/:id/toggle-scraping', adminController.toggleGameScraping);
 
 // Subscription Packages Management (no auth - for simple admin app)
 router.get('/subscription-packages', adminController.getSubscriptionPackages);
@@ -51,12 +56,5 @@ router.post('/results/bulk-upload', adminController.bulkUploadResults); // Flexi
 // Notifications
 router.post('/notification/send', adminController.sendPushNotification);
 router.get('/notifications/history', adminController.getNotificationHistory);
-
-// Games Management (authenticated routes)
-router.get('/games/:id', adminController.getGame);
-router.put('/games/:id', adminController.updateGame);
-router.delete('/games/:id', adminController.deleteGame);
-router.post('/games/:id/toggle-active', adminController.toggleGameActive);
-router.post('/games/:id/toggle-scraping', adminController.toggleGameScraping);
 
 module.exports = router;
