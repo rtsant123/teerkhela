@@ -350,7 +350,8 @@ let paymentRequests = [
     payment_method_id: 1,
     payment_method_name: 'PhonePe',
     transaction_id: 'TXN123456789',
-    proof_image_url: '/uploads/payment_proof_123.jpg',
+    user_name: 'Rajesh Kumar',
+    proof_image_url: null,
     status: 'pending',
     rejection_reason: null,
     created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
@@ -367,7 +368,8 @@ let paymentRequests = [
     payment_method_id: 2,
     payment_method_name: 'Google Pay',
     transaction_id: 'TXN987654321',
-    proof_image_url: '/uploads/payment_proof_456.jpg',
+    user_name: 'Priya Sharma',
+    proof_image_url: null,
     status: 'approved',
     rejection_reason: null,
     created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
@@ -575,14 +577,16 @@ const createPaymentRequest = async (req, res) => {
       amount,
       payment_method_id,
       transaction_id,
+      user_name,
       proof_image_url,
       user_email
     } = req.body;
 
-    if (!user_id || !package_id || !amount || !payment_method_id || !transaction_id || !proof_image_url) {
+    // Validate required fields (removed proof_image_url, added user_name)
+    if (!user_id || !package_id || !amount || !payment_method_id || !transaction_id) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required'
+        message: 'user_id, package_id, amount, payment_method_id, and transaction_id are required'
       });
     }
 
@@ -599,7 +603,8 @@ const createPaymentRequest = async (req, res) => {
       payment_method_id: parseInt(payment_method_id),
       payment_method_name,
       transaction_id,
-      proof_image_url,
+      user_name: user_name || 'Unknown User',
+      proof_image_url: proof_image_url || null,
       status: 'pending',
       rejection_reason: null,
       created_at: new Date().toISOString(),
