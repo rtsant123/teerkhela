@@ -592,8 +592,15 @@ const getAllGames = async (req, res) => {
 // Get single game
 const getGame = async (req, res) => {
   try {
-    const { id } = req.params;
-    const game = await Game.getById(id);
+    const { id } = req.params; // Can be either ID or name
+
+    // Try to find game by name first (since admin app sends name)
+    let game = await Game.getByName(id);
+
+    // If not found by name, try by ID
+    if (!game && !isNaN(id)) {
+      game = await Game.getById(parseInt(id));
+    }
 
     if (!game) {
       return res.status(404).json({
@@ -667,10 +674,25 @@ const createGame = async (req, res) => {
 // Update game
 const updateGame = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Can be either ID or name
     const { display_name, region, scrape_url, is_active, scrape_enabled, fr_time, sr_time, display_order } = req.body;
 
-    const game = await Game.update(id, {
+    // Try to find game by name first (since admin app sends name)
+    let existingGame = await Game.getByName(id);
+
+    // If not found by name, try by ID
+    if (!existingGame && !isNaN(id)) {
+      existingGame = await Game.getById(parseInt(id));
+    }
+
+    if (!existingGame) {
+      return res.status(404).json({
+        success: false,
+        message: 'Game not found'
+      });
+    }
+
+    const game = await Game.update(existingGame.id, {
       display_name,
       region,
       scrape_url,
@@ -680,13 +702,6 @@ const updateGame = async (req, res) => {
       sr_time,
       display_order
     });
-
-    if (!game) {
-      return res.status(404).json({
-        success: false,
-        message: 'Game not found'
-      });
-    }
 
     res.json({
       success: true,
@@ -705,16 +720,24 @@ const updateGame = async (req, res) => {
 // Delete game (soft delete)
 const deleteGame = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Can be either ID or name
 
-    const game = await Game.delete(id);
+    // Try to find game by name first (since admin app sends name)
+    let existingGame = await Game.getByName(id);
 
-    if (!game) {
+    // If not found by name, try by ID
+    if (!existingGame && !isNaN(id)) {
+      existingGame = await Game.getById(parseInt(id));
+    }
+
+    if (!existingGame) {
       return res.status(404).json({
         success: false,
         message: 'Game not found'
       });
     }
+
+    const game = await Game.delete(existingGame.id);
 
     res.json({
       success: true,
@@ -732,16 +755,24 @@ const deleteGame = async (req, res) => {
 // Toggle game active status
 const toggleGameActive = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Can be either ID or name
 
-    const game = await Game.toggleActive(id);
+    // Try to find game by name first (since admin app sends name)
+    let existingGame = await Game.getByName(id);
 
-    if (!game) {
+    // If not found by name, try by ID
+    if (!existingGame && !isNaN(id)) {
+      existingGame = await Game.getById(parseInt(id));
+    }
+
+    if (!existingGame) {
       return res.status(404).json({
         success: false,
         message: 'Game not found'
       });
     }
+
+    const game = await Game.toggleActive(existingGame.id);
 
     res.json({
       success: true,
@@ -760,16 +791,24 @@ const toggleGameActive = async (req, res) => {
 // Toggle game scraping
 const toggleGameScraping = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Can be either ID or name
 
-    const game = await Game.toggleScraping(id);
+    // Try to find game by name first (since admin app sends name)
+    let existingGame = await Game.getByName(id);
 
-    if (!game) {
+    // If not found by name, try by ID
+    if (!existingGame && !isNaN(id)) {
+      existingGame = await Game.getById(parseInt(id));
+    }
+
+    if (!existingGame) {
       return res.status(404).json({
         success: false,
         message: 'Game not found'
       });
     }
+
+    const game = await Game.toggleScraping(existingGame.id);
 
     res.json({
       success: true,
