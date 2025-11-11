@@ -929,9 +929,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
         ),
       ),
       child: Column(
-        children: indicators.map((indicator) {
+        children: indicators.asMap().entries.map((entry) {
+          final index = entry.key;
+          final indicator = entry.value;
+          final isLast = index == indicators.length - 1;
+
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
             child: Row(
               children: [
                 Container(
@@ -959,37 +963,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               ],
             ),
           );
-        }).toList()
-          ..removeLast() // Remove last padding
-          ..add(
-            // Add back last item without padding
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    indicators.last['icon'] as IconData,
-                    color: AppTheme.primary,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    indicators.last['text'] as String,
-                    style: AppTheme.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        }).toList(),
       ),
     );
   }
