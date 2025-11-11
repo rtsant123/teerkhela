@@ -785,6 +785,178 @@ const toggleGameScraping = async (req, res) => {
   }
 };
 
+// Subscription Packages Management
+const getSubscriptionPackages = async (req, res) => {
+  try {
+    // For now, return mock data - you can add database later
+    const packages = [
+      { id: 1, name: 'Monthly Premium', price: 49, days: 30, description: 'Full access to all features', is_popular: true },
+      { id: 2, name: 'Quarterly Premium', price: 129, days: 90, description: '3 months access - Save 10%', is_popular: false },
+      { id: 3, name: 'Annual Premium', price: 499, days: 365, description: '1 year access - Best value!', is_popular: false }
+    ];
+
+    res.json({
+      success: true,
+      data: packages
+    });
+  } catch (error) {
+    console.error('Error getting subscription packages:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error getting subscription packages'
+    });
+  }
+};
+
+const createSubscriptionPackage = async (req, res) => {
+  try {
+    const { name, price, days, description, isPopular } = req.body;
+
+    // Mock response - add database later
+    const newPackage = {
+      id: Date.now(),
+      name,
+      price,
+      days,
+      description,
+      is_popular: isPopular || false
+    };
+
+    res.status(201).json({
+      success: true,
+      message: 'Package created successfully',
+      data: newPackage
+    });
+  } catch (error) {
+    console.error('Error creating subscription package:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating subscription package'
+    });
+  }
+};
+
+const updateSubscriptionPackage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, price, days, description, isPopular } = req.body;
+
+    // Mock response
+    res.json({
+      success: true,
+      message: 'Package updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating subscription package:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating subscription package'
+    });
+  }
+};
+
+const deleteSubscriptionPackage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Mock response
+    res.json({
+      success: true,
+      message: 'Package deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting subscription package:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting subscription package'
+    });
+  }
+};
+
+// FOMO Content Management
+const getFomoContent = async (req, res) => {
+  try {
+    // Mock FOMO content
+    const fomoItems = [
+      { id: 1, type: 'accuracy', title: '95% Accurate Predictions', message: 'Our AI predictions helped 500+ users win this week!', is_active: true },
+      { id: 2, type: 'winner', title: '1000+ Winners Today', message: 'Join the winning community!', is_active: true },
+      { id: 3, type: 'users', title: '5000+ Active Users', message: 'Trust the most popular Teer prediction app', is_active: true }
+    ];
+
+    res.json({
+      success: true,
+      data: fomoItems
+    });
+  } catch (error) {
+    console.error('Error getting FOMO content:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error getting FOMO content'
+    });
+  }
+};
+
+const createFomoContent = async (req, res) => {
+  try {
+    const { type, title, message, isActive } = req.body;
+
+    const newFomo = {
+      id: Date.now(),
+      type,
+      title,
+      message,
+      is_active: isActive !== undefined ? isActive : true
+    };
+
+    res.status(201).json({
+      success: true,
+      message: 'FOMO content created successfully',
+      data: newFomo
+    });
+  } catch (error) {
+    console.error('Error creating FOMO content:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating FOMO content'
+    });
+  }
+};
+
+const updateFomoContent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, title, message, isActive } = req.body;
+
+    res.json({
+      success: true,
+      message: 'FOMO content updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating FOMO content:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating FOMO content'
+    });
+  }
+};
+
+const deleteFomoContent = async (req, res) => {
+  try {
+    const { id} = req.params;
+
+    res.json({
+      success: true,
+      message: 'FOMO content deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting FOMO content:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting FOMO content'
+    });
+  }
+};
+
 module.exports = {
   login,
   getStatistics,
@@ -807,5 +979,15 @@ module.exports = {
   updateGame,
   deleteGame,
   toggleGameActive,
-  toggleGameScraping
+  toggleGameScraping,
+  // Subscription packages
+  getSubscriptionPackages,
+  createSubscriptionPackage,
+  updateSubscriptionPackage,
+  deleteSubscriptionPackage,
+  // FOMO content
+  getFomoContent,
+  createFomoContent,
+  updateFomoContent,
+  deleteFomoContent
 };

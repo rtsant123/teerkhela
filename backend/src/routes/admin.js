@@ -16,6 +16,18 @@ router.post('/results/bulk-historical', adminController.bulkHistoricalUpload);
 router.post('/games', adminController.createGame);
 router.get('/games', adminController.getAllGames);
 
+// Subscription Packages Management (no auth - for simple admin app)
+router.get('/subscription-packages', adminController.getSubscriptionPackages);
+router.post('/subscription-packages', adminController.createSubscriptionPackage);
+router.put('/subscription-packages/:id', adminController.updateSubscriptionPackage);
+router.delete('/subscription-packages/:id', adminController.deleteSubscriptionPackage);
+
+// FOMO Content Management (no auth - for simple admin app)
+router.get('/fomo', adminController.getFomoContent);
+router.post('/fomo', adminController.createFomoContent);
+router.put('/fomo/:id', adminController.updateFomoContent);
+router.delete('/fomo/:id', adminController.deleteFomoContent);
+
 // All routes below require admin auth
 router.use(adminAuth);
 
