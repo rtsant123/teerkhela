@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../utils/app_theme.dart';
 import '../models/game.dart';
+import '../widgets/app_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 
 class LuckyNumbersScreen extends StatefulWidget {
   const LuckyNumbersScreen({super.key});
@@ -96,20 +100,25 @@ class _LuckyNumbersScreenState extends State<LuckyNumbersScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final userProvider = Provider.of<UserProvider>(context);
+    final isPremium = userProvider.isPremium;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lucky Numbers'),
+        title: const Text('Lucky VIP Numbers'),
         backgroundColor: AppTheme.primary,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _generateLuckyNumbers,
-            tooltip: 'Generate New',
-          ),
+          if (isPremium)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _generateLuckyNumbers,
+              tooltip: 'Generate New',
+            ),
         ],
       ),
-      body: _buildBody(size),
+      drawer: const AppDrawer(),
+      body: isPremium ? _buildBody(size) : _buildPremiumRequired(size),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
 
@@ -187,20 +196,35 @@ class _LuckyNumbersScreenState extends State<LuckyNumbersScreen> {
             Container(
               padding: EdgeInsets.all(AppTheme.space16),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                gradient: LinearGradient(
+                  colors: [AppTheme.primary.withOpacity(0.15), AppTheme.premiumPurple.withOpacity(0.15)],
+                ),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: AppTheme.primary),
+                  Icon(Icons.stars, color: AppTheme.primary, size: 28),
                   SizedBox(width: AppTheme.space12),
                   Expanded(
-                    child: Text(
-                      'Randomly generated lucky numbers',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.textPrimary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'VIP Lucky Numbers',
+                          style: AppTheme.subtitle1.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Premium feature - Your lucky picks for today',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -232,22 +256,7 @@ class _LuckyNumbersScreenState extends State<LuckyNumbersScreen> {
               runSpacing: AppTheme.space12,
               children: _luckySR.map((num) => _buildNumberChip(num, false, size)).toList(),
             ),
-            SizedBox(height: AppTheme.space24),
-
-            // Generate Button
-            ElevatedButton.icon(
-              onPressed: _generateLuckyNumbers,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Generate New Lucky Numbers'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.all(AppTheme.space16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                ),
-              ),
-            ),
+            SizedBox(height: AppTheme.space32),
           ],
         ),
       ),
@@ -280,6 +289,68 @@ class _LuckyNumbersScreenState extends State<LuckyNumbersScreen> {
           fontWeight: FontWeight.bold,
         ),
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildPremiumRequired(Size size) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(size.width * 0.08),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.lock,
+              size: size.width * 0.25,
+              color: AppTheme.textSecondary.withOpacity(0.5),
+            ),
+            SizedBox(height: size.height * 0.03),
+            Text(
+              'Premium Feature',
+              style: AppTheme.heading2.copyWith(
+                fontSize: size.width * 0.06,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: size.height * 0.02),
+            Text(
+              'Upgrade to Premium to access Lucky VIP Numbers and get your personalized lucky picks',
+              style: AppTheme.bodyMedium.copyWith(
+                fontSize: size.width * 0.04,
+                color: AppTheme.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: size.height * 0.04),
+            Container(
+              width: double.infinity,
+              constraints: BoxConstraints(maxWidth: size.width * 0.8),
+              child: ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/subscribe'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.08,
+                    vertical: size.height * 0.02,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                ),
+                child: Text(
+                  'Upgrade to Premium',
+                  style: TextStyle(
+                    fontSize: size.width * 0.045,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -150,9 +150,6 @@ class _AppInitializerState extends State<AppInitializer> {
 
     if (!mounted) return;
 
-    // Check if user has seen onboarding
-    final hasSeenOnboarding = StorageService.getOnboardingComplete();
-
     // Generate device ID if not exists (for premium tracking)
     String? deviceId = StorageService.getDeviceId();
     if (deviceId == null) {
@@ -165,12 +162,8 @@ class _AppInitializerState extends State<AppInitializer> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await userProvider.initializeWithDeviceId(deviceId);
 
-      // Navigate based on onboarding status
-      if (!hasSeenOnboarding) {
-        Navigator.pushReplacementNamed(context, '/onboarding');
-      } else {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+      // Skip onboarding - go directly to home
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 

@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'screens/admin_home_screen.dart';
+import 'screens/past_results_screen.dart';
+import 'screens/manage_houses_screen.dart';
+import 'screens/send_bonus_screen.dart';
+import 'screens/manage_subscriptions_screen.dart';
+import 'screens/manage_fomo_screen.dart';
 
 void main() {
   runApp(const TeerAdminApp());
@@ -20,7 +26,16 @@ class TeerAdminApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF667eea)),
         useMaterial3: true,
       ),
-      home: const AddResultScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const AdminHomeScreen(),
+        '/add-result': (context) => const AddResultScreen(),
+        '/past-results': (context) => const PastResultsScreen(),
+        '/manage-houses': (context) => const ManageHousesScreen(),
+        '/manage-subscriptions': (context) => const ManageSubscriptionsScreen(),
+        '/manage-fomo': (context) => const ManageFomoScreen(),
+        '/send-bonus': (context) => const SendBonusScreen(),
+      },
     );
   }
 }

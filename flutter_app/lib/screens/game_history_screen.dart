@@ -5,6 +5,7 @@ import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../models/result.dart';
 import '../utils/app_theme.dart';
+import '../widgets/app_bottom_nav.dart';
 
 class GameHistoryScreen extends StatefulWidget {
   const GameHistoryScreen({super.key});
@@ -56,6 +57,7 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final displayName = args['displayName'] as String;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -69,8 +71,8 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
           if (!_isPremium)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(size.width * 0.04),
+              margin: EdgeInsets.all(size.width * 0.04),
               decoration: BoxDecoration(
                 gradient: AppTheme.premiumGradient,
                 borderRadius: BorderRadius.circular(12),
@@ -84,24 +86,24 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.lock, color: Colors.white, size: 32),
-                  const SizedBox(width: 16),
+                  Icon(Icons.lock, color: Colors.white, size: size.width * 0.08),
+                  SizedBox(width: size.width * 0.04),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Upgrade for 30 Days History',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: size.width * 0.04,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: size.height * 0.005),
                         Text(
                           'Free: 7 days | Premium: 30 days',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                          style: TextStyle(color: Colors.white70, fontSize: size.width * 0.03),
                         ),
                       ],
                     ),
@@ -167,6 +169,7 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 
@@ -228,15 +231,16 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
   }
 
   Widget _buildHistoryCard(TeerResult result) {
+    final size = MediaQuery.of(context).size;
     final dateFormat = DateFormat('EEEE, MMM d, yyyy');
     final displayDate = result.date != null ? dateFormat.format(result.date!) : 'Unknown Date';
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: size.height * 0.015),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(size.width * 0.04),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -246,8 +250,8 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
               children: [
                 Text(
                   displayDate,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: size.width * 0.035,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.primary,
                   ),
@@ -288,16 +292,16 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
                         Text(
                           'FR',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: size.width * 0.03,
                             color: AppTheme.frColor.withOpacity(0.7),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: size.height * 0.005),
                         Text(
                           result.fr?.toString() ?? '--',
-                          style: const TextStyle(
-                            fontSize: 32,
+                          style: TextStyle(
+                            fontSize: size.width * 0.08,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.frColor,
                           ),
@@ -322,16 +326,16 @@ class _GameHistoryScreenState extends State<GameHistoryScreen> {
                         Text(
                           'SR',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: size.width * 0.03,
                             color: AppTheme.srColor.withOpacity(0.7),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: size.height * 0.005),
                         Text(
                           result.sr?.toString() ?? '--',
-                          style: const TextStyle(
-                            fontSize: 32,
+                          style: TextStyle(
+                            fontSize: size.width * 0.08,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.srColor,
                           ),

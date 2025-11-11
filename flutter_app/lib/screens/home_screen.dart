@@ -133,8 +133,6 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: const AppDrawer(),
       body: _buildBody(size),
       bottomNavigationBar: const AppBottomNav(currentIndex: 0),
-      floatingActionButton: _buildFloatingMenu(context),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -263,269 +261,106 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            // Enhanced Accuracy Banner - More Prominent
-            Container(
-              margin: EdgeInsets.all(horizontalPadding),
-              padding: EdgeInsets.all(horizontalPadding * 1.5),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF11998e).withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: const AccuracyBannerWidget(),
-            ),
-
-            // Hit Numbers Banner for Premium Users
-            if (userProvider.isPremium && _hitStats != null)
+            // Premium Banner for Free Users - Simplified
+            if (!userProvider.isPremium)
               GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, '/hit-numbers');
-                },
+                onTap: () => Navigator.pushNamed(context, '/subscribe'),
                 child: Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(horizontalPadding * 1.2),
-                  margin: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding,
-                    vertical: AppTheme.space8,
-                  ),
+                  padding: const EdgeInsets.all(16),
+                  margin: EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.success,
-                        AppTheme.success.withOpacity(0.7),
-                      ],
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.success.withOpacity(0.3),
+                        color: const Color(0xFF667eea).withOpacity(0.3),
                         blurRadius: 12,
-                        offset: const Offset(0, 6),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(AppTheme.space12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                        ),
-                        child: Icon(
-                          Icons.track_changes,
-                          color: Colors.white,
-                          size: iconSize * 0.7,
-                        ),
+                      Icon(
+                        Icons.stars,
+                        color: Colors.white,
+                        size: 28,
                       ),
-                      SizedBox(width: AppTheme.space12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '🎯 Today\'s Hits',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: size.width * 0.042,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                if (_hitStats!.successfulPredictions > 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                                      ),
-                                      child: Text(
-                                        '${_hitStats!.overallAccuracy.toStringAsFixed(0)}%',
-                                        style: TextStyle(
-                                          color: AppTheme.success,
-                                          fontSize: size.width * 0.028,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            SizedBox(height: AppTheme.space4),
                             Text(
-                              '${_hitStats!.successfulPredictions}/${_hitStats!.totalPredictions} predictions matched',
+                              'Upgrade to Premium',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Get predictions, analysis & more',
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.9),
-                                fontSize: size.width * 0.032,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
                               ),
                             ),
                           ],
                         ),
                       ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '₹49',
+                          style: TextStyle(
+                            color: const Color(0xFF667eea),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Icon(
                         Icons.arrow_forward_ios,
                         color: Colors.white,
-                        size: AppTheme.iconSmall(size.width),
+                        size: 16,
                       ),
                     ],
                   ),
                 ),
               ),
 
-            // Premium Banner for Free Users - Enhanced
-            if (!userProvider.isPremium)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(horizontalPadding * 1.2),
-                margin: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding,
-                  vertical: AppTheme.space8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF8E2DE2).withOpacity(0.4),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(AppTheme.space12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                      ),
-                      child: Icon(
-                        Icons.workspace_premium,
-                        color: Colors.white,
-                        size: iconSize * 0.8,
-                      ),
-                    ),
-                    SizedBox(width: AppTheme.space12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Unlock Premium',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: size.width * 0.05,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          SizedBox(height: AppTheme.space4),
-                          Text(
-                            'Hit Analysis • Results History • Dream Bot',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: size.width * 0.032,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(height: AppTheme.space8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(AppTheme.space20),
-                            ),
-                            child: Text(
-                              '50% OFF - Just ₹49/month',
-                              style: TextStyle(
-                                color: const Color(0xFF8E2DE2),
-                                fontSize: size.width * 0.032,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(AppTheme.opacityMedium),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/subscribe');
-                        },
-                        icon: Icon(
-                          Icons.arrow_forward,
-                          color: const Color(0xFF8E2DE2),
-                          size: iconSize * 0.6,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Section Header
+            // Section Header - Cleaner
             Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: AppTheme.space12,
-              ),
+              padding: EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 12),
               child: Row(
                 children: [
-                  Container(
-                    width: 4,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
                   Text(
                     'Today\'s Results',
-                    style: AppTheme.heading2,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                   const Spacer(),
                   Text(
-                    DateFormat('dd MMM, yyyy').format(DateTime.now()),
+                    DateFormat('dd MMM').format(DateTime.now()),
                     style: TextStyle(
-                      fontSize: size.width * 0.035,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: Colors.grey[600],
                     ),
                   ),
                 ],
@@ -637,6 +472,186 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildResultCard(TeerResult result, Size size) {
+    final bool isComplete = result.fr != null && result.sr != null;
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    final displayDate = result.date != null ? dateFormat.format(result.date!) : DateFormat('MMM dd, yyyy').format(DateTime.now());
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/game-history',
+          arguments: {'game': result.game, 'displayName': result.displayName},
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: size.height * 0.015),
+        padding: EdgeInsets.all(size.width * 0.04),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        result.displayName,
+                        style: TextStyle(
+                          fontSize: size.width * 0.045,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: size.height * 0.005),
+                      Text(
+                        displayDate,
+                        style: TextStyle(
+                          fontSize: size.width * 0.032,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: size.width * 0.025, vertical: size.height * 0.005),
+                  decoration: BoxDecoration(
+                    color: isComplete ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    isComplete ? 'DECLARED' : 'PENDING',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: size.width * 0.029,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: size.height * 0.02),
+
+            // FR & SR Numbers
+            Row(
+              children: [
+                // FR
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'FR',
+                          style: TextStyle(
+                            fontSize: size.width * 0.032,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                        SizedBox(height: size.height * 0.01),
+                        Text(
+                          result.fr?.toString().padLeft(2, '0') ?? '--',
+                          style: TextStyle(
+                            fontSize: size.width * 0.085,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: size.width * 0.03),
+                // SR
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'SR',
+                          style: TextStyle(
+                            fontSize: size.width * 0.032,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        SizedBox(height: size.height * 0.01),
+                        Text(
+                          result.sr?.toString().padLeft(2, '0') ?? '--',
+                          style: TextStyle(
+                            fontSize: size.width * 0.085,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: size.height * 0.015),
+
+            // View History Button
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: size.height * 0.012),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history, size: size.width * 0.04, color: Colors.grey.shade700),
+                  SizedBox(width: size.width * 0.015),
+                  Text(
+                    'View Full History',
+                    style: TextStyle(
+                      fontSize: size.width * 0.034,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  SizedBox(width: size.width * 0.01),
+                  Icon(Icons.arrow_forward_ios, size: size.width * 0.03, color: Colors.grey.shade600),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Simplified helper methods
+  Widget _buildOldResultCard(TeerResult result, Size size) {
     final bool isComplete = result.fr != null && result.sr != null;
     final String statusText = isComplete ? 'DECLARED' : 'PENDING';
     final Color statusColor = isComplete ? const Color(0xFF10B981) : const Color(0xFFF59E0B);

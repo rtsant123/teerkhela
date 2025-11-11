@@ -51,7 +51,7 @@ class AppBottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Stack(
               children: [
-                const Icon(Icons.lightbulb_outline),
+                const Icon(Icons.grid_3x3_rounded),
                 if (!isPremium)
                   Positioned(
                     right: 0,
@@ -70,11 +70,31 @@ class AppBottomNav extends StatelessWidget {
                   ),
               ],
             ),
-            label: 'Hot Numbers',
+            label: 'Common',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.forum_rounded),
-            label: 'Forum',
+          BottomNavigationBarItem(
+            icon: Stack(
+              children: [
+                const Icon(Icons.stars_rounded),
+                if (!isPremium)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.premiumGold,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 8,
+                        minHeight: 8,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            label: 'Lucky VIP',
           ),
           BottomNavigationBarItem(
             icon: Stack(
@@ -119,10 +139,10 @@ class AppBottomNav extends StatelessWidget {
         route = '/home';
         break;
       case 1:
-        route = '/predictions';
+        route = '/common-numbers';
         break;
       case 2:
-        route = '/community-forum';
+        route = '/lucky-numbers';
         break;
       case 3:
         route = '/dream';
