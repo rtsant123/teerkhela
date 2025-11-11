@@ -4,7 +4,6 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
-import '../models/user.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
@@ -16,15 +15,19 @@ class SubscribeScreen extends StatefulWidget {
   State<SubscribeScreen> createState() => _SubscribeScreenState();
 }
 
-class _SubscribeScreenState extends State<SubscribeScreen> {
+class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProviderStateMixin {
   late Razorpay _razorpay;
-  final _emailController = TextEditingController();
-  bool _isLoading = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
-  // Razorpay Production Keys
-  static const String razorpayKeyId = 'rzp_test_RcNQd80r82gwlm'; // TODO: Replace with live key
-  static const String planId = 'plan_PUmwDBdxGxFw5h'; // Monthly subscription plan
-  static const bool testMode = false; // Production mode - real Razorpay payments
+  List<Map<String, dynamic>> _packages = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+  int? _selectedPackageIndex;
+
+  // Razorpay Configuration
+  static const String razorpayKeyId = 'rzp_test_RcNQd80r82gwlm';
+  static const bool testMode = true; // Test mode - demo subscription for testing
 
   @override
   void initState() {
@@ -34,18 +37,45 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
 
-    // Pre-fill email if saved
-    final savedEmail = StorageService.getEmail();
-    if (savedEmail != null) {
-      _emailController.text = savedEmail;
-    }
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
+
+    _loadPackages();
   }
 
   @override
   void dispose() {
     _razorpay.clear();
-    _emailController.dispose();
+    _animationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadPackages() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    try {
+      final packages = await ApiService.getSubscriptionPackages();
+      setState(() {
+        _packages = packages;
+        _isLoading = false;
+      });
+      _animationController.forward();
+    } catch (e) {
+      print('Error loading packages: $e');
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+      });
+    }
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
@@ -53,34 +83,80 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
 
     if (!mounted) return;
 
-    // Show success dialog
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 32),
-            SizedBox(width: 12),
-            Text('Success!'),
-          ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         ),
-        content: const Text(
-          'Your premium subscription is now active. Enjoy all features!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Refresh user status
-              Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
-
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous screen
-              Navigator.pushReplacementNamed(context, '/predictions'); // Go to predictions
-            },
-            child: const Text('Start Using'),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.successGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Welcome to VIP Premium!',
+                style: AppTheme.heading2,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Your premium subscription is now active. Enjoy all AI-powered features!',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); // Go back to previous screen
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    'Start Using Premium',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -93,11 +169,16 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Payment failed: ${response.message}'),
-        backgroundColor: Colors.red,
+        backgroundColor: AppTheme.error,
+        behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'Retry',
           textColor: Colors.white,
-          onPressed: _openCheckout,
+          onPressed: () {
+            if (_selectedPackageIndex != null) {
+              _handleSubscribe(_selectedPackageIndex!);
+            }
+          },
         ),
       ),
     );
@@ -107,76 +188,140 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
     print('External Wallet: ${response.walletName}');
   }
 
-  Future<void> _openCheckout() async {
-    final email = _emailController.text.trim();
+  Future<void> _handleSubscribe(int packageIndex) async {
+    setState(() {
+      _selectedPackageIndex = packageIndex;
+    });
 
-    if (email.isEmpty || !email.contains('@')) {
+    final package = _packages[packageIndex];
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.userId;
+
+    if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email')),
+        const SnackBar(content: Text('Please login first')),
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    // TEST MODE: Activate premium for testing (no payment required)
+    if (testMode) {
+      try {
+        await userProvider.activateTestPremium(package['days']);
 
-    try {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final userId = userProvider.userId!;
-
-      // Save email
-      await StorageService.setEmail(email);
-      userProvider.updateEmail(email);
-
-      // TEST MODE: Show error - payment must be configured
-      if (testMode) {
         if (!mounted) return;
-        setState(() => _isLoading = false);
 
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.error, color: Colors.red, size: 32),
-                SizedBox(width: 12),
-                Text('Payment Not Available'),
-              ],
+          barrierDismissible: false,
+          builder: (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
             ),
-            content: const Text(
-              'Payment integration is not configured.\n\nPlease contact support to activate premium.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.successGradient,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                      size: 48,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Test Premium Activated!',
+                    style: AppTheme.heading2,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Test premium subscription activated for ${package['days']} days.\n\nNote: This is for testing only.',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.premiumGradient,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Close dialog
+                        Navigator.pop(context); // Go back
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Start Using Premium',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
+    // PRODUCTION MODE: Real payment flow
+    try {
+      final email = StorageService.getEmail() ?? '';
+
+      if (email.isEmpty || !email.contains('@')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please set a valid email in your profile')),
         );
         return;
       }
 
-      // PRODUCTION MODE: Real payment flow
-      final subscriptionData = await ApiService.createSubscription(
-        userId,
-        email,
-        planId,
-      );
-
-      // Open Razorpay checkout
+      // Create subscription (you'll need to implement this in your API)
       var options = {
         'key': razorpayKeyId,
-        'subscription_id': subscriptionData['subscriptionId'],
-        'name': 'Teer Khela Premium',
-        'description': 'Monthly Subscription - AI Predictions',
+        'amount': package['price'] * 100, // Razorpay takes amount in paise
+        'name': 'Teer Khela VIP Premium',
+        'description': package['name'],
         'prefill': {
           'email': email,
           'contact': '',
         },
         'theme': {
-          'color': '#7c3aed',
+          'color': '#9333EA',
         },
       };
 
@@ -185,386 +330,667 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Unable to process subscription. Please try again later.'),
-            backgroundColor: Colors.red,
+            content: Text('Unable to process subscription: ${e.toString()}'),
+            backgroundColor: AppTheme.error,
           ),
         );
       }
       print('Subscription error: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Upgrade to Premium'),
+        title: const Text('Upgrade to VIP Premium'),
         backgroundColor: AppTheme.primary,
+        elevation: 0,
       ),
       drawer: const AppDrawer(),
-      body: _buildContent(size),
+      body: _isLoading
+          ? _buildLoadingState()
+          : _hasError
+              ? _buildErrorState()
+              : _buildContent(),
       bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
   }
 
-  Widget _buildContent(Size size) {
-    final horizontalPadding = size.width * 0.05;
-    final iconSize = size.width * 0.2;
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: AppTheme.premiumGradient,
+              shape: BoxShape.circle,
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(12.0),
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Loading Premium Plans...',
+            style: AppTheme.subtitle1.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: AppTheme.space16,
-        ),
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Hero Section
             Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(size.width * 0.08),
-              decoration: const BoxDecoration(
-                gradient: AppTheme.premiumGradient,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(AppTheme.radiusMedium),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.workspace_premium,
-                    size: iconSize,
-                    color: Colors.white,
-                  ),
-                  SizedBox(height: AppTheme.space16),
-                  Text(
-                    'Premium Membership',
-                    style: AppTheme.heading1.copyWith(
-                      fontSize: size.width * 0.065,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: AppTheme.space12),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppTheme.space16,
-                      vertical: AppTheme.space8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                    ),
-                    child: Text(
-                      '50% OFF - LIMITED TIME!',
-                      style: AppTheme.buttonText.copyWith(
-                        fontSize: size.width * 0.033,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.space24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '₹',
-                        style: TextStyle(
-                          fontSize: size.width * 0.055,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '49',
-                        style: TextStyle(
-                          fontSize: size.width * 0.08,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                      ),
-                      SizedBox(width: AppTheme.space8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '₹99',
-                            style: TextStyle(
-                              fontSize: size.width * 0.042,
-                              color: Colors.white70,
-                              decoration: TextDecoration.lineThrough,
-                            ),
-                          ),
-                          Text(
-                            'per month',
-                            style: TextStyle(
-                              fontSize: size.width * 0.037,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: AppTheme.space8),
-                  Text(
-                    'Auto-renews monthly. Cancel anytime.',
-                    style: AppTheme.bodySmall.copyWith(
-                      fontSize: size.width * 0.03,
-                      color: Colors.white70,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: AppTheme.space24),
-
-            // Features Section - Simplified to 3 Key Benefits
-            Container(
-              padding: EdgeInsets.all(AppTheme.space20),
-              decoration: AppTheme.cardDecoration,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.workspace_premium,
-                        color: AppTheme.premiumPurple,
-                        size: size.width * 0.065,
-                      ),
-                      SizedBox(width: AppTheme.space12),
-                      Text(
-                        'What You Get',
-                        style: AppTheme.heading3.copyWith(
-                          fontSize: size.width * 0.055,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: AppTheme.space20),
-                  _buildFeatureItem(
-                    Icons.auto_graph,
-                    'AI Predictions (10 Numbers)',
-                    'Daily AI predictions for FR & SR in all 6 Teer games',
-                    size,
-                  ),
-                  SizedBox(height: AppTheme.space16),
-                  _buildFeatureItem(
-                    Icons.nights_stay,
-                    'Dream Interpreter Bot',
-                    '100+ symbols in Hindi, Bengali, English & more',
-                    size,
-                  ),
-                  SizedBox(height: AppTheme.space16),
-                  _buildFeatureItem(
-                    Icons.bar_chart,
-                    'Complete Analytics',
-                    '30-day history • Common numbers • Formula calculator',
-                    size,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: AppTheme.space24),
-
-            // Email Input
-            Container(
-              padding: EdgeInsets.all(AppTheme.space16),
-              decoration: AppTheme.cardDecoration,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Enter Your Email',
-                    style: AppTheme.subtitle1.copyWith(
-                      fontSize: size.width * 0.042,
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.space12),
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: AppTheme.bodyMedium.copyWith(
-                      fontSize: size.width * 0.038,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      labelStyle: AppTheme.bodyMedium.copyWith(
-                        fontSize: size.width * 0.037,
-                      ),
-                      hintText: 'Enter your email',
-                      hintStyle: AppTheme.bodySmall.copyWith(
-                        fontSize: size.width * 0.035,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                        borderSide: BorderSide(
-                          color: AppTheme.textSecondary.withOpacity(0.3),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                        borderSide: const BorderSide(color: AppTheme.primary, width: 2),
-                      ),
-                      prefixIcon: Icon(
-                        Icons.email,
-                        size: size.width * 0.055,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: AppTheme.space16,
-                        vertical: AppTheme.space12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: AppTheme.space24),
-
-            // Subscribe Button
-            Container(
-              width: double.infinity,
-              constraints: const BoxConstraints(
-                maxWidth: 400,
-                minHeight: 48,
-                maxHeight: 56,
-              ),
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
-                gradient: AppTheme.premiumGradient,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+                color: AppTheme.error.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _openCheckout,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppTheme.space16,
-                    vertical: AppTheme.space12,
-                  ),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.workspace_premium,
-                            size: size.width * 0.05,
-                          ),
-                          SizedBox(width: AppTheme.space8),
-                          Text(
-                            'Subscribe Now - ₹49/month',
-                            style: AppTheme.buttonText.copyWith(
-                              fontSize: size.width * 0.042,
-                            ),
-                          ),
-                        ],
-                      ),
+              child: const Icon(
+                Icons.error_outline,
+                color: AppTheme.error,
+                size: 48,
               ),
             ),
-            SizedBox(height: AppTheme.space16),
-
-            // Terms
-            Container(
-              padding: EdgeInsets.all(AppTheme.space12),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+            const SizedBox(height: 20),
+            Text(
+              'Failed to Load Plans',
+              style: AppTheme.heading2,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Unable to fetch subscription packages. Please check your connection and try again.',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondary,
               ),
-              child: Text(
-                'By subscribing, you agree to auto-renewal. You can cancel anytime from your profile. Powered by Razorpay secure payments.',
-                style: AppTheme.bodySmall.copyWith(
-                  fontSize: size.width * 0.03,
-                  height: 1.5,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadPackages,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 14,
                 ),
-                textAlign: TextAlign.center,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
               ),
             ),
-            SizedBox(height: size.height * 0.02),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFeatureItem(
-    IconData icon,
-    String title,
-    String description,
-    Size size,
-  ) {
-    final iconContainerSize = size.width * 0.11;
-    final iconSize = iconContainerSize * 0.5;
+  Widget _buildContent() {
+    final size = MediaQuery.of(context).size;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: iconContainerSize,
-          height: iconContainerSize,
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+    return SafeArea(
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.04,
+            vertical: 16,
           ),
-          child: Icon(
-            icon,
-            color: AppTheme.primary,
-            size: iconSize,
+          child: Column(
+            children: [
+              _buildHeroSection(size),
+              const SizedBox(height: 24),
+              _buildBenefitsSection(size),
+              const SizedBox(height: 32),
+              _buildPlansSection(size),
+              const SizedBox(height: 24),
+              _buildTrustIndicators(size),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
-        SizedBox(width: AppTheme.space12),
-        Expanded(
+      ),
+    );
+  }
+
+  Widget _buildHeroSection(Size size) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF9333EA),
+            Color(0xFFC026D3),
+            Color(0xFFD946EF),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.premiumPurple.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.workspace_premium_rounded,
+              size: 48,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Upgrade to VIP Premium',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1.2,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'Unlock AI-Powered Teer Predictions',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitsSection(Size size) {
+    final benefits = [
+      {
+        'icon': Icons.auto_awesome,
+        'title': 'AI-Powered Predictions for all 6 games',
+        'color': AppTheme.primary,
+      },
+      {
+        'icon': Icons.nights_stay,
+        'title': 'Dream Dictionary Bot (100+ symbols)',
+        'color': Color(0xFF8B5CF6),
+      },
+      {
+        'icon': Icons.trending_up,
+        'title': 'Today\'s Top 7 Common Numbers',
+        'color': AppTheme.secondary,
+      },
+      {
+        'icon': Icons.stars,
+        'title': 'Lucky VIP Numbers',
+        'color': AppTheme.premiumGold,
+      },
+      {
+        'icon': Icons.calculate,
+        'title': 'Formula Calculator & Hit Analysis',
+        'color': Color(0xFF06B6D4),
+      },
+      {
+        'icon': Icons.support_agent,
+        'title': 'Priority Support',
+        'color': Color(0xFFEC4899),
+      },
+      {
+        'icon': Icons.block,
+        'title': 'Ad-Free Experience',
+        'color': AppTheme.error,
+      },
+      {
+        'icon': Icons.insights,
+        'title': 'Exclusive FOMO Insights',
+        'color': Color(0xFFF97316),
+      },
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: AppTheme.cardDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                ),
+                child: const Icon(
+                  Icons.card_giftcard,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Premium Benefits',
+                style: AppTheme.heading3.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...benefits.map((benefit) => _buildBenefitItem(
+                benefit['icon'] as IconData,
+                benefit['title'] as String,
+                benefit['color'] as Color,
+                size,
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitItem(IconData icon, String title, Color color, Size size) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              title,
+              style: AppTheme.bodyMedium.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const Icon(
+            Icons.check_circle,
+            color: AppTheme.success,
+            size: 22,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlansSection(Size size) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: AppTheme.subtitle1.copyWith(
-                  fontSize: size.width * 0.038,
+                'Choose Your Plan',
+                style: AppTheme.heading2.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: AppTheme.space4),
+              const SizedBox(height: 4),
               Text(
-                description,
-                style: AppTheme.bodySmall.copyWith(
-                  fontSize: size.width * 0.032,
+                'Select the perfect plan for you',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textSecondary,
                 ),
               ),
             ],
           ),
         ),
-        Icon(
-          Icons.check_circle,
-          color: Colors.green,
-          size: size.width * 0.05,
-        ),
+        ..._packages.asMap().entries.map((entry) {
+          final index = entry.key;
+          final package = entry.value;
+          return _buildPlanCard(package, index, size);
+        }),
       ],
+    );
+  }
+
+  Widget _buildPlanCard(Map<String, dynamic> package, int index, Size size) {
+    final isPopular = package['is_popular'] == true;
+    final price = package['price'];
+    final days = package['days'];
+    final monthlyRate = (price / (days / 30)).ceil();
+    final baseMonthlyRate = 49; // Assuming base monthly rate is 49
+    final savePercentage = days > 30
+        ? (((baseMonthlyRate * (days / 30) - price) / (baseMonthlyRate * (days / 30))) * 100).round()
+        : 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(
+          color: isPopular ? AppTheme.premiumPurple : Colors.transparent,
+          width: isPopular ? 2 : 0,
+        ),
+        boxShadow: isPopular
+            ? [
+                BoxShadow(
+                  color: AppTheme.premiumPurple.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : AppTheme.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        child: Stack(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                gradient: isPopular
+                    ? LinearGradient(
+                        colors: [
+                          AppTheme.premiumPurple.withOpacity(0.05),
+                          Colors.transparent,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              package['name'],
+                              style: AppTheme.heading3.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${days} days',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isPopular || savePercentage > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: isPopular
+                                ? AppTheme.premiumGradient
+                                : AppTheme.goldGradient,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isPopular ? AppTheme.premiumPurple : AppTheme.premiumGold)
+                                    .withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            isPopular ? 'MOST POPULAR' : 'SAVE $savePercentage%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '₹',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                          height: 1.2,
+                        ),
+                      ),
+                      Text(
+                        price.toString(),
+                        style: TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                          height: 1,
+                        ),
+                      ),
+                      if (days > 30)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8, top: 8),
+                          child: Text(
+                            '≈₹$monthlyRate/mo',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    package['description'],
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: isPopular
+                          ? AppTheme.premiumGradient
+                          : AppTheme.primaryGradient,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      boxShadow: AppTheme.buttonShadow(
+                        isPopular ? AppTheme.premiumPurple : AppTheme.primary,
+                      ),
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () => _handleSubscribe(index),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.workspace_premium_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Subscribe Now',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrustIndicators(Size size) {
+    final indicators = [
+      {
+        'icon': Icons.security,
+        'text': '100% Secure Payment',
+      },
+      {
+        'icon': Icons.autorenew,
+        'text': 'Auto-renewal (cancel anytime)',
+      },
+      {
+        'icon': Icons.flash_on,
+        'text': 'Instant Activation',
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(
+          color: AppTheme.primary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: indicators.map((indicator) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    indicator['icon'] as IconData,
+                    color: AppTheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    indicator['text'] as String,
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList()
+          ..removeLast() // Remove last padding
+          ..add(
+            // Add back last item without padding
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    indicators.last['icon'] as IconData,
+                    color: AppTheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    indicators.last['text'] as String,
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ),
     );
   }
 }
