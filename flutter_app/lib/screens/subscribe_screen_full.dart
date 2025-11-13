@@ -4,6 +4,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../services/razorpay_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
@@ -26,8 +27,10 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   int? _selectedPackageIndex;
 
   // Razorpay Configuration
-  static const String razorpayKeyId = 'rzp_test_RcNQd80r82gwlm';
-  static const bool testMode = true; // Test mode - demo subscription for testing
+  static const String razorpayKeyId = 'rzp_test_Rf5pLyBmC6t8Zx';
+  static const bool testMode = false; // Production mode - use real payments
+
+  RazorpayService? _razorpayService;
 
   @override
   void initState() {
@@ -36,6 +39,8 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
+    _razorpayService = RazorpayService();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -52,6 +57,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   @override
   void dispose() {
     _razorpay.clear();
+    _razorpayService?.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -204,14 +210,310 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       return;
     }
 
-    // MANUAL PAYMENT: Navigate to manual payment screen
-    Navigator.pushNamed(
-      context,
-      '/manual-payment',
-      arguments: package,
-    );
+    // Show payment method selection dialog
+    _showPaymentMethodDialog(package, userProvider);
     return;
+  }
 
+  void _showPaymentMethodDialog(Map<String, dynamic> package, userProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.payment,
+                size: 60,
+                color: AppTheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Choose Payment Method',
+                style: AppTheme.heading2,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Select how you want to pay',
+                style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Razorpay Online Payment
+              InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleRazorpayPayment(package, userProvider);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF667eea).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.flash_on,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Pay Online (Instant)',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'UPI, Card, Wallet - Instant Activation',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Manual Payment
+              InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(
+                    context,
+                    '/manual-payment',
+                    arguments: package,
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppTheme.primary, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.qr_code_scanner,
+                          color: AppTheme.primary,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Manual Payment',
+                              style: TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Pay via QR/UPI - Needs Admin Approval',
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: AppTheme.primary,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleRazorpayPayment(Map<String, dynamic> package, userProvider) async {
+    final userId = userProvider.userId;
+    final email = StorageService.getEmail() ?? '';
+    final phone = StorageService.getPhone() ?? '';
+
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please set a valid email in your profile')),
+      );
+      return;
+    }
+
+    if (_razorpayService == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment service not initialized')),
+      );
+      return;
+    }
+
+    await _razorpayService!.initiatePayment(
+      context: context,
+      amount: package['price'].toDouble(),
+      userId: userId,
+      packageId: package['id'],
+      packageName: package['name'],
+      userName: StorageService.getName() ?? 'User',
+      userEmail: email,
+      userPhone: phone,
+      onComplete: (success, message) {
+        if (success) {
+          // Refresh user status
+          userProvider.refreshUserStatus();
+
+          // Show success dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        gradient: AppTheme.successGradient,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Payment Successful!',
+                      style: AppTheme.heading2,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Your premium subscription is now active. Enjoy all AI-powered features!',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.premiumGradient,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Close dialog
+                          Navigator.pop(context); // Go back to previous screen
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text(
+                          'Start Using Premium',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: AppTheme.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  void _testModeActivation() {
     // TEST MODE: Activate premium for testing (no payment required)
     if (testMode) {
       try {
