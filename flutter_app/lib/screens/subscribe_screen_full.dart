@@ -69,17 +69,43 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     });
 
     try {
-      final packages = await ApiService.getSubscriptionPackages();
-      setState(() {
-        _packages = packages;
-        _isLoading = false;
-      });
-      _animationController.forward();
+      // Add timeout to prevent infinite loading
+      final packages = await ApiService.getSubscriptionPackages()
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Connection timeout. Please check your internet and try again.');
+            },
+          );
+
+      if (mounted) {
+        setState(() {
+          _packages = packages;
+          _isLoading = false;
+        });
+        _animationController.forward();
+      }
     } catch (e) {
-      setState(() {
-        _hasError = true;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppTheme.error,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _loadPackages,
+            ),
+          ),
+        );
+      }
     }
   }
 

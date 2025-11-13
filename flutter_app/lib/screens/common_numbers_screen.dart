@@ -412,24 +412,32 @@ class _CommonNumbersScreenState extends State<CommonNumbersScreen> {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: size.height * 0.04),
-              ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/subscribe'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.08,
-                    vertical: size.height * 0.02,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: AppTheme.premiumGradient,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
                 ),
-                child: Text(
-                  'Upgrade to Premium',
-                  style: TextStyle(
-                    fontSize: size.width * 0.045,
-                    fontWeight: FontWeight.bold,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pushNamed(context, '/subscribe'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.08,
+                      vertical: size.height * 0.02,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Upgrade to Premium',
+                    style: TextStyle(
+                      fontSize: size.width * 0.045,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

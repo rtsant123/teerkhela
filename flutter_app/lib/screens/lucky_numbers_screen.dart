@@ -327,11 +327,16 @@ class _LuckyNumbersScreenState extends State<LuckyNumbersScreen> {
             Container(
               width: double.infinity,
               constraints: BoxConstraints(maxWidth: size.width * 0.8),
+              decoration: BoxDecoration(
+                gradient: AppTheme.premiumGradient,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
+              ),
               child: ElevatedButton(
                 onPressed: () => Navigator.pushNamed(context, '/subscribe'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
                   padding: EdgeInsets.symmetric(
                     horizontal: size.width * 0.08,
                     vertical: size.height * 0.02,
@@ -345,6 +350,7 @@ class _LuckyNumbersScreenState extends State<LuckyNumbersScreen> {
                   style: TextStyle(
                     fontSize: size.width * 0.045,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
