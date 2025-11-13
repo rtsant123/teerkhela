@@ -261,15 +261,6 @@ class _DreamScreenState extends State<DreamScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: AppTheme.space12),
-
-              // Price - Responsive
-              Text(
-                'Just ₹49/month • 50% OFF',
-                style: AppTheme.bodySmall.copyWith(
-                  fontSize: size.width * 0.033,
-                ),
-              ),
               SizedBox(height: size.height * 0.02),
             ],
           ),

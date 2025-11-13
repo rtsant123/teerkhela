@@ -316,7 +316,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             child: const Text(
-              '₹49/month • 50% OFF',
+              'Get Started',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,

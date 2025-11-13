@@ -182,8 +182,8 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF667eea), // Purple
-              Color(0xFF764ba2), // Deep Purple
+              AppTheme.primary, // Purple
+              AppTheme.premiumPurple, // Deep Purple
               Color(0xFF4c6ef5), // Blue
             ],
             stops: [0.0, 0.5, 1.0],
@@ -264,7 +264,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
           child: const Icon(
             Icons.person_add,
             size: 40,
-            color: Color(0xFF667eea),
+            color: AppTheme.primary,
           ),
         ),
         const SizedBox(height: 20),
@@ -323,7 +323,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                   decoration: InputDecoration(
                     labelText: 'Full Name',
                     hintText: 'Enter your full name',
-                    prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF667eea)),
+                    prefixIcon: const Icon(Icons.person_outline, color: AppTheme.primary),
                     filled: true,
                     fillColor: AppTheme.surfaceVariant,
                     border: OutlineInputBorder(
@@ -336,7 +336,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF667eea), width: 2),
+                      borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -366,7 +366,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                 decoration: InputDecoration(
                   labelText: 'Phone Number',
                   hintText: 'Enter your phone number',
-                  prefixIcon: const Icon(Icons.phone_android, color: Color(0xFF667eea)),
+                  prefixIcon: const Icon(Icons.phone_android, color: AppTheme.primary),
                   filled: true,
                   fillColor: _otpSent ? AppTheme.surfaceVariant.withOpacity(0.5) : AppTheme.surfaceVariant,
                   border: OutlineInputBorder(
@@ -379,7 +379,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF667eea), width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                   ),
                   disabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -417,7 +417,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                   decoration: InputDecoration(
                     labelText: 'Enter OTP',
                     hintText: '000000',
-                    prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF667eea)),
+                    prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primary),
                     filled: true,
                     fillColor: AppTheme.surfaceVariant,
                     border: OutlineInputBorder(
@@ -430,7 +430,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF667eea), width: 2),
+                      borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   ),
@@ -483,7 +483,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
               'Resend OTP',
               style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF667eea),
+                color: AppTheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -497,14 +497,14 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       height: 56,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+          colors: [AppTheme.primary, AppTheme.premiumPurple],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF667eea).withOpacity(0.4),
+            color: const AppTheme.primary.withOpacity(0.4),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),

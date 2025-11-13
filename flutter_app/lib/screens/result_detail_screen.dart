@@ -112,7 +112,7 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
                             backgroundColor: const Color(0xFF7c3aed),
                           ),
                           child: const Text(
-                            'Upgrade Now - ₹49/month • 50% OFF',
+                            'Upgrade to Premium',
                             style: TextStyle(color: Colors.white),
                           ),
                         ),

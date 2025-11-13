@@ -191,7 +191,7 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
                           _buildDetailRow(
                             Icons.payments,
                             'Amount',
-                            '₹49/month • 50% OFF',
+                            'Premium Plan',
                           ),
                           const Divider(height: 24),
                           _buildDetailRow(

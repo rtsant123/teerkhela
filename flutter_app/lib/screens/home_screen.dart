@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Predictions',
                   Icons.psychology,
                   const LinearGradient(
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    colors: [AppTheme.primary, AppTheme.premiumPurple],
                   ),
                   () => Navigator.pushNamed(context, '/predictions'),
                   size,
@@ -823,7 +823,7 @@ class _SubscriptionModalState extends State<_SubscriptionModal> {
       decoration: BoxDecoration(
         gradient: isPopular
             ? const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                colors: [AppTheme.primary, AppTheme.premiumPurple],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
@@ -837,7 +837,7 @@ class _SubscriptionModalState extends State<_SubscriptionModal> {
         boxShadow: [
           BoxShadow(
             color: isPopular
-                ? const Color(0xFF667eea).withOpacity(0.3)
+                ? const AppTheme.primary.withOpacity(0.3)
                 : Colors.black.withOpacity(0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),

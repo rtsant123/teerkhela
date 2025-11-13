@@ -328,6 +328,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               SizedBox(height: AppTheme.space16),
 
+              // Quick Access Section
+              _buildQuickAccessSection(size, userProvider.isPremium),
+
+              SizedBox(height: AppTheme.space16),
+
               // Referral Program Card
               _buildReferralCard(size),
 
@@ -700,7 +705,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               child: Text(
-                'Upgrade Now - ₹49/month • 50% OFF',
+                'Upgrade to Premium',
                 style: AppTheme.buttonText.copyWith(
                   fontSize: size.width * 0.04,
                 ),
@@ -1209,6 +1214,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessSection(Size size, bool isPremium) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(AppTheme.space16),
+      decoration: AppTheme.cardDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.dashboard_rounded, color: AppTheme.primary, size: 24),
+              SizedBox(width: AppTheme.space8),
+              Text(
+                'Quick Access',
+                style: AppTheme.heading3.copyWith(
+                  fontSize: size.width * 0.048,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppTheme.space16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickAccessButton(
+                  context: context,
+                  icon: Icons.analytics_rounded,
+                  title: 'Hit Numbers',
+                  subtitle: 'Analysis',
+                  onTap: () => Navigator.pushNamed(context, '/hit-numbers'),
+                  isPremium: isPremium,
+                  size: size,
+                ),
+              ),
+              SizedBox(width: AppTheme.space12),
+              Expanded(
+                child: _buildQuickAccessButton(
+                  context: context,
+                  icon: Icons.calculate_rounded,
+                  title: 'Formula',
+                  subtitle: 'Calculator',
+                  onTap: () => Navigator.pushNamed(context, '/formula'),
+                  isPremium: isPremium,
+                  size: size,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessButton({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    required bool isPremium,
+    required Size size,
+  }) {
+    return GestureDetector(
+      onTap: isPremium ? onTap : () => Navigator.pushNamed(context, '/subscribe'),
+      child: Container(
+        padding: EdgeInsets.all(AppTheme.space12),
+        decoration: BoxDecoration(
+          gradient: isPremium
+              ? LinearGradient(
+                  colors: [AppTheme.primary.withOpacity(0.1), AppTheme.premiumPurple.withOpacity(0.1)],
+                )
+              : LinearGradient(
+                  colors: [Colors.grey.shade200, Colors.grey.shade100],
+                ),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          border: Border.all(
+            color: isPremium ? AppTheme.primary.withOpacity(0.3) : Colors.grey.shade300,
+          ),
+        ),
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                Icon(
+                  icon,
+                  size: size.width * 0.1,
+                  color: isPremium ? AppTheme.primary : Colors.grey.shade400,
+                ),
+                if (!isPremium)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Icon(
+                      Icons.lock,
+                      size: size.width * 0.04,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: AppTheme.space8),
+            Text(
+              title,
+              style: AppTheme.subtitle1.copyWith(
+                fontSize: size.width * 0.035,
+                fontWeight: FontWeight.bold,
+                color: isPremium ? AppTheme.textPrimary : Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: AppTheme.bodySmall.copyWith(
+                fontSize: size.width * 0.028,
+                color: isPremium ? AppTheme.textSecondary : Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

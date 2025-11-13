@@ -104,8 +104,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF667eea), // Purple
-              Color(0xFF764ba2), // Deep Purple
+              AppTheme.primary, // Purple
+              AppTheme.premiumPurple, // Deep Purple
               Color(0xFF4c6ef5), // Blue
             ],
             stops: [0.0, 0.5, 1.0],
@@ -168,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           child: const Icon(
             Icons.sports_cricket,
             size: 50,
-            color: Color(0xFF667eea),
+            color: AppTheme.primary,
           ),
         ),
         const SizedBox(height: 24),
@@ -247,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 decoration: InputDecoration(
                   labelText: 'Phone Number',
                   hintText: 'Enter your phone number',
-                  prefixIcon: const Icon(Icons.phone_android, color: Color(0xFF667eea)),
+                  prefixIcon: const Icon(Icons.phone_android, color: AppTheme.primary),
                   filled: true,
                   fillColor: AppTheme.surfaceVariant,
                   border: OutlineInputBorder(
@@ -260,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF667eea), width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -302,14 +302,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       height: 56,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+          colors: [AppTheme.primary, AppTheme.premiumPurple],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF667eea).withOpacity(0.4),
+            color: const AppTheme.primary.withOpacity(0.4),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),

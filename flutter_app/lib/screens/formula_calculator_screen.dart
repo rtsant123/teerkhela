@@ -197,7 +197,7 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
                   ),
                 ),
                 child: Text(
-                  'Upgrade to Premium - ₹49/month',
+                  'Upgrade to Premium',
                   style: AppTheme.buttonText.copyWith(color: Colors.white),
                 ),
               ),

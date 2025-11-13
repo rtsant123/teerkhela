@@ -312,7 +312,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'Upgrade Now - ₹49/month',
+                'Upgrade to Premium',
                 style: TextStyle(
                   fontSize: size.width * 0.045,
                   fontWeight: FontWeight.bold,

@@ -215,7 +215,7 @@ class _AINumbersScreenState extends State<AINumbersScreen> {
                   ),
                 ),
                 child: Text(
-                  'Unlock for ₹49/month',
+                  'Unlock Premium Features',
                   style: AppTheme.buttonText.copyWith(fontSize: size.width * 0.04),
                 ),
               ),

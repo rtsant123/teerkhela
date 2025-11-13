@@ -77,7 +77,6 @@ class _HitNumbersScreenState extends State<HitNumbersScreen> {
       body: userProvider.isPremium
           ? _buildHitNumbersView(size)
           : _buildPremiumLock(size),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 
@@ -154,13 +153,6 @@ class _HitNumbersScreenState extends State<HitNumbersScreen> {
                     ),
                   ],
                 ),
-              ),
-            ),
-            SizedBox(height: AppTheme.space12),
-            Text(
-              'Just ₹49/month • 50% OFF',
-              style: AppTheme.bodySmall.copyWith(
-                fontSize: size.width * 0.033,
               ),
             ),
           ],

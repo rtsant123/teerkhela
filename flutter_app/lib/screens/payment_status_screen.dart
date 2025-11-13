@@ -82,7 +82,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payment History', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF667eea),
+        backgroundColor: const AppTheme.primary,
         elevation: 0,
         actions: [
           IconButton(
@@ -94,7 +94,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+            colors: [AppTheme.primary, AppTheme.premiumPurple],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -117,7 +117,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF667eea),
+                            foregroundColor: const AppTheme.primary,
                           ),
                           child: const Text('Subscribe Now'),
                         ),
@@ -213,13 +213,13 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                                   // Amount
                                   Row(
                                     children: [
-                                      const Icon(Icons.currency_rupee, size: 20, color: Color(0xFF667eea)),
+                                      const Icon(Icons.currency_rupee, size: 20, color: AppTheme.primary),
                                       Text(
                                         '${payment['amount']}',
                                         style: const TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF667eea),
+                                          color: AppTheme.primary,
                                         ),
                                       ),
                                     ],

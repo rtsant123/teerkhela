@@ -146,7 +146,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
                     ),
                   ),
                   child: Text(
-                    'Upgrade to Premium - ₹49/month',
+                    'Upgrade to Premium',
                     style: AppTheme.buttonText.copyWith(
                       fontSize: size.width * 0.04,
                       color: Colors.white,

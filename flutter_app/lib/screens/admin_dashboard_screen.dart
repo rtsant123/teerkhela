@@ -216,7 +216,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             value: _games.length.toString(),
             icon: Icons.home_work,
             gradient: const LinearGradient(
-              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+              colors: [AppTheme.primary, AppTheme.premiumPurple],
             ),
           ),
         ),
