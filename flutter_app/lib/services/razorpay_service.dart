@@ -18,7 +18,6 @@ class RazorpayService {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    debugPrint('✅ Payment Success: ${response.paymentId}');
     if (onSuccess != null) {
       onSuccess!({
         'payment_id': response.paymentId,
@@ -29,14 +28,12 @@ class RazorpayService {
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    debugPrint('❌ Payment Error: ${response.code} - ${response.message}');
     if (onError != null) {
       onError!('${response.message} (Code: ${response.code})');
     }
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
-    debugPrint('💳 External Wallet: ${response.walletName}');
     if (onError != null) {
       onError!('External wallet payment not supported');
     }
@@ -61,18 +58,13 @@ class RazorpayService {
         }),
       );
 
-      debugPrint('Create Order Response: ${response.statusCode}');
-      debugPrint('Create Order Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['data'];
       } else {
-        debugPrint('❌ Failed to create order: ${response.body}');
         return null;
       }
     } catch (e) {
-      debugPrint('❌ Error creating order: $e');
       return null;
     }
   }
@@ -114,7 +106,6 @@ class RazorpayService {
     try {
       _razorpay.open(options);
     } catch (e) {
-      debugPrint('❌ Error opening Razorpay: $e');
       if (onError != null) {
         onError!('Failed to open payment gateway');
       }
@@ -144,18 +135,13 @@ class RazorpayService {
         }),
       );
 
-      debugPrint('Verify Payment Response: ${response.statusCode}');
-      debugPrint('Verify Payment Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['success'] == true;
       } else {
-        debugPrint('❌ Payment verification failed: ${response.body}');
         return false;
       }
     } catch (e) {
-      debugPrint('❌ Error verifying payment: $e');
       return false;
     }
   }
@@ -172,18 +158,8 @@ class RazorpayService {
     required String userPhone,
     required Function(bool, String) onComplete,
   }) async {
-    debugPrint('🚀 RazorpayService.initiatePayment() called');
-    debugPrint('   Amount: ₹$amount');
-    debugPrint('   UserId: $userId');
-    debugPrint('   PackageId: $packageId');
-    debugPrint('   PackageName: $packageName');
-    debugPrint('   UserName: $userName');
-    debugPrint('   UserEmail: $userEmail');
-    debugPrint('   UserPhone: $userPhone');
-
     try {
       // Show loading
-      debugPrint('📊 Showing loading dialog...');
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -193,7 +169,6 @@ class RazorpayService {
       );
 
       // Create order
-      debugPrint('📞 Creating Razorpay order...');
       final orderData = await createOrder(
         amount: amount,
         userId: userId,
@@ -201,21 +176,15 @@ class RazorpayService {
         packageName: packageName,
       );
 
-      debugPrint('📦 Order response: $orderData');
-
       // Close loading
       if (context.mounted) {
-        debugPrint('✅ Closing loading dialog');
         Navigator.pop(context);
       }
 
       if (orderData == null) {
-        debugPrint('❌ Failed to create order - orderData is null');
         onComplete(false, 'Failed to create payment order');
         return;
       }
-
-      debugPrint('✅ Order created successfully: ${orderData['order_id']}');
 
       // Set callbacks
       onSuccess = (response) async {
@@ -257,11 +226,6 @@ class RazorpayService {
       };
 
       // Open checkout
-      debugPrint('🏪 Opening Razorpay checkout...');
-      debugPrint('   Order ID: ${orderData['order_id']}');
-      debugPrint('   Key ID: ${orderData['key_id']}');
-      debugPrint('   Amount: ₹$amount');
-
       openCheckout(
         orderId: orderData['order_id'],
         amount: amount,
@@ -271,14 +235,11 @@ class RazorpayService {
         phone: userPhone,
         description: packageName,
       );
-
-      debugPrint('✅ Checkout opened successfully');
     } catch (e) {
-      debugPrint('❌ Error initiating payment: $e');
       if (context.mounted) {
         Navigator.pop(context); // Close loading if open
       }
-      onComplete(false, 'Failed to initiate payment: $e');
+      onComplete(false, 'Failed to initiate payment');
     }
   }
 

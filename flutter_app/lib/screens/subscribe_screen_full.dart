@@ -76,7 +76,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       });
       _animationController.forward();
     } catch (e) {
-      print('Error loading packages: $e');
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -85,8 +84,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    print('Payment Success: ${response.paymentId}');
-
     if (!mounted) return;
 
     showDialog(
@@ -168,8 +165,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    print('Payment Error: ${response.code} - ${response.message}');
-
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -191,7 +186,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
-    print('External Wallet: ${response.walletName}');
+    // External wallet selected
   }
 
   Future<void> _handleSubscribe(int packageIndex) async {
@@ -399,12 +394,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     final user = StorageService.getUser();
     String name = user?.name ?? '';
 
-    print('🔍 DEBUG: userId string = $userIdString');
-    print('🔍 DEBUG: userId int = $userId (0 = guest)');
-    print('🔍 DEBUG: email = $email');
-    print('🔍 DEBUG: phone = $phone');
-    print('🔍 DEBUG: name = $name');
-
     // Ask for phone if not available
     if (phone.isEmpty) {
       final phoneController = TextEditingController();
@@ -499,7 +488,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
 
       phone = result;
       await StorageService.setPhoneNumber(phone);
-      print('✅ Phone saved: $phone');
     }
 
     // If email is not set, ask for it
@@ -595,9 +583,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       }
 
       email = result;
-      // Save email for future use
       await StorageService.setEmail(email);
-      print('✅ Email saved: $email');
     }
 
     // Use "Guest" if no name
@@ -605,23 +591,12 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       name = 'Guest User';
     }
 
-    print('📧 Final email: $email');
-    print('📱 Final phone: $phone');
-    print('👤 Final name: $name');
-    print('🆔 Final userId: $userId (0 = guest)');
-
     if (_razorpayService == null) {
-      print('❌ ERROR: Razorpay service is null!');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Payment service not initialized')),
       );
       return;
     }
-
-    print('💳 Starting Razorpay payment flow...');
-    print('   Package: ${package['name']}');
-    print('   Price: ₹${package['price']}');
-    print('   Package ID: ${package['id']}');
 
     await _razorpayService!.initiatePayment(
       context: context,
@@ -635,17 +610,15 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       onComplete: (success, message) {
         if (success) {
           // Save premium status locally for ALL users
-          print('💎 Saving premium status locally');
           final expiryDate = DateTime.now().add(Duration(days: package['days']));
           StorageService.setPremiumStatus(true);
           StorageService.setPremiumExpiry(expiryDate.toIso8601String());
-          print('✅ Premium activated until: $expiryDate');
 
-          // Update user provider directly (don't call refreshUserStatus which overwrites with backend)
+          // Update user provider directly
           userProvider.setPremium(true);
-          print('✅ User provider updated with premium status');
 
           // Show success dialog
+          if (!mounted) return;
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -722,11 +695,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
             ),
           );
         } else {
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
               backgroundColor: AppTheme.error,
               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
             ),
           );
         }
