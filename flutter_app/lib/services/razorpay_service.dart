@@ -98,14 +98,16 @@ class RazorpayService {
         'email': email,
         'name': name,
       },
-      'method': {
-        'upi': true,
-        'card': true,
-        'netbanking': true,
-        'wallet': true,
+      'readonly': {
+        'contact': false,
+        'email': false,
+      },
+      'external': {
+        'wallets': ['paytm']
       },
       'theme': {
-        'color': '#667eea'
+        'color': '#667eea',
+        'hide_topbar': false
       }
     };
 
