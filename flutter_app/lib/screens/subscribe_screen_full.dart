@@ -393,15 +393,105 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
 
   Future<void> _handleRazorpayPayment(Map<String, dynamic> package, userProvider) async {
     final userId = userProvider.userId;
-    final email = StorageService.getEmail() ?? '';
+    String email = StorageService.getEmail() ?? '';
     final phone = StorageService.getPhoneNumber() ?? '';
     final user = StorageService.getUser();
 
+    // If email is not set, ask for it
     if (email.isEmpty || !email.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please set a valid email in your profile')),
+      final emailController = TextEditingController();
+
+      final result = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF667eea).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.email,
+                  size: 40,
+                  color: Color(0xFF667eea),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Enter Your Email',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'We need your email for payment confirmation',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: TextField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Email Address *',
+              hintText: 'your@email.com',
+              prefixIcon: const Icon(Icons.email_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final enteredEmail = emailController.text.trim();
+                if (enteredEmail.isEmpty || !enteredEmail.contains('@')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a valid email')),
+                  );
+                  return;
+                }
+                Navigator.pop(context, enteredEmail);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF667eea),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Continue',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+        ),
       );
-      return;
+
+      if (result == null || result.isEmpty) {
+        return; // User cancelled
+      }
+
+      email = result;
+      // Save email for future use
+      await StorageService.setEmail(email);
     }
 
     if (_razorpayService == null) {
