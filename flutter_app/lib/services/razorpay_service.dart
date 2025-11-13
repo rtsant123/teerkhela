@@ -98,8 +98,37 @@ class RazorpayService {
         'email': email,
         'name': name,
       },
+      'method': {
+        'upi': true,
+        'card': true,
+        'netbanking': true,
+        'wallet': true,
+      },
+      'config': {
+        'display': {
+          'blocks': {
+            'banks': {
+              'name': 'Pay via UPI',
+              'instruments': [
+                {
+                  'method': 'upi',
+                }
+              ],
+            },
+          },
+          'sequence': ['block.banks'], // UPI shown first
+          'preferences': {
+            'show_default_blocks': true,
+          }
+        }
+      },
       'theme': {
         'color': '#667eea'
+      },
+      'modal': {
+        'ondismiss': () {
+          debugPrint('Checkout form closed by user');
+        }
       }
     };
 

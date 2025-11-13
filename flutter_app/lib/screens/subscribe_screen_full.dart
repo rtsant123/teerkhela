@@ -287,7 +287,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Pay Online (Instant)',
+                              'Pay with UPI (Instant)',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -296,10 +296,10 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'UPI, Card, Wallet - Instant Activation',
+                              'Google Pay, PhonePe, Paytm, Any UPI - Instant Activation',
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.9),
-                                fontSize: 12,
+                                fontSize: 11,
                               ),
                             ),
                           ],

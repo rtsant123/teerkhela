@@ -198,9 +198,90 @@ const getAllOrders = (req, res) => {
   }
 };
 
+// Handle Razorpay Webhook
+const handleWebhook = async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const signature = req.headers['x-razorpay-signature'];
+
+    // If webhook secret is configured, verify signature
+    if (webhookSecret && signature) {
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(JSON.stringify(req.body))
+        .digest('hex');
+
+      if (signature !== expectedSignature) {
+        console.log('❌ Invalid webhook signature');
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid signature'
+        });
+      }
+    }
+
+    const event = req.body.event;
+    const payload = req.body.payload;
+
+    console.log(`📨 Webhook received: ${event}`);
+
+    // Handle different webhook events
+    switch (event) {
+      case 'payment.authorized':
+        console.log('✅ Payment authorized:', payload.payment.entity.id);
+        // Update order status
+        const authorizedOrder = orders.find(
+          o => o.razorpay_order_id === payload.payment.entity.order_id
+        );
+        if (authorizedOrder) {
+          authorizedOrder.status = 'authorized';
+          authorizedOrder.razorpay_payment_id = payload.payment.entity.id;
+        }
+        break;
+
+      case 'payment.captured':
+        console.log('✅ Payment captured:', payload.payment.entity.id);
+        // Update order status
+        const capturedOrder = orders.find(
+          o => o.razorpay_order_id === payload.payment.entity.order_id
+        );
+        if (capturedOrder) {
+          capturedOrder.status = 'captured';
+          capturedOrder.paid_at = new Date().toISOString();
+        }
+        break;
+
+      case 'payment.failed':
+        console.log('❌ Payment failed:', payload.payment.entity.id);
+        // Update order status
+        const failedOrder = orders.find(
+          o => o.razorpay_order_id === payload.payment.entity.order_id
+        );
+        if (failedOrder) {
+          failedOrder.status = 'failed';
+          failedOrder.error_reason = payload.payment.entity.error_reason;
+        }
+        break;
+
+      default:
+        console.log('ℹ️ Unhandled webhook event:', event);
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Webhook processing error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   verifyPayment,
   getPaymentDetails,
-  getAllOrders
+  getAllOrders,
+  handleWebhook
 };
