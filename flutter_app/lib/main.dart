@@ -8,6 +8,7 @@ import 'dart:io';
 import 'services/storage_service.dart';
 import 'services/notification_service.dart';
 import 'providers/user_provider.dart';
+import 'providers/results_provider.dart';
 import 'providers/predictions_provider.dart';
 import 'providers/theme_provider.dart';
 import 'utils/app_theme.dart';
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => ResultsProvider()),
         ChangeNotifierProvider(create: (_) => PredictionsProvider()),
       ],
       child: Consumer<ThemeProvider>(
