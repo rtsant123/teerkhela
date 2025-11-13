@@ -392,32 +392,112 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   }
 
   Future<void> _handleRazorpayPayment(Map<String, dynamic> package, userProvider) async {
-    final userId = userProvider.userId;
+    final userId = userProvider.userId ?? 0; // Use 0 for guest users
     String email = StorageService.getEmail() ?? '';
-    final phone = StorageService.getPhoneNumber() ?? '';
+    String phone = StorageService.getPhoneNumber() ?? '';
     final user = StorageService.getUser();
+    String name = user?.name ?? '';
 
-    print('🔍 DEBUG: userId = $userId');
+    print('🔍 DEBUG: userId = $userId (0 = guest)');
     print('🔍 DEBUG: email = $email');
     print('🔍 DEBUG: phone = $phone');
-    print('🔍 DEBUG: user = ${user?.name}');
+    print('🔍 DEBUG: name = $name');
 
-    // Check if user is logged in
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please login first to subscribe'),
-          backgroundColor: AppTheme.error,
-          action: SnackBarAction(
-            label: 'Login',
-            textColor: Colors.white,
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/login');
-            },
+    // Ask for phone if not available
+    if (phone.isEmpty) {
+      final phoneController = TextEditingController();
+
+      final result = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF667eea).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.phone,
+                  size: 40,
+                  color: Color(0xFF667eea),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Enter Your Phone Number',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'We need your phone number for payment',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
+          content: TextField(
+            controller: phoneController,
+            keyboardType: TextInputType.phone,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Phone Number *',
+              hintText: '9876543210',
+              prefixIcon: const Icon(Icons.phone_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final enteredPhone = phoneController.text.trim();
+                if (enteredPhone.isEmpty || enteredPhone.length < 10) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a valid phone number')),
+                  );
+                  return;
+                }
+                Navigator.pop(context, enteredPhone);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF667eea),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Continue',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.spaceBetween,
         ),
       );
-      return;
+
+      if (result == null || result.isEmpty) {
+        return; // User cancelled
+      }
+
+      phone = result;
+      await StorageService.setPhoneNumber(phone);
+      print('✅ Phone saved: $phone');
     }
 
     // If email is not set, ask for it
@@ -518,10 +598,15 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       print('✅ Email saved: $email');
     }
 
+    // Use "Guest" if no name
+    if (name.isEmpty) {
+      name = 'Guest User';
+    }
+
     print('📧 Final email: $email');
     print('📱 Final phone: $phone');
-    print('👤 Final user: ${user?.name}');
-    print('🆔 Final userId: $userId');
+    print('👤 Final name: $name');
+    print('🆔 Final userId: $userId (0 = guest)');
 
     if (_razorpayService == null) {
       print('❌ ERROR: Razorpay service is null!');
@@ -539,14 +624,24 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     await _razorpayService!.initiatePayment(
       context: context,
       amount: package['price'].toDouble(),
-      userId: userId,
+      userId: userId, // 0 for guests, real ID for logged-in users
       packageId: package['id'],
       packageName: package['name'],
-      userName: user?.name ?? 'User',
+      userName: name,
       userEmail: email,
       userPhone: phone,
       onComplete: (success, message) {
         if (success) {
+          // For guest users, save premium status locally
+          if (userId == 0) {
+            print('💎 Saving premium status for guest user');
+            // Save premium status with expiry date
+            final expiryDate = DateTime.now().add(Duration(days: package['days']));
+            StorageService.setPremiumStatus(true);
+            StorageService.setPremiumExpiry(expiryDate.toIso8601String());
+            print('✅ Guest user now has premium until: $expiryDate');
+          }
+
           // Refresh user status
           userProvider.refreshUserStatus();
 
@@ -750,101 +845,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
 
   Widget _buildContent() {
     final size = MediaQuery.of(context).size;
-    final userProvider = Provider.of<UserProvider>(context);
-    final isGuest = userProvider.userId == null;
-
-    // Show login required screen for guest users
-    if (isGuest) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.premiumGradient,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_outline,
-                  color: Colors.white,
-                  size: 60,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Login Required',
-                style: AppTheme.heading1.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Please login to subscribe to VIP Premium and unlock all AI-powered features!',
-                style: AppTheme.bodyLarge.copyWith(
-                  color: AppTheme.textSecondary,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.premiumGradient,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  icon: const Icon(
-                    Icons.login,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                  label: const Text(
-                    'Login Now',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/home');
-                },
-                child: Text(
-                  'Back to Home',
-                  style: TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
 
     return SafeArea(
       child: FadeTransition(

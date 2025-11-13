@@ -122,6 +122,24 @@ class StorageService {
     return _prefs?.getString('deviceId');
   }
 
+  // Premium status (for guest users)
+  static Future<void> setPremiumStatus(bool isPremium) async {
+    await _prefs?.setBool('isPremium', isPremium);
+  }
+
+  static bool getPremiumStatus() {
+    return _prefs?.getBool('isPremium') ?? false;
+  }
+
+  // Premium expiry date
+  static Future<void> setPremiumExpiry(String expiryDate) async {
+    await _prefs?.setString('premiumExpiry', expiryDate);
+  }
+
+  static String? getPremiumExpiry() {
+    return _prefs?.getString('premiumExpiry');
+  }
+
   // Clear all data
   static Future<void> clearAll() async {
     await _prefs?.clear();
