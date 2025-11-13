@@ -11,7 +11,22 @@ class UserProvider with ChangeNotifier {
   User? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  bool get isPremium => _user?.isPremium ?? false;
+  bool get isPremium {
+    // Check local storage first (for users who paid via Razorpay)
+    final localPremium = StorageService.getPremiumStatus();
+    if (localPremium) {
+      // Check if not expired
+      final expiryStr = StorageService.getPremiumExpiry();
+      if (expiryStr != null) {
+        final expiry = DateTime.parse(expiryStr);
+        if (DateTime.now().isBefore(expiry)) {
+          return true;
+        }
+      }
+    }
+    // Fall back to user object
+    return _user?.isPremium ?? false;
+  }
   String? get userId => _user?.userId;
 
   // Initialize user from storage

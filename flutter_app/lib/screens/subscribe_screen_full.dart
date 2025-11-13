@@ -634,18 +634,16 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       userPhone: phone,
       onComplete: (success, message) {
         if (success) {
-          // For guest users, save premium status locally
-          if (userId == 0) {
-            print('💎 Saving premium status for guest user');
-            // Save premium status with expiry date
-            final expiryDate = DateTime.now().add(Duration(days: package['days']));
-            StorageService.setPremiumStatus(true);
-            StorageService.setPremiumExpiry(expiryDate.toIso8601String());
-            print('✅ Guest user now has premium until: $expiryDate');
-          }
+          // Save premium status locally for ALL users
+          print('💎 Saving premium status locally');
+          final expiryDate = DateTime.now().add(Duration(days: package['days']));
+          StorageService.setPremiumStatus(true);
+          StorageService.setPremiumExpiry(expiryDate.toIso8601String());
+          print('✅ Premium activated until: $expiryDate');
 
-          // Refresh user status
-          userProvider.refreshUserStatus();
+          // Update user provider directly (don't call refreshUserStatus which overwrites with backend)
+          userProvider.setPremium(true);
+          print('✅ User provider updated with premium status');
 
           // Show success dialog
           showDialog(
