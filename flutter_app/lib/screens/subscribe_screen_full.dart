@@ -750,7 +750,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
           : _hasError
               ? _buildErrorState()
               : _buildContent(),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 5), // No tab highlighted for subscribe page
     );
   }
 

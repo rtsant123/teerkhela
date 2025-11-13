@@ -121,8 +121,8 @@ class AppBottomNav extends StatelessWidget {
             label: 'Dream',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: Icon(Icons.calculate_rounded),
+            label: 'Formula',
           ),
         ],
       ),
@@ -148,7 +148,7 @@ class AppBottomNav extends StatelessWidget {
         route = '/dream';
         break;
       case 4:
-        route = '/profile';
+        route = '/formula-calculator';
         break;
       default:
         return;

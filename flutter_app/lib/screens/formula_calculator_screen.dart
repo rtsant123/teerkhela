@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../utils/app_theme.dart';
+import '../widgets/app_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 import 'package:shimmer/shimmer.dart';
 
 class FormulaCalculatorScreen extends StatefulWidget {
@@ -124,9 +126,11 @@ class _FormulaCalculatorScreenState extends State<FormulaCalculatorScreen> {
         backgroundColor: AppTheme.primary,
         elevation: 0,
       ),
+      drawer: const AppDrawer(),
       body: userProvider.isPremium
           ? _buildCalculatorView()
           : _buildPremiumGate(),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
     );
   }
 
