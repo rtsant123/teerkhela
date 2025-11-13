@@ -90,16 +90,8 @@ class RazorpayService {
         'email': email,
         'name': name,
       },
-      'readonly': {
-        'contact': false,
-        'email': false,
-      },
-      'external': {
-        'wallets': ['paytm']
-      },
       'theme': {
-        'color': '#667eea',
-        'hide_topbar': false
+        'color': '#6366F1',
       }
     };
 
