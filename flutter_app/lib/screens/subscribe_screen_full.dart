@@ -225,9 +225,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                  ),
+                  gradient: AppTheme.primaryGradient,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -294,10 +292,9 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                        ),
+                        gradient: AppTheme.primaryGradient,
                         borderRadius: BorderRadius.circular(12),
+                        boxShadow: AppTheme.buttonShadow(AppTheme.primary),
                       ),
                       child: ElevatedButton(
                         onPressed: () {
@@ -316,6 +313,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                           'Pay Now',
                           style: TextStyle(
                             color: Colors.white,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -353,13 +351,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF667eea).withOpacity(0.1),
+                  color: AppTheme.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.phone,
                   size: 40,
-                  color: Color(0xFF667eea),
+                  color: AppTheme.primary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -411,7 +409,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                 Navigator.pop(context, enteredPhone);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667eea),
+                backgroundColor: AppTheme.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -419,7 +417,10 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               ),
               child: const Text(
                 'Continue',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -449,13 +450,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF667eea).withOpacity(0.1),
+                  color: AppTheme.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.email,
                   size: 40,
-                  color: Color(0xFF667eea),
+                  color: AppTheme.primary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -507,7 +508,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                 Navigator.pop(context, enteredEmail);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667eea),
+                backgroundColor: AppTheme.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -515,7 +516,10 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               ),
               child: const Text(
                 'Continue',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
