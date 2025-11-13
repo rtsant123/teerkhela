@@ -397,6 +397,29 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     final phone = StorageService.getPhoneNumber() ?? '';
     final user = StorageService.getUser();
 
+    print('🔍 DEBUG: userId = $userId');
+    print('🔍 DEBUG: email = $email');
+    print('🔍 DEBUG: phone = $phone');
+    print('🔍 DEBUG: user = ${user?.name}');
+
+    // Check if user is logged in
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please login first to subscribe'),
+          backgroundColor: AppTheme.error,
+          action: SnackBarAction(
+            label: 'Login',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
     // If email is not set, ask for it
     if (email.isEmpty || !email.contains('@')) {
       final emailController = TextEditingController();
@@ -492,14 +515,26 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       email = result;
       // Save email for future use
       await StorageService.setEmail(email);
+      print('✅ Email saved: $email');
     }
 
+    print('📧 Final email: $email');
+    print('📱 Final phone: $phone');
+    print('👤 Final user: ${user?.name}');
+    print('🆔 Final userId: $userId');
+
     if (_razorpayService == null) {
+      print('❌ ERROR: Razorpay service is null!');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Payment service not initialized')),
       );
       return;
     }
+
+    print('💳 Starting Razorpay payment flow...');
+    print('   Package: ${package['name']}');
+    print('   Price: ₹${package['price']}');
+    print('   Package ID: ${package['id']}');
 
     await _razorpayService!.initiatePayment(
       context: context,

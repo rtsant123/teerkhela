@@ -193,8 +193,18 @@ class RazorpayService {
     required String userPhone,
     required Function(bool, String) onComplete,
   }) async {
+    debugPrint('🚀 RazorpayService.initiatePayment() called');
+    debugPrint('   Amount: ₹$amount');
+    debugPrint('   UserId: $userId');
+    debugPrint('   PackageId: $packageId');
+    debugPrint('   PackageName: $packageName');
+    debugPrint('   UserName: $userName');
+    debugPrint('   UserEmail: $userEmail');
+    debugPrint('   UserPhone: $userPhone');
+
     try {
       // Show loading
+      debugPrint('📊 Showing loading dialog...');
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -204,6 +214,7 @@ class RazorpayService {
       );
 
       // Create order
+      debugPrint('📞 Creating Razorpay order...');
       final orderData = await createOrder(
         amount: amount,
         userId: userId,
@@ -211,15 +222,21 @@ class RazorpayService {
         packageName: packageName,
       );
 
+      debugPrint('📦 Order response: $orderData');
+
       // Close loading
       if (context.mounted) {
+        debugPrint('✅ Closing loading dialog');
         Navigator.pop(context);
       }
 
       if (orderData == null) {
+        debugPrint('❌ Failed to create order - orderData is null');
         onComplete(false, 'Failed to create payment order');
         return;
       }
+
+      debugPrint('✅ Order created successfully: ${orderData['order_id']}');
 
       // Set callbacks
       onSuccess = (response) async {
@@ -261,6 +278,11 @@ class RazorpayService {
       };
 
       // Open checkout
+      debugPrint('🏪 Opening Razorpay checkout...');
+      debugPrint('   Order ID: ${orderData['order_id']}');
+      debugPrint('   Key ID: ${orderData['key_id']}');
+      debugPrint('   Amount: ₹$amount');
+
       openCheckout(
         orderId: orderData['order_id'],
         amount: amount,
@@ -270,12 +292,14 @@ class RazorpayService {
         phone: userPhone,
         description: packageName,
       );
+
+      debugPrint('✅ Checkout opened successfully');
     } catch (e) {
       debugPrint('❌ Error initiating payment: $e');
       if (context.mounted) {
         Navigator.pop(context); // Close loading if open
       }
-      onComplete(false, 'Failed to initiate payment');
+      onComplete(false, 'Failed to initiate payment: $e');
     }
   }
 
