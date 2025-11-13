@@ -837,7 +837,7 @@ class _SubscriptionModalState extends State<_SubscriptionModal> {
         boxShadow: [
           BoxShadow(
             color: isPopular
-                ? const AppTheme.primary.withOpacity(0.3)
+                ? AppTheme.primary.withOpacity(0.3)
                 : Colors.black.withOpacity(0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/device_info.dart';
+import '../utils/app_theme.dart';
 
 class PaymentStatusScreen extends StatefulWidget {
   const PaymentStatusScreen({super.key});
@@ -82,7 +83,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payment History', style: TextStyle(color: Colors.white)),
-        backgroundColor: const AppTheme.primary,
+        backgroundColor: AppTheme.primary,
         elevation: 0,
         actions: [
           IconButton(
@@ -92,7 +93,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [AppTheme.primary, AppTheme.premiumPurple],
             begin: Alignment.topCenter,
@@ -117,7 +118,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: const AppTheme.primary,
+                            foregroundColor: AppTheme.primary,
                           ),
                           child: const Text('Subscribe Now'),
                         ),
@@ -213,10 +214,10 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                                   // Amount
                                   Row(
                                     children: [
-                                      const Icon(Icons.currency_rupee, size: 20, color: AppTheme.primary),
+                                      Icon(Icons.currency_rupee, size: 20, color: AppTheme.primary),
                                       Text(
                                         '${payment['amount']}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
                                           color: AppTheme.primary,
