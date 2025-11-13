@@ -392,13 +392,15 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   }
 
   Future<void> _handleRazorpayPayment(Map<String, dynamic> package, userProvider) async {
-    final userId = userProvider.userId ?? 0; // Use 0 for guest users
+    final String? userIdString = userProvider.userId;
+    final int userId = userIdString != null ? userIdString.hashCode.abs() : 0; // Convert UUID to int, or 0 for guests
     String email = StorageService.getEmail() ?? '';
     String phone = StorageService.getPhoneNumber() ?? '';
     final user = StorageService.getUser();
     String name = user?.name ?? '';
 
-    print('🔍 DEBUG: userId = $userId (0 = guest)');
+    print('🔍 DEBUG: userId string = $userIdString');
+    print('🔍 DEBUG: userId int = $userId (0 = guest)');
     print('🔍 DEBUG: email = $email');
     print('🔍 DEBUG: phone = $phone');
     print('🔍 DEBUG: name = $name');
