@@ -124,11 +124,6 @@ class RazorpayService {
       },
       'theme': {
         'color': '#667eea'
-      },
-      'modal': {
-        'ondismiss': () {
-          debugPrint('Checkout form closed by user');
-        }
       }
     };
 
