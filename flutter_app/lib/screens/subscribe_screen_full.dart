@@ -394,7 +394,8 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   Future<void> _handleRazorpayPayment(Map<String, dynamic> package, userProvider) async {
     final userId = userProvider.userId;
     final email = StorageService.getEmail() ?? '';
-    final phone = StorageService.getPhone() ?? '';
+    final phone = StorageService.getPhoneNumber() ?? '';
+    final user = StorageService.getUser();
 
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -416,7 +417,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       userId: userId,
       packageId: package['id'],
       packageName: package['name'],
-      userName: StorageService.getName() ?? 'User',
+      userName: user?.name ?? 'User',
       userEmail: email,
       userPhone: phone,
       onComplete: (success, message) {
@@ -513,141 +514,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     );
   }
 
-  void _testModeActivation() {
-    // TEST MODE: Activate premium for testing (no payment required)
-    if (testMode) {
-      try {
-        await userProvider.activateTestPremium(package['days']);
-
-        if (!mounted) return;
-
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.successGradient,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                      size: 48,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Test Premium Activated!',
-                    style: AppTheme.heading2,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Test premium subscription activated for ${package['days']} days.\n\nNote: This is for testing only.',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.premiumGradient,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                      boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context); // Close dialog
-                        Navigator.pop(context); // Go back
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        'Start Using Premium',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: AppTheme.error,
-            ),
-          );
-        }
-      }
-      return;
-    }
-
-    // PRODUCTION MODE: Real payment flow
-    try {
-      final email = StorageService.getEmail() ?? '';
-
-      if (email.isEmpty || !email.contains('@')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please set a valid email in your profile')),
-        );
-        return;
-      }
-
-      // Create subscription (you'll need to implement this in your API)
-      var options = {
-        'key': razorpayKeyId,
-        'amount': package['price'] * 100, // Razorpay takes amount in paise
-        'name': 'Teer Khela VIP Premium',
-        'description': package['name'],
-        'prefill': {
-          'email': email,
-          'contact': '',
-        },
-        'theme': {
-          'color': '#9333EA',
-        },
-      };
-
-      _razorpay.open(options);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Unable to process subscription: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
-      print('Subscription error: $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
