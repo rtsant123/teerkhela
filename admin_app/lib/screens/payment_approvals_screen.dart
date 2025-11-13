@@ -12,7 +12,7 @@ class PaymentApprovalsScreen extends StatefulWidget {
 class _PaymentApprovalsScreenState extends State<PaymentApprovalsScreen> with SingleTickerProviderStateMixin {
   List<dynamic> payments = [];
   bool isLoading = true;
-  final String baseUrl = 'http://localhost:5000/api/payment';
+  final String baseUrl = 'https://teerkhela-production.up.railway.app/api/payment';
   late TabController _tabController;
   String currentStatus = 'pending';
 

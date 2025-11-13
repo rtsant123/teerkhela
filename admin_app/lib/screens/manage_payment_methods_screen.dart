@@ -12,7 +12,7 @@ class ManagePaymentMethodsScreen extends StatefulWidget {
 class _ManagePaymentMethodsScreenState extends State<ManagePaymentMethodsScreen> {
   List<dynamic> paymentMethods = [];
   bool isLoading = true;
-  final String baseUrl = 'http://localhost:5000/api/payment';
+  final String baseUrl = 'https://teerkhela-production.up.railway.app/api/payment';
 
   @override
   void initState() {

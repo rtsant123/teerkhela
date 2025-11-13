@@ -90,121 +90,103 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size for responsive design
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.height < 600;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppTheme.primaryGradient,
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Animated Logo Container
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: FadeTransition(
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Animated Logo Container - CENTERED
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Container(
+                      width: isSmallScreen ? 100 : 140,
+                      height: isSmallScreen ? 100 : 140,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(35),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.gps_fixed, // Target/Archery icon for Teer
+                          size: isSmallScreen ? 50 : 70,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: isSmallScreen ? 24 : 32),
+
+                // App Name
+                FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
+                  child: Text(
+                    'Teer Khela',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 28 : 36,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: AppTheme.elevatedShadow,
+                      letterSpacing: 1.5,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    child: const Icon(
-                      Icons.sports_cricket,
-                      size: 60,
-                      color: AppTheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Tagline
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Text(
+                    'AI Predictions & Results',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14 : 18,
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w300,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 30),
+                SizedBox(height: isSmallScreen ? 40 : 50),
 
-              // App Name
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Text(
-                  'Teer Khela',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
+                // Loading Indicator
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: const SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 3,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-
-              // Tagline
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Text(
-                  'AI Predictions & Results',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
-                ),
-              ),
-              const Spacer(),
-
-              // Loading Indicator
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Rotating outer ring
-                      RotationTransition(
-                        turns: Tween(begin: 0.0, end: 1.0).animate(
-                          CurvedAnimation(
-                            parent: _fadeController,
-                            curve: const Interval(0, 1, curve: Curves.linear),
-                          ),
-                        ),
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Center dot
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Version Number
-              const Text(
-                'v1.0.0',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white54,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 30),
-            ],
+              ],
+            ),
           ),
         ),
       ),
