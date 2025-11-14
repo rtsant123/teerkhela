@@ -87,17 +87,21 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
         );
       };
 
-      // Wait for billing service to initialize
-      await Future.delayed(const Duration(seconds: 2));
+      // Wait for billing service to initialize (maximum 5 seconds)
+      int attempts = 0;
+      while (_billingService!.isLoading() && attempts < 10) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        attempts++;
+      }
 
       if (!_billingService!.isAvailable()) {
-        throw Exception('Google Play Store not available on this device');
+        throw Exception('⚠️ Google Play Billing Not Available\n\nThis app must be downloaded from the Play Store to purchase subscriptions.\n\nPlease:\n1. Publish your release to Internal Testing\n2. Add yourself as a tester\n3. Download the app from Play Store\n4. Wait 2-3 hours for products to sync\n5. Then try purchasing');
       }
 
       final products = _billingService!.getProducts();
 
       if (products.isEmpty) {
-        throw Exception('No subscription products found. Please create subscriptions in Play Console first.');
+        throw Exception('⚠️ Subscription Products Not Found\n\nPossible reasons:\n1. Products just created - wait 2-3 hours for Google to sync\n2. App not downloaded from Play Store\n3. Products not activated in Play Console\n\nPlease check Play Console and wait for sync.');
       }
 
       if (mounted) {
@@ -112,7 +116,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
         setState(() {
           _hasError = true;
           _isLoading = false;
-          _errorMessage = e.toString();
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
         });
       }
     }
@@ -312,38 +316,51 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
   }
 
   Widget _buildErrorState() {
-    return Center(
-      child: Padding(
+    return SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 40),
             Container(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.1),
+                color: Colors.orange.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.error_outline,
-                color: AppTheme.error,
+                Icons.info_outline,
+                color: Colors.orange,
                 size: 48,
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              'Failed to Load Plans',
+              'Setup Required',
               style: AppTheme.heading2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
-            Text(
-              _errorMessage ?? 'Unable to fetch subscription packages.',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondary,
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                border: Border.all(
+                  color: Colors.orange.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-              textAlign: TextAlign.center,
+              child: Text(
+                _errorMessage ?? 'Unable to fetch subscription packages.',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textPrimary,
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.left,
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -362,6 +379,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                 ),
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
