@@ -379,11 +379,98 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF059669)],
+                ),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: _activateTestPremium,
+                icon: const Icon(Icons.science),
+                label: const Text('Activate Test Premium (30 Days)'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'For testing only - No payment required',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textTertiary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
             const SizedBox(height: 40),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _activateTestPremium() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Activating test premium...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Activate test premium for 30 days
+      await userProvider.activateTestPremium(30);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        _showSuccessDialog('Test premium activated for 30 days! All premium features are now unlocked.');
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to activate test premium: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildContent() {
