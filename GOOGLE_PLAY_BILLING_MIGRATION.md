@@ -27,7 +27,7 @@ Using external payment systems (like Razorpay) for these will cause:
 - **After $1M:** 30% commission
 - For subscriptions after 1 year: 15% commission (loyalty discount)
 
-Example: ₹49 subscription = You get ₹41.65 (Google takes ₹7.35)
+Example: ₹99 subscription = You get ₹84.15 (Google takes ₹14.85)
 
 ## IMPLEMENTATION STEPS:
 
@@ -44,15 +44,15 @@ Example: ₹49 subscription = You get ₹41.65 (Google takes ₹7.35)
 - Product ID: `premium_monthly`
 - Name: Monthly Premium
 - Description: Premium access with AI predictions
-- Price: ₹49 (auto-converts to other currencies)
+- Price: ₹99 (auto-converts to other currencies)
 - Billing period: 1 month
 - Free trial: 7 days (optional)
 
 **Quarterly Premium:**
 - Product ID: `premium_quarterly`
 - Name: Quarterly Premium
-- Description: 3 months of premium access - Save 12%
-- Price: ₹129
+- Description: 3 months of premium access - Save 16%
+- Price: ₹249
 - Billing period: 3 months
 - Free trial: 7 days (optional)
 
@@ -60,7 +60,7 @@ Example: ₹49 subscription = You get ₹41.65 (Google takes ₹7.35)
 - Product ID: `premium_annual`
 - Name: Annual Premium
 - Description: 12 months of premium access - Best value!
-- Price: ₹499
+- Price: ₹999
 - Billing period: 12 months
 - Free trial: 7 days (optional)
 
