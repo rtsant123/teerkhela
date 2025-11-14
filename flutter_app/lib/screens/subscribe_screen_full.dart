@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import '../providers/user_provider.dart';
-import '../services/api_service.dart';
-import '../services/storage_service.dart';
-import '../services/razorpay_service.dart';
+import '../services/google_play_billing_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
@@ -17,31 +15,18 @@ class SubscribeScreen extends StatefulWidget {
 }
 
 class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProviderStateMixin {
-  late Razorpay _razorpay;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  List<Map<String, dynamic>> _packages = [];
+  GooglePlayBillingService? _billingService;
+  List<ProductDetails> _products = [];
   bool _isLoading = true;
   bool _hasError = false;
-  int? _selectedPackageIndex;
-
-  // Razorpay Configuration
-  static const String razorpayKeyId = 'rzp_test_Rf5pLyBmC6t8Zx';
-  static const bool testMode = false; // Production mode - use real payments
-
-  RazorpayService? _razorpayService;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
-
-    _razorpayService = RazorpayService();
-
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -51,36 +36,73 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       curve: Curves.easeIn,
     );
 
-    _loadPackages();
+    _initializeBilling();
   }
 
   @override
   void dispose() {
-    _razorpay.clear();
-    _razorpayService?.dispose();
+    _billingService?.dispose();
     _animationController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadPackages() async {
+  Future<void> _initializeBilling() async {
     setState(() {
       _isLoading = true;
       _hasError = false;
     });
 
     try {
-      // Add timeout to prevent infinite loading
-      final packages = await ApiService.getSubscriptionPackages()
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception('Connection timeout. Please check your internet and try again.');
-            },
+      _billingService = GooglePlayBillingService();
+
+      // Set callbacks
+      _billingService!.onPurchaseComplete = (success, message) {
+        if (!mounted) return;
+
+        if (success) {
+          // Refresh user status
+          Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
+
+          // Show success dialog
+          _showSuccessDialog(message);
+        } else {
+          // Show error
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: AppTheme.error,
+              duration: const Duration(seconds: 5),
+            ),
           );
+        }
+      };
+
+      _billingService!.onError = (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      };
+
+      // Wait for billing service to initialize
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!_billingService!.isAvailable()) {
+        throw Exception('Google Play Store not available on this device');
+      }
+
+      final products = _billingService!.getProducts();
+
+      if (products.isEmpty) {
+        throw Exception('No subscription products found. Please create subscriptions in Play Console first.');
+      }
 
       if (mounted) {
         setState(() {
-          _packages = packages;
+          _products = products;
           _isLoading = false;
         });
         _animationController.forward();
@@ -90,28 +112,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
         setState(() {
           _hasError = true;
           _isLoading = false;
+          _errorMessage = e.toString();
         });
-
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: AppTheme.error,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: _loadPackages,
-            ),
-          ),
-        );
       }
     }
   }
 
-  void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    if (!mounted) return;
-
+  void _showSuccessDialog(String message) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -127,7 +134,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               Container(
                 width: 80,
                 height: 80,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppTheme.successGradient,
                   shape: BoxShape.circle,
                 ),
@@ -145,7 +152,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               ),
               const SizedBox(height: 12),
               Text(
-                'Your premium subscription is now active. Enjoy all AI-powered features!',
+                message,
                 style: AppTheme.bodyMedium.copyWith(
                   color: AppTheme.textSecondary,
                 ),
@@ -161,7 +168,6 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
                     Navigator.pop(context); // Close dialog
                     Navigator.pop(context); // Go back to previous screen
                   },
@@ -190,500 +196,46 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     );
   }
 
-  void _handlePaymentError(PaymentFailureResponse response) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Payment failed: ${response.message}'),
-        backgroundColor: AppTheme.error,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'Retry',
-          textColor: Colors.white,
-          onPressed: () {
-            if (_selectedPackageIndex != null) {
-              _handleSubscribe(_selectedPackageIndex!);
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  void _handleExternalWallet(ExternalWalletResponse response) {
-    // External wallet selected
-  }
-
-  Future<void> _handleSubscribe(int packageIndex) async {
-    setState(() {
-      _selectedPackageIndex = packageIndex;
-    });
-
-    final package = _packages[packageIndex];
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userId = userProvider.userId;
-
-    if (userId == null) {
+  Future<void> _handleSubscribe(ProductDetails product) async {
+    if (_billingService == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login first')),
+        const SnackBar(content: Text('Billing service not initialized')),
       );
       return;
     }
 
-    // Show payment confirmation dialog
-    _showPaymentConfirmDialog(package, userProvider);
-    return;
-  }
-
-  void _showPaymentConfirmDialog(Map<String, dynamic> package, userProvider) {
+    // Show loading dialog
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: AppTheme.primaryGradient,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.payment,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Confirm Payment',
-                style: AppTheme.heading2,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'You are about to subscribe to ${package['name']}',
-                style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Amount:',
-                      style: AppTheme.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      '₹${package['price']}',
-                      style: AppTheme.heading2.copyWith(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: AppTheme.primary),
-                        ),
-                      ),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: AppTheme.buttonShadow(AppTheme.primary),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _handleRazorpayPayment(package, userProvider);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Pay Now',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Processing purchase...'),
+              ],
+            ),
           ),
         ),
       ),
     );
+
+    // Wait a moment for dialog to show
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Close loading dialog
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
+    // Start purchase
+    await _billingService!.purchaseSubscription(product);
   }
-
-  Future<void> _handleRazorpayPayment(Map<String, dynamic> package, userProvider) async {
-    final String? userIdString = userProvider.userId;
-    final int userId = userIdString != null ? userIdString.hashCode.abs() : 0; // Convert UUID to int, or 0 for guests
-    String email = StorageService.getEmail() ?? '';
-    String phone = StorageService.getPhoneNumber() ?? '';
-    final user = StorageService.getUser();
-    String name = user?.name ?? '';
-
-    // Ask for phone if not available
-    if (phone.isEmpty) {
-      final phoneController = TextEditingController();
-
-      final result = await showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.phone,
-                  size: 40,
-                  color: AppTheme.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Enter Your Phone Number',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'We need your phone number for payment',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.normal,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          content: TextField(
-            controller: phoneController,
-            keyboardType: TextInputType.phone,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: 'Phone Number *',
-              hintText: '9876543210',
-              prefixIcon: const Icon(Icons.phone_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[50],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final enteredPhone = phoneController.text.trim();
-                if (enteredPhone.isEmpty || enteredPhone.length < 10) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a valid phone number')),
-                  );
-                  return;
-                }
-                Navigator.pop(context, enteredPhone);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Continue',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-          actionsAlignment: MainAxisAlignment.spaceBetween,
-        ),
-      );
-
-      if (result == null || result.isEmpty) {
-        return; // User cancelled
-      }
-
-      phone = result;
-      await StorageService.setPhoneNumber(phone);
-    }
-
-    // If email is not set, ask for it
-    if (email.isEmpty || !email.contains('@')) {
-      final emailController = TextEditingController();
-
-      final result = await showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.email,
-                  size: 40,
-                  color: AppTheme.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Enter Your Email',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'We need your email for payment confirmation',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.normal,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          content: TextField(
-            controller: emailController,
-            keyboardType: TextInputType.emailAddress,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: 'Email Address *',
-              hintText: 'your@email.com',
-              prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[50],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final enteredEmail = emailController.text.trim();
-                if (enteredEmail.isEmpty || !enteredEmail.contains('@')) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a valid email')),
-                  );
-                  return;
-                }
-                Navigator.pop(context, enteredEmail);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Continue',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-          actionsAlignment: MainAxisAlignment.spaceBetween,
-        ),
-      );
-
-      if (result == null || result.isEmpty) {
-        return; // User cancelled
-      }
-
-      email = result;
-      await StorageService.setEmail(email);
-    }
-
-    // Use "Guest" if no name
-    if (name.isEmpty) {
-      name = 'Guest User';
-    }
-
-    if (_razorpayService == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment service not initialized')),
-      );
-      return;
-    }
-
-    await _razorpayService!.initiatePayment(
-      context: context,
-      amount: package['price'].toDouble(),
-      userId: userId, // 0 for guests, real ID for logged-in users
-      packageId: package['id'],
-      packageName: package['name'],
-      userName: name,
-      userEmail: email,
-      userPhone: phone,
-      onComplete: (success, message) {
-        if (success) {
-          // Save premium status locally for ALL users
-          final expiryDate = DateTime.now().add(Duration(days: package['days']));
-          StorageService.setPremiumStatus(true);
-          StorageService.setPremiumExpiry(expiryDate.toIso8601String());
-
-          // Update user provider directly
-          userProvider.setPremium(true);
-
-          // Show success dialog
-          if (!mounted) return;
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        gradient: AppTheme.successGradient,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: Colors.white,
-                        size: 48,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Payment Successful!',
-                      style: AppTheme.heading2,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Your premium subscription is now active. Enjoy all AI-powered features!',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.premiumGradient,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                        boxShadow: AppTheme.buttonShadow(AppTheme.premiumPurple),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context); // Close dialog
-                          Navigator.pop(context); // Go back to previous screen
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        child: const Text(
-                          'Start Using Premium',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        } else {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: AppTheme.error,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
-      },
-    );
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -693,6 +245,22 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
         title: const Text('Upgrade to VIP Premium'),
         backgroundColor: AppTheme.primary,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.restore),
+            tooltip: 'Restore Purchases',
+            onPressed: () async {
+              if (_billingService != null) {
+                await _billingService!.restorePurchases();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Checking for previous purchases...')),
+                  );
+                }
+              }
+            },
+          ),
+        ],
       ),
       drawer: const AppDrawer(),
       body: _isLoading
@@ -700,7 +268,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
           : _hasError
               ? _buildErrorState()
               : _buildContent(),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 5), // No tab highlighted for subscribe page
+      bottomNavigationBar: const AppBottomNav(currentIndex: 5),
     );
   }
 
@@ -729,6 +297,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
             'Loading Premium Plans...',
             style: AppTheme.subtitle1.copyWith(
               color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Connecting to Google Play Store',
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textTertiary,
             ),
           ),
         ],
@@ -764,7 +339,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
             ),
             const SizedBox(height: 12),
             Text(
-              'Unable to fetch subscription packages. Please check your connection and try again.',
+              _errorMessage ?? 'Unable to fetch subscription packages.',
               style: AppTheme.bodyMedium.copyWith(
                 color: AppTheme.textSecondary,
               ),
@@ -772,7 +347,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: _loadPackages,
+              onPressed: _initializeBilling,
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
@@ -901,7 +476,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       {
         'icon': Icons.nights_stay,
         'title': 'Dream Dictionary Bot (100+ symbols)',
-        'color': Color(0xFF8B5CF6),
+        'color': const Color(0xFF8B5CF6),
       },
       {
         'icon': Icons.trending_up,
@@ -916,12 +491,12 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       {
         'icon': Icons.calculate,
         'title': 'Formula Calculator & Hit Analysis',
-        'color': Color(0xFF06B6D4),
+        'color': const Color(0xFF06B6D4),
       },
       {
         'icon': Icons.support_agent,
         'title': 'Priority Support',
-        'color': Color(0xFFEC4899),
+        'color': const Color(0xFFEC4899),
       },
       {
         'icon': Icons.block,
@@ -931,7 +506,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       {
         'icon': Icons.insights,
         'title': 'Exclusive FOMO Insights',
-        'color': Color(0xFFF97316),
+        'color': const Color(0xFFF97316),
       },
     ];
 
@@ -1032,7 +607,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
               ),
               const SizedBox(height: 4),
               Text(
-                'Select the perfect plan for you',
+                'Billed through Google Play Store',
                 style: AppTheme.bodyMedium.copyWith(
                   color: AppTheme.textSecondary,
                 ),
@@ -1040,24 +615,29 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
             ],
           ),
         ),
-        ..._packages.asMap().entries.map((entry) {
+        ..._products.asMap().entries.map((entry) {
           final index = entry.key;
-          final package = entry.value;
-          return _buildPlanCard(package, index, size);
+          final product = entry.value;
+          return _buildPlanCard(product, index, size);
         }),
       ],
     );
   }
 
-  Widget _buildPlanCard(Map<String, dynamic> package, int index, Size size) {
-    final isPopular = package['is_popular'] == true;
-    final price = package['price'];
-    final days = package['days'];
-    final monthlyRate = (price / (days / 30)).ceil();
-    final baseMonthlyRate = 49; // Assuming base monthly rate is 49
-    final savePercentage = days > 30
-        ? (((baseMonthlyRate * (days / 30) - price) / (baseMonthlyRate * (days / 30))) * 100).round()
-        : 0;
+  Widget _buildPlanCard(ProductDetails product, int index, Size size) {
+    final isPopular = index == 1; // Middle plan is popular
+
+    // Get price
+    final price = product.price;
+    final priceNum = double.tryParse(product.rawPrice.toString()) ?? 0;
+
+    // Determine savings
+    int savePercentage = 0;
+    if (product.id == GooglePlayBillingService.quarterlyProductId) {
+      savePercentage = 12;
+    } else if (product.id == GooglePlayBillingService.annualProductId) {
+      savePercentage = 15;
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1079,170 +659,137 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        child: Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                gradient: isPopular
-                    ? LinearGradient(
-                        colors: [
-                          AppTheme.premiumPurple.withOpacity(0.05),
-                          Colors.transparent,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-              ),
-              child: Column(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            gradient: isPopular
+                ? LinearGradient(
+                    colors: [
+                      AppTheme.premiumPurple.withOpacity(0.05),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              package['name'],
-                              style: AppTheme.heading3.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${days} days',
-                              style: AppTheme.bodySmall.copyWith(
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isPopular || savePercentage > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: isPopular
-                                ? AppTheme.premiumGradient
-                                : AppTheme.goldGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isPopular ? AppTheme.premiumPurple : AppTheme.premiumGold)
-                                    .withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            isPopular ? 'MOST POPULAR' : 'SAVE $savePercentage%',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.title.replaceAll(' (Teer Khela)', ''),
+                          style: AppTheme.heading3.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '₹',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                          height: 1.2,
-                        ),
-                      ),
-                      Text(
-                        price.toString(),
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                          height: 1,
-                        ),
-                      ),
-                      if (days > 30)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8, top: 8),
-                          child: Text(
-                            '≈₹$monthlyRate/mo',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
+                        const SizedBox(height: 4),
+                        Text(
+                          product.description,
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondary,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    package['description'],
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.textSecondary,
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: isPopular
-                          ? AppTheme.premiumGradient
-                          : AppTheme.primaryGradient,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                      boxShadow: AppTheme.buttonShadow(
-                        isPopular ? AppTheme.premiumPurple : AppTheme.primary,
+                  if (isPopular || savePercentage > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () => _handleSubscribe(index),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.workspace_premium_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Subscribe Now',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      decoration: BoxDecoration(
+                        gradient: isPopular
+                            ? AppTheme.premiumGradient
+                            : AppTheme.goldGradient,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isPopular ? AppTheme.premiumPurple : AppTheme.premiumGold)
+                                .withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
+                      child: Text(
+                        isPopular ? 'MOST POPULAR' : 'SAVE $savePercentage%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                price,
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: isPopular
+                      ? AppTheme.premiumGradient
+                      : AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: AppTheme.buttonShadow(
+                    isPopular ? AppTheme.premiumPurple : AppTheme.primary,
+                  ),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => _handleSubscribe(product),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Subscribe Now',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1252,11 +799,11 @@ class _SubscribeScreenState extends State<SubscribeScreen> with SingleTickerProv
     final indicators = [
       {
         'icon': Icons.security,
-        'text': '100% Secure Payment',
+        'text': '100% Secure Payment via Google',
       },
       {
         'icon': Icons.autorenew,
-        'text': 'Auto-renewal (cancel anytime)',
+        'text': 'Auto-renewal (manage in Play Store)',
       },
       {
         'icon': Icons.flash_on,
