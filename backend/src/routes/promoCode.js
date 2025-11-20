@@ -7,11 +7,12 @@ const promoCodeController = require('../controllers/promoCodeController');
 router.post('/promo-codes/validate', promoCodeController.validatePromoCode);
 
 // Admin routes - manage promo codes (no auth - for simple admin app)
-router.get('/admin/promo-codes', promoCodeController.getAllPromoCodes);
-router.post('/admin/promo-codes', promoCodeController.createPromoCode);
-router.put('/admin/promo-codes/:id', promoCodeController.updatePromoCode);
-router.delete('/admin/promo-codes/:id', promoCodeController.deletePromoCode);
-router.patch('/admin/promo-codes/:id/toggle', promoCodeController.togglePromoCode);
-router.get('/admin/promo-codes/stats', promoCodeController.getPromoCodeStats);
+// Note: These are mounted at /api in server.js, so full paths are /api/promo-codes-admin/*
+router.get('/promo-codes-admin', promoCodeController.getAllPromoCodes);
+router.post('/promo-codes-admin', promoCodeController.createPromoCode);
+router.put('/promo-codes-admin/:id', promoCodeController.updatePromoCode);
+router.delete('/promo-codes-admin/:id', promoCodeController.deletePromoCode);
+router.patch('/promo-codes-admin/:id/toggle', promoCodeController.togglePromoCode);
+router.get('/promo-codes-admin/stats', promoCodeController.getPromoCodeStats);
 
 module.exports = router;
