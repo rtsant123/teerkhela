@@ -108,6 +108,32 @@ const initializeApp = async () => {
     // Initialize database
     await initDatabase();
 
+    // Create promo codes table if it doesn't exist
+    try {
+      const PromoCode = require('./models/PromoCode');
+      await PromoCode.createTable();
+      console.log('✓ Promo codes table ready');
+
+      // Create test promo code
+      try {
+        await PromoCode.create({
+          code: 'TEST100',
+          discount_percent: 100,
+          max_uses: null,
+          valid_until: null,
+          description: 'Test promo code - 100% discount',
+          created_by: 'system'
+        });
+        console.log('✓ TEST100 promo code created');
+      } catch (promoError) {
+        if (promoError.code !== '23505') { // Ignore duplicate key error
+          console.log('ℹ️  TEST100 promo code already exists');
+        }
+      }
+    } catch (promoTableError) {
+      console.log('⚠️  Promo codes table creation skipped:', promoTableError.message);
+    }
+
     // Initialize Firebase (optional - won't crash if not configured)
     try {
       initializeFirebase();
