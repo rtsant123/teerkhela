@@ -18,7 +18,7 @@ const adminRoutes = require('./routes/admin');
 const forumRoutes = require('./routes/forum');
 const referralRoutes = require('./routes/referral');
 const subscriptionsRoutes = require('./routes/subscriptions');
-const razorpayRoutes = require('./routes/razorpay');
+const promoCodeRoutes = require('./routes/promoCode');
 
 // Import services for cron jobs
 const scraperService = require('./services/scraperService');
@@ -81,7 +81,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/referral', referralRoutes);
-app.use('/api/razorpay', razorpayRoutes);
+app.use('/api', promoCodeRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -254,3 +254,4 @@ process.on('unhandledRejection', (reason, promise) => {
 startServer();
 
 module.exports = app;
+
