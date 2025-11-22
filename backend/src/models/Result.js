@@ -191,6 +191,55 @@ class Result {
     }
   }
 
+  // Get all results by date (for any date)
+  static async getByDate(date) {
+    try {
+      const result = await pool.query(
+        'SELECT * FROM results WHERE date = $1 ORDER BY game',
+        [date]
+      );
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting results by date:', error);
+      throw error;
+    }
+  }
+
+  // Get latest result for a specific game
+  static async getLatest(game) {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM results
+         WHERE game = $1
+         AND (fr IS NOT NULL OR sr IS NOT NULL)
+         ORDER BY date DESC
+         LIMIT 1`,
+        [game]
+      );
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error getting latest result:', error);
+      throw error;
+    }
+  }
+
+  // Get all results for a game with limit
+  static async getAllByGame(game, limit = 100) {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM results
+         WHERE game = $1
+         ORDER BY date DESC
+         LIMIT $2`,
+        [game, limit]
+      );
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting all game results:', error);
+      throw error;
+    }
+  }
+
   // Delete old results (cleanup)
   static async deleteOldResults(daysToKeep = 90) {
     try {

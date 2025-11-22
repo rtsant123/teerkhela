@@ -46,32 +46,123 @@ const getResults = async (req, res) => {
 const getResultHistory = async (req, res) => {
   try {
     const { game } = req.params;
-    const { days = 7, userId } = req.query;
+    const { days = 30 } = req.query;
 
-    // Free users get 7 days max, premium get 30 days
-    let maxDays = 7;
-    if (userId) {
-      const isPremium = await User.isPremium(userId);
-      if (isPremium) {
-        maxDays = 30;
-      }
-    }
-
-    const requestedDays = Math.min(parseInt(days), maxDays);
+    // Public API - allow 30 days for everyone
+    const requestedDays = Math.min(parseInt(days), 30);
     const history = await Result.getHistory(game, requestedDays);
 
     res.json({
       success: true,
       game,
       days: requestedDays,
+      count: history.length,
       data: history,
-      isPremium: maxDays === 30
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Error getting result history:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching result history'
+    });
+  }
+};
+
+// Get today's results for all games
+const getTodayResults = async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const results = await Result.getByDate(today);
+
+    res.json({
+      success: true,
+      date: today,
+      count: results.length,
+      data: results,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting today results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching today results'
+    });
+  }
+};
+
+// Get latest result for specific game
+const getLatestResult = async (req, res) => {
+  try {
+    const { game } = req.params;
+    const result = await Result.getLatest(game);
+
+    if (!result) {
+      return res.json({
+        success: true,
+        game,
+        data: null,
+        message: 'No results found for this game'
+      });
+    }
+
+    res.json({
+      success: true,
+      game,
+      data: result,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting latest result:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching latest result'
+    });
+  }
+};
+
+// Get today's result for specific game
+const getGameTodayResult = async (req, res) => {
+  try {
+    const { game } = req.params;
+    const today = new Date().toISOString().split('T')[0];
+    const result = await Result.getByGameAndDate(game, today);
+
+    res.json({
+      success: true,
+      game,
+      date: today,
+      data: result || { game, date: today, fr: null, sr: null },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting game today result:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching today result'
+    });
+  }
+};
+
+// Get all results for a game (no limit)
+const getAllGameResults = async (req, res) => {
+  try {
+    const { game } = req.params;
+    const { limit = 100 } = req.query;
+    const results = await Result.getAllByGame(game, parseInt(limit));
+
+    res.json({
+      success: true,
+      game,
+      count: results.length,
+      data: results,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting all game results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching game results'
     });
   }
 };
@@ -379,6 +470,10 @@ module.exports = {
   getAllGames,
   getResults,
   getResultHistory,
+  getTodayResults,
+  getLatestResult,
+  getGameTodayResult,
+  getAllGameResults,
   createTestUser,
   registerUser,
   getUserStatus,
