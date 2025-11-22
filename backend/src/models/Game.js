@@ -153,6 +153,17 @@ class Game {
     }
   }
 
+  // Hard delete ALL games (cleanup)
+  static async hardDeleteAll() {
+    try {
+      const result = await pool.query('DELETE FROM games RETURNING *');
+      return result.rows;
+    } catch (error) {
+      console.error('Error deleting all games:', error);
+      throw error;
+    }
+  }
+
   // Toggle game active status
   static async toggleActive(id) {
     try {

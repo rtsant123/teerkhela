@@ -787,6 +787,25 @@ const deleteGame = async (req, res) => {
   }
 };
 
+// Delete all games (hard delete - cleanup)
+const deleteAllGames = async (req, res) => {
+  try {
+    const deletedGames = await Game.hardDeleteAll();
+
+    res.json({
+      success: true,
+      message: `All games deleted successfully (${deletedGames.length} games removed)`,
+      count: deletedGames.length
+    });
+  } catch (error) {
+    console.error('Error deleting all games:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting all games'
+    });
+  }
+};
+
 // Toggle game active status
 const toggleGameActive = async (req, res) => {
   try {
@@ -1053,6 +1072,7 @@ module.exports = {
   createGame,
   updateGame,
   deleteGame,
+  deleteAllGames,
   toggleGameActive,
   toggleGameScraping,
   // Subscription packages
