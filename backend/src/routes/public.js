@@ -5,6 +5,9 @@ const publicController = require('../controllers/publicController');
 // Games
 router.get('/games', publicController.getAllGames);
 
+// Results - Get all latest results
+router.get('/results', publicController.getResults);                      // All results for home screen
+
 // Results - 2 Endpoints per House
 router.get('/results/:game/latest', publicController.getLatestResult);   // Latest result for specific house (date + FR + SR)
 router.get('/results/:game/history', publicController.getResultHistory); // History for specific house (date + FR + SR)
