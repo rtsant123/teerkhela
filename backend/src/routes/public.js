@@ -5,9 +5,9 @@ const publicController = require('../controllers/publicController');
 // Games
 router.get('/games', publicController.getAllGames);
 
-// Results - Simple 2 Endpoint API
-router.get('/results/latest', publicController.getLatestResults);       // Latest results for all games (date + FR + SR)
-router.get('/results/:game/history', publicController.getResultHistory);// History for specific game (date + FR + SR)
+// Results - 2 Endpoints per House
+router.get('/results/:game/latest', publicController.getLatestResult);   // Latest result for specific house (date + FR + SR)
+router.get('/results/:game/history', publicController.getResultHistory); // History for specific house (date + FR + SR)
 
 // User
 router.get('/create-test-user', publicController.createTestUser);
