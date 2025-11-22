@@ -9,6 +9,9 @@ router.post('/login', adminController.login);
 // Manual result entry (no auth - for simple admin app)
 router.post('/results/manual-entry', adminController.manualResultEntry);
 
+// Delete result (no auth - for simple admin app)
+router.delete('/results/:game/:date', adminController.deleteResult);
+
 // Bulk historical upload (no auth - for simple admin app)
 router.post('/results/bulk-historical', adminController.bulkHistoricalUpload);
 

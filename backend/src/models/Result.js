@@ -254,6 +254,20 @@ class Result {
       throw error;
     }
   }
+
+  // Delete a specific result by game and date
+  static async delete(game, date) {
+    try {
+      const result = await pool.query(
+        'DELETE FROM results WHERE game = $1 AND date = $2 RETURNING *',
+        [game, date]
+      );
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting result:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = Result;

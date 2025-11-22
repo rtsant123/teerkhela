@@ -319,6 +319,41 @@ const manualResultEntry = async (req, res) => {
   }
 };
 
+// Delete result
+const deleteResult = async (req, res) => {
+  try {
+    const { game, date } = req.params;
+
+    if (!game || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'game and date are required'
+      });
+    }
+
+    const Result = require('../models/Result');
+    const deleted = await Result.delete(game, date);
+
+    if (deleted) {
+      res.json({
+        success: true,
+        message: 'Result deleted successfully'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Result not found'
+      });
+    }
+  } catch (error) {
+    console.error('Error deleting result:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting result'
+    });
+  }
+};
+
 // Bulk add results for multiple games at once
 const bulkAddResults = async (req, res) => {
   try {
@@ -1005,6 +1040,7 @@ module.exports = {
   overridePrediction,
   generatePredictions,
   manualResultEntry,
+  deleteResult,
   bulkAddResults,
   bulkUploadResults,
   bulkHistoricalUpload,
