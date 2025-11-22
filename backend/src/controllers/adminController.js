@@ -772,7 +772,7 @@ const deleteGame = async (req, res) => {
       });
     }
 
-    const game = await Game.delete(existingGame.id);
+    const game = await Game.hardDelete(existingGame.id);
 
     res.json({
       success: true,
