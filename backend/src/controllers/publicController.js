@@ -121,6 +121,39 @@ const getLatestResult = async (req, res) => {
   }
 };
 
+// Get latest results for ALL games (simple: date, game, fr, sr)
+const getLatestResults = async (req, res) => {
+  try {
+    const games = await Game.getAll(false); // Active games only
+    const results = [];
+
+    for (const game of games) {
+      const latest = await Result.getLatest(game.name);
+      if (latest) {
+        results.push({
+          game: latest.game,
+          date: latest.date,
+          fr: latest.fr,
+          sr: latest.sr
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      count: results.length,
+      data: results,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting latest results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching latest results'
+    });
+  }
+};
+
 // Get today's result for specific game
 const getGameTodayResult = async (req, res) => {
   try {
@@ -472,6 +505,7 @@ module.exports = {
   getResultHistory,
   getTodayResults,
   getLatestResult,
+  getLatestResults,
   getGameTodayResult,
   getAllGameResults,
   createTestUser,
