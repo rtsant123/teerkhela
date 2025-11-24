@@ -1,5 +1,19 @@
 const { pool } = require('../config/database');
-
+async function refreshVercelCache(game) {
+  try {
+    await fetch('https://www.blinder11.com/api/revalidate-teer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-revalidation-secret': process.env.VERCEL_REVALIDATION_SECRET
+      },
+      body: JSON.stringify({ game })
+    });
+    console.log(`Cache refreshed: ${game}`);
+  } catch (err) {
+    console.error('Cache refresh failed:', err.message);
+  }
+}
 class Result {
   // Save or update result
   static async upsert(game, date, fr, sr, declaredTime, isAuto = true) {
@@ -16,6 +30,7 @@ class Result {
          RETURNING *`,
         [game, date, fr, sr, declaredTime, isAuto]
       );
+      refreshVercelCache(game);
       return result.rows[0];
     } catch (error) {
       console.error('Error upserting result:', error);
