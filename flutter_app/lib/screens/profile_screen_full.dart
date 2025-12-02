@@ -292,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     SizedBox(height: AppTheme.space16),
                     Text(
-                      user?.email ?? 'Guest User',
+                      user?.phoneNumber ?? 'Guest User',
                       style: AppTheme.heading2.copyWith(
                         fontSize: size.width * 0.045,
                         color: Colors.white,
@@ -471,7 +471,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       size: size.width * 0.04,
                     ),
                     onTap: () {
-                      // TODO: Open privacy policy
+                      Navigator.pushNamed(context, '/privacy-policy');
                     },
                   ),
                   ListTile(
@@ -490,7 +490,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       size: size.width * 0.04,
                     ),
                     onTap: () {
-                      // TODO: Open terms
+                      Navigator.pushNamed(context, '/terms-conditions');
                     },
                   ),
                 ],
@@ -499,31 +499,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               SizedBox(height: AppTheme.space16),
 
-              // Logout Button
+              // Login/Logout Button (Conditional based on auth state)
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    _showLogoutDialog();
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppTheme.space12,
-                      horizontal: AppTheme.space16,
-                    ),
-                    side: const BorderSide(color: AppTheme.error),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    ),
-                  ),
-                  child: Text(
-                    'Logout',
-                    style: AppTheme.buttonText.copyWith(
-                      fontSize: size.width * 0.04,
-                      color: AppTheme.error,
-                    ),
-                  ),
-                ),
+                child: userProvider.isLoggedIn
+                    ? ElevatedButton.icon(
+                        onPressed: () {
+                          _showLogoutDialog();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.error,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppTheme.space12,
+                            horizontal: AppTheme.space16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          ),
+                          elevation: 2,
+                        ),
+                        icon: const Icon(Icons.logout, size: 20),
+                        label: Text(
+                          'Logout',
+                          style: AppTheme.buttonText.copyWith(
+                            fontSize: size.width * 0.04,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/phone-login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppTheme.space12,
+                            horizontal: AppTheme.space16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          ),
+                          elevation: 2,
+                        ),
+                        icon: const Icon(Icons.login, size: 20),
+                        label: Text(
+                          'Login with Phone',
+                          style: AppTheme.buttonText.copyWith(
+                            fontSize: size.width * 0.04,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
               ),
               SizedBox(height: AppTheme.space32),
             ],
@@ -613,7 +644,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // TODO: Navigate to manage subscription screen
+                Navigator.pushNamed(context, '/manage-subscription');
                 Navigator.pushNamed(context, '/manage-subscription');
               },
               style: ElevatedButton.styleFrom(
@@ -695,6 +726,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
                 shadowColor: Colors.transparent,
                 padding: EdgeInsets.symmetric(
                   vertical: AppTheme.space12,

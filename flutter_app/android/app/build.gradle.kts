@@ -39,6 +39,22 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
+    flavorDimensions += "version"
+    productFlavors {
+        create("playstore") {
+            dimension = "version"
+            applicationIdSuffix = ""
+            versionNameSuffix = "-playstore"
+            buildConfigField("boolean", "IS_PLAY_STORE", "true")
+        }
+        create("direct") {
+            dimension = "version"
+            applicationIdSuffix = ""
+            versionNameSuffix = "-direct"
+            buildConfigField("boolean", "IS_PLAY_STORE", "false")
+        }
+    }
+
     defaultConfig {
         applicationId = "com.teerkhela.app"
         // You can update the following values to match your application needs.
@@ -63,8 +79,12 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

@@ -12,6 +12,7 @@ class AppDrawer extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return Drawer(
+      width: size.width * 0.8, // Responsive drawer width
       child: Container(
         color: AppTheme.background,
         child: Column(
@@ -20,10 +21,10 @@ class AppDrawer extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + AppTheme.space16,
-                bottom: AppTheme.space24,
-                left: AppTheme.space20,
-                right: AppTheme.space20,
+                top: MediaQuery.of(context).padding.top + size.height * 0.02,
+                bottom: size.height * 0.025,
+                left: size.width * 0.05,
+                right: size.width * 0.05,
               ),
               decoration: const BoxDecoration(
                 gradient: AppTheme.primaryGradient,
@@ -31,7 +32,34 @@ class AppDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // App Logo/Icon
+                  // User Avatar and Name
+                  if (userProvider.user != null && !userProvider.user!.isGuest)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: size.height * 0.02),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userProvider.user!.name ?? 'User',
+                            style: AppTheme.heading2.copyWith(
+                              color: Colors.white,
+                              fontSize: size.width * 0.05,
+                            ),
+                          ),
+                          if (userProvider.user!.phoneNumber != null)
+                            Text(
+                              userProvider.user!.phoneNumber!,
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: size.width * 0.035,
+                              ),
+                            ),
+                          SizedBox(height: size.height * 0.015),
+                        ],
+                      ),
+                    ),
+
+                  // App Logo/Icon - Teer (Archery Target)
                   Container(
                     width: size.width * 0.15,
                     height: size.width * 0.15,
@@ -41,12 +69,12 @@ class AppDrawer extends StatelessWidget {
                       boxShadow: AppTheme.elevatedShadow,
                     ),
                     child: Icon(
-                      Icons.sports_cricket,
+                      Icons.gps_fixed, // Target icon for Teer (archery)
                       size: size.width * 0.08,
                       color: AppTheme.primary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.space16),
+                  SizedBox(height: size.height * 0.015),
 
                   // App Name
                   Text(
@@ -56,13 +84,13 @@ class AppDrawer extends StatelessWidget {
                       fontSize: size.width * 0.055,
                     ),
                   ),
-                  SizedBox(height: AppTheme.space4),
+                  SizedBox(height: size.height * 0.005),
 
                   // User Status
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: AppTheme.space12,
-                      vertical: AppTheme.space4,
+                      horizontal: size.width * 0.03,
+                      vertical: size.height * 0.006,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
@@ -78,7 +106,7 @@ class AppDrawer extends StatelessWidget {
                           color: Colors.white,
                           size: size.width * 0.04,
                         ),
-                        SizedBox(width: AppTheme.space4),
+                        SizedBox(width: size.width * 0.015),
                         Text(
                           userProvider.isPremium ? 'VIP Member' : 'Free User',
                           style: AppTheme.bodySmall.copyWith(
@@ -97,7 +125,7 @@ class AppDrawer extends StatelessWidget {
             // Menu Items
             Expanded(
               child: ListView(
-                padding: EdgeInsets.symmetric(vertical: AppTheme.space8),
+                padding: EdgeInsets.symmetric(vertical: size.height * 0.01),
                 children: [
                   // Home / Results
                   _buildMenuItem(
@@ -144,6 +172,20 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, '/common-numbers');
+                    },
+                    size: size,
+                  ),
+
+                  // Hot & Cold Numbers
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.whatshot,
+                    title: 'Hot & Cold Numbers',
+                    subtitle: 'Trending Analysis',
+                    isPremiumFeature: !userProvider.isPremium,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/hot-cold-numbers');
                     },
                     size: size,
                   ),
@@ -218,19 +260,60 @@ class AppDrawer extends StatelessWidget {
                     },
                     size: size,
                   ),
+
+                  const Divider(height: 1),
+
+                  // Contact Us
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.support_agent,
+                    title: 'Contact Us',
+                    subtitle: 'Get Help & Support',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/contact-us');
+                    },
+                    size: size,
+                  ),
+
+                  // Privacy Policy
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.privacy_tip,
+                    title: 'Privacy Policy',
+                    subtitle: 'Your Data Privacy',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/privacy-policy');
+                    },
+                    size: size,
+                  ),
+
+                  // Terms & Conditions
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.description,
+                    title: 'Terms & Conditions',
+                    subtitle: 'Usage Terms',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/terms-conditions');
+                    },
+                    size: size,
+                  ),
                 ],
               ),
             ),
 
             // Footer - App Version
             Container(
-              padding: EdgeInsets.all(AppTheme.space16),
+              padding: EdgeInsets.all(size.width * 0.04),
               child: Column(
                 children: [
                   if (!userProvider.isPremium)
                     Container(
                       width: double.infinity,
-                      margin: EdgeInsets.only(bottom: AppTheme.space12),
+                      margin: EdgeInsets.only(bottom: size.height * 0.015),
                       decoration: BoxDecoration(
                         gradient: AppTheme.premiumGradient,
                         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -243,9 +326,10 @@ class AppDrawer extends StatelessWidget {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
                           shadowColor: Colors.transparent,
                           padding: EdgeInsets.symmetric(
-                            vertical: AppTheme.space12,
+                            vertical: size.height * 0.015,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -256,13 +340,17 @@ class AppDrawer extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.workspace_premium,
-                              size: size.width * 0.045,
+                              size: size.width * 0.05,
                             ),
-                            SizedBox(width: AppTheme.space8),
-                            Text(
-                              'Upgrade to VIP - ₹49/mo',
-                              style: AppTheme.buttonText.copyWith(
-                                fontSize: size.width * 0.037,
+                            SizedBox(width: size.width * 0.02),
+                            Flexible(
+                              child: Text(
+                                'Upgrade to VIP',
+                                style: AppTheme.buttonText.copyWith(
+                                  fontSize: size.width * 0.04,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -270,10 +358,10 @@ class AppDrawer extends StatelessWidget {
                       ),
                     ),
                   Text(
-                    'Version 1.0.0',
+                    'Version 1.0.7',
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textTertiary,
-                      fontSize: size.width * 0.03,
+                      fontSize: size.width * 0.032,
                     ),
                   ),
                 ],
@@ -297,9 +385,10 @@ class AppDrawer extends StatelessWidget {
     bool isAdmin = false,
   }) {
     return ListTile(
+      dense: true,
       leading: Container(
-        width: size.width * 0.11,
-        height: size.width * 0.11,
+        width: size.width * 0.12,
+        height: size.width * 0.12,
         decoration: BoxDecoration(
           gradient: isPremium
               ? AppTheme.premiumGradient
@@ -309,32 +398,35 @@ class AppDrawer extends StatelessWidget {
                     )
                   : LinearGradient(
                       colors: [
-                        AppTheme.primary.withOpacity(0.1),
-                        AppTheme.primaryLight.withOpacity(0.1),
+                        AppTheme.primary.withOpacity(0.15),
+                        AppTheme.primaryLight.withOpacity(0.15),
                       ],
                     ),
-          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
           color: (isPremium || isAdmin) ? Colors.white : AppTheme.primary,
-          size: size.width * 0.055,
+          size: size.width * 0.06,
         ),
       ),
       title: Row(
         children: [
-          Text(
-            title,
-            style: AppTheme.subtitle1.copyWith(
-              fontSize: size.width * 0.04,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              title,
+              style: AppTheme.subtitle1.copyWith(
+                fontSize: size.width * 0.042,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           if (isPremiumFeature) ...[
-            SizedBox(width: AppTheme.space4),
+            SizedBox(width: size.width * 0.01),
             Icon(
               Icons.lock,
-              size: size.width * 0.035,
+              size: size.width * 0.038,
               color: AppTheme.premiumGold,
             ),
           ],
@@ -343,19 +435,20 @@ class AppDrawer extends StatelessWidget {
       subtitle: Text(
         subtitle,
         style: AppTheme.bodySmall.copyWith(
-          fontSize: size.width * 0.032,
+          fontSize: size.width * 0.034,
           color: AppTheme.textSecondary,
         ),
+        overflow: TextOverflow.ellipsis,
       ),
       trailing: Icon(
         Icons.arrow_forward_ios,
-        size: size.width * 0.035,
+        size: size.width * 0.038,
         color: AppTheme.textSecondary,
       ),
       onTap: onTap,
       contentPadding: EdgeInsets.symmetric(
-        horizontal: AppTheme.space16,
-        vertical: AppTheme.space4,
+        horizontal: size.width * 0.04,
+        vertical: size.width * 0.01,
       ),
     );
   }

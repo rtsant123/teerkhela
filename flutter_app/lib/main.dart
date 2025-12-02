@@ -20,6 +20,7 @@ import 'screens/subscribe_screen_full.dart';
 import 'screens/profile_screen_full.dart';
 import 'screens/game_history_screen.dart';
 import 'screens/common_numbers_screen.dart';
+import 'screens/hot_cold_numbers_screen.dart';
 import 'screens/formula_calculator_screen.dart';
 import 'screens/community_forum_simple.dart';
 import 'screens/create_forum_post_screen.dart';
@@ -31,6 +32,11 @@ import 'screens/admin_dashboard_screen.dart';
 import 'screens/admin_add_result_screen.dart';
 import 'screens/admin_manage_houses_screen.dart';
 import 'screens/payment_status_screen.dart';
+import 'screens/phone_login_screen.dart';
+import 'screens/otp_verification_screen.dart';
+import 'screens/contact_us_screen.dart';
+import 'screens/privacy_policy_screen.dart';
+import 'screens/terms_conditions_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -113,6 +119,7 @@ class MyApp extends StatelessWidget {
               '/profile': (context) => const ProfileScreen(),
               '/game-history': (context) => const GameHistoryScreen(),
               '/common-numbers': (context) => const CommonNumbersScreen(),
+              '/hot-cold-numbers': (context) => const HotColdNumbersScreen(),
               '/formula-calculator': (context) => const FormulaCalculatorScreen(),
               '/community-forum': (context) => const SimpleCommunityForum(),
               '/create-forum-post': (context) => const CreateForumPostScreen(),
@@ -124,6 +131,22 @@ class MyApp extends StatelessWidget {
               '/admin-add-result': (context) => const AdminAddResultScreen(),
               '/admin-manage-houses': (context) => const AdminManageHousesScreen(),
               '/payment-status': (context) => const PaymentStatusScreen(),
+              '/phone-login': (context) => const PhoneLoginScreen(),
+              '/contact-us': (context) => const ContactUsScreen(),
+              '/privacy-policy': (context) => const PrivacyPolicyScreen(),
+              '/terms-conditions': (context) => const TermsConditionsScreen(),
+            },
+            onGenerateRoute: (settings) {
+              // Handle OTP verification with phone number argument
+              if (settings.name == '/otp-verification') {
+                final args = settings.arguments as Map<String, dynamic>?;
+                return MaterialPageRoute(
+                  builder: (context) => OTPVerificationScreen(
+                    phoneNumber: args?['phoneNumber'] ?? '',
+                  ),
+                );
+              }
+              return null;
             },
           );
         },
@@ -181,6 +204,14 @@ class _AppInitializerState extends State<AppInitializer> {
       }
     } catch (e) {
       print('Error getting device ID: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not get device ID. Some features may not work correctly.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
     return 'device_${DateTime.now().millisecondsSinceEpoch}';
   }
