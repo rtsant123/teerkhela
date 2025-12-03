@@ -806,6 +806,50 @@ const deleteAllGames = async (req, res) => {
   }
 };
 
+// Restore default games
+const restoreDefaultGames = async (req, res) => {
+  try {
+    const { pool } = require('../config/database');
+
+    // Delete all existing games first
+    await pool.query('DELETE FROM games');
+    console.log('✅ Cleared existing games');
+
+    // Insert all default games/houses
+    const result = await pool.query(`
+      INSERT INTO games (name, display_name, region, scrape_url, is_active, scrape_enabled, display_order)
+      VALUES
+        ('shillong', 'Shillong Teer', 'Meghalaya', 'shillong-teer', true, true, 1),
+        ('khanapara', 'Khanapara Teer', 'Assam', 'khanapara-teer', true, true, 2),
+        ('juwai', 'Juwai Teer', 'Meghalaya', 'juwai-teer', true, true, 3),
+        ('bhutan', 'Bhutan Teer', 'Bhutan', 'bhutan-teer', true, true, 4),
+        ('shillong-morning', 'Shillong Morning Teer', 'Meghalaya', 'shillong-morning', true, true, 5),
+        ('juwai-morning', 'Juwai Morning Teer', 'Meghalaya', 'juwai-morning', true, true, 6),
+        ('khanapara-morning', 'Khanapara Morning Teer', 'Assam', 'khanapara-morning', true, true, 7),
+        ('shillong-night', 'Shillong Night Teer', 'Meghalaya', 'shillong-night', true, true, 8),
+        ('night', 'Night Teer', 'General', 'night-teer', true, true, 9),
+        ('first', 'First Teer', 'General', 'first-teer', true, true, 10)
+      RETURNING *;
+    `);
+
+    console.log(`✅ Restored ${result.rowCount} houses successfully!`);
+
+    res.json({
+      success: true,
+      message: `All houses restored successfully (${result.rowCount} houses)`,
+      count: result.rowCount,
+      houses: result.rows
+    });
+  } catch (error) {
+    console.error('Error restoring default games:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error restoring default games',
+      error: error.message
+    });
+  }
+};
+
 // Toggle game active status
 const toggleGameActive = async (req, res) => {
   try {
@@ -1073,6 +1117,7 @@ module.exports = {
   updateGame,
   deleteGame,
   deleteAllGames,
+  restoreDefaultGames,
   toggleGameActive,
   toggleGameScraping,
   // Subscription packages

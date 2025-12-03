@@ -22,6 +22,7 @@ router.get('/games/:id', adminController.getGame);
 router.put('/games/:id', adminController.updateGame);
 router.delete('/games/:id', adminController.deleteGame);
 router.delete('/games', adminController.deleteAllGames);  // Cleanup endpoint
+router.post('/games/restore-defaults', adminController.restoreDefaultGames);  // Restore all houses
 router.post('/games/:id/toggle-active', adminController.toggleGameActive);
 router.post('/games/:id/toggle-scraping', adminController.toggleGameScraping);
 
