@@ -44,18 +44,17 @@ router.post('/create-subscription', async (req, res) => {
       });
     }
 
-    // Check if plan ID is configured (check for default fallback values only)
-    if (!selectedPlan.id || selectedPlan.id === 'plan_monthly' || selectedPlan.id === 'plan_quarterly' || selectedPlan.id === 'plan_yearly') {
+    // Check if plan ID is configured
+    if (!selectedPlan.id) {
       console.error('⚠️ Razorpay plan ID not configured for', plan_type);
-      console.error('   Current plan ID:', selectedPlan.id);
-      console.error('   Set environment variable: RAZORPAY_PLAN_' + plan_type.toUpperCase());
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        message: `Subscription plan not configured. Please set Razorpay plan IDs in environment variables.`,
-        error: 'RAZORPAY_PLAN_ID_MISSING',
-        details: `Missing: RAZORPAY_PLAN_${plan_type.toUpperCase()}`
+        message: `This subscription plan is not available right now. Please contact support.`,
+        userMessage: 'Subscription plan unavailable'
       });
     }
+
+    console.log('✅ Using plan:', plan_type, 'with ID:', selectedPlan.id);
 
     // Validate promo code if provided
     let discount = 0;

@@ -101,7 +101,28 @@ class RazorpayService {
 
       _razorpay.open(options);
     } catch (e) {
-      onError?.call('Error creating subscription: $e');
+      // Convert technical errors to user-friendly messages
+      String userMessage = _getUserFriendlyError(e.toString());
+      onError?.call(userMessage);
+    }
+  }
+
+  // Convert technical errors to user-friendly messages
+  String _getUserFriendlyError(String technicalError) {
+    if (technicalError.contains('Network error') || technicalError.contains('SocketException')) {
+      return 'Unable to connect. Please check your internet connection and try again.';
+    } else if (technicalError.contains('plan not available') || technicalError.contains('plan unavailable')) {
+      return 'This subscription plan is temporarily unavailable. Please try again later or contact support.';
+    } else if (technicalError.contains('timeout')) {
+      return 'Request timed out. Please check your connection and try again.';
+    } else if (technicalError.contains('500')) {
+      return 'Our servers are experiencing issues. Please try again in a few minutes.';
+    } else if (technicalError.contains('404')) {
+      return 'Service not found. Please update your app or contact support.';
+    } else if (technicalError.contains('credentials') || technicalError.contains('authentication')) {
+      return 'Payment system configuration error. Please contact support.';
+    } else {
+      return 'Unable to process subscription. Please try again or contact support.';
     }
   }
 
