@@ -120,11 +120,10 @@ const handleSubscriptionCharged = async (payload) => {
 
     console.log(`💰 Subscription charged: ${subscription.id}`);
 
-    // Find user by subscription ID or email
-    const email = subscription.notes?.customer_email;
+    // Find user by subscription ID
     const userResult = await User.pool.query(
-      'SELECT * FROM users WHERE subscription_id = $1 OR email = $2',
-      [subscription.id, email]
+      'SELECT * FROM users WHERE subscription_id = $1',
+      [subscription.id]
     );
 
     if (userResult.rows.length === 0) {
@@ -134,9 +133,27 @@ const handleSubscriptionCharged = async (payload) => {
 
     const user = userResult.rows[0];
 
-    // Calculate expiry date (30 days from now)
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 30);
+    // Determine duration based on plan_id
+    let durationDays = 30; // default monthly
+    if (subscription.plan_id === process.env.RAZORPAY_PLAN_MONTHLY) {
+      durationDays = 30;
+    } else if (subscription.plan_id === process.env.RAZORPAY_PLAN_QUARTERLY) {
+      durationDays = 90;
+    } else if (subscription.plan_id === process.env.RAZORPAY_PLAN_YEARLY) {
+      durationDays = 365;
+    }
+
+    // Calculate expiry date
+    // If user still has premium time left, extend from expiry_date
+    // Otherwise, start from now
+    let expiryDate;
+    if (user.expiry_date && new Date(user.expiry_date) > new Date()) {
+      expiryDate = new Date(user.expiry_date);
+      expiryDate.setDate(expiryDate.getDate() + durationDays);
+    } else {
+      expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + durationDays);
+    }
 
     // Update user premium status
     await User.updatePremiumStatus(user.id, true, expiryDate, subscription.id);

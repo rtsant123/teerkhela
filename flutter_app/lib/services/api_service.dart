@@ -62,13 +62,9 @@ class ApiService {
         throw Exception('Failed to get games');
       }
     } catch (e) {
-      // Return default games if API fails
-      return [
-        TeerGame(id: 1, name: 'shillong', displayName: 'Shillong Teer', region: 'Meghalaya', isActive: true, scrapeEnabled: true, displayOrder: 1),
-        TeerGame(id: 2, name: 'khanapara', displayName: 'Khanapara Teer', region: 'Assam', isActive: true, scrapeEnabled: true, displayOrder: 2),
-        TeerGame(id: 3, name: 'juwai', displayName: 'Juwai Teer', region: 'Meghalaya', isActive: true, scrapeEnabled: true, displayOrder: 3),
-        TeerGame(id: 4, name: 'bhutan', displayName: 'Bhutan Teer', region: 'Bhutan', isActive: true, scrapeEnabled: true, displayOrder: 4),
-      ];
+      // Return empty list if API fails - games come from server only
+      print('Error fetching games: $e');
+      return [];
     }
   }
 
@@ -209,8 +205,8 @@ class ApiService {
   }
 
   // AI Common Numbers (premium only)
-  static Future<Map<String, dynamic>> getAICommonNumbers(String game) async {
-    final response = await _get('/ai-common-numbers/$game');
+  static Future<Map<String, dynamic>> getAICommonNumbers(String game, String userId) async {
+    final response = await _get('/ai-common-numbers/$game?userId=$userId');
 
     if (response['success']) {
       return response['data'];
@@ -231,8 +227,8 @@ class ApiService {
   }
 
   // AI Hit Numbers (premium only)
-  static Future<Map<String, dynamic>> getAIHitNumbers(String game, {int days = 7}) async {
-    final response = await _get('/ai-hit-numbers/$game?days=$days');
+  static Future<Map<String, dynamic>> getAIHitNumbers(String game, String userId, {int days = 7}) async {
+    final response = await _get('/ai-hit-numbers/$game?userId=$userId&days=$days');
 
     if (response['success']) {
       return response['data'];
@@ -259,31 +255,45 @@ class ApiService {
     }
   }
 
-  // Create subscription
-  static Future<Map<String, dynamic>> createSubscription(String userId, String email, String planId) async {
-    final response = await _post('/payment/create-subscription', {
-      'userId': userId,
-      'email': email,
-      'planId': planId,
+  // Create recurring subscription
+  static Future<Map<String, dynamic>> createRecurringSubscription({
+    required String userId,
+    required String planType, // 'monthly', 'quarterly', or 'annual'
+    String? promoCode,
+  }) async {
+    final response = await _post('/subscriptions/create-subscription', {
+      'user_id': userId,
+      'plan_type': planType,
+      if (promoCode != null && promoCode.isNotEmpty) 'promo_code': promoCode,
     });
 
     if (response['success']) {
       return {
-        'subscriptionId': response['subscriptionId'],
+        'subscriptionId': response['subscription_id'],
         'status': response['status'],
-        'shortUrl': response['shortUrl'],
+        'shortUrl': response['short_url'],
+        'planType': response['plan_type'],
+        'firstPaymentAmount': response['first_payment_amount'],
+        'regularAmount': response['regular_amount'],
+        'discountApplied': response['discount_applied'],
+        'durationDays': response['duration_days'],
+        'message': response['message'],
       };
     } else {
-      throw Exception('Failed to create subscription');
+      throw Exception(response['message'] ?? 'Failed to create subscription');
     }
   }
 
   // Cancel subscription
   static Future<void> cancelSubscription(String userId, String subscriptionId) async {
-    await _post('/payment/cancel-subscription', {
-      'userId': userId,
-      'subscriptionId': subscriptionId,
+    final response = await _post('/subscriptions/cancel-subscription', {
+      'user_id': userId,
+      'subscription_id': subscriptionId,
     });
+
+    if (!response['success']) {
+      throw Exception(response['message'] ?? 'Failed to cancel subscription');
+    }
   }
 
   // Activate test subscription (for testing purposes)
@@ -589,6 +599,36 @@ class ApiService {
       return response['data'];
     } else {
       throw Exception('Failed to get user payments');
+    }
+  }
+
+  // ==========================================
+  // PROMO CODE SYSTEM METHODS
+  // ==========================================
+
+  // Validate promo code (returns discount info if valid)
+  static Future<Map<String, dynamic>> validatePromoCode(String code) async {
+    try {
+      final response = await _post('/promo-codes/validate', {'code': code});
+
+      if (response['valid'] == true) {
+        return {
+          'valid': true,
+          'code': response['code'],
+          'discount_percent': response['discount_percent'],
+          'description': response['description'],
+        };
+      } else {
+        return {
+          'valid': false,
+          'error': response['error'] ?? 'Invalid promo code',
+        };
+      }
+    } catch (e) {
+      return {
+        'valid': false,
+        'error': e.toString().replaceAll('Exception: Network error: Exception: ', ''),
+      };
     }
   }
 }

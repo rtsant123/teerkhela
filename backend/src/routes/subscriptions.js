@@ -2,6 +2,154 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const PromoCode = require('../models/PromoCode');
+const { createSubscription, cancelSubscription } = require('../config/razorpay');
+const User = require('../models/User');
+
+// Create Razorpay recurring subscription
+router.post('/create-subscription', async (req, res) => {
+  try {
+    const { user_id, plan_type, promo_code } = req.body;
+
+    if (!user_id || !plan_type) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id and plan_type are required'
+      });
+    }
+
+    // Map plan type to Razorpay plan ID
+    const planMapping = {
+      'monthly': {
+        id: process.env.RAZORPAY_PLAN_MONTHLY,
+        price: 9900, // ₹99 in paise
+        duration_days: 30
+      },
+      'quarterly': {
+        id: process.env.RAZORPAY_PLAN_QUARTERLY,
+        price: 24900, // ₹249 in paise
+        duration_days: 90
+      },
+      'annual': {
+        id: process.env.RAZORPAY_PLAN_YEARLY,
+        price: 99900, // ₹999 in paise
+        duration_days: 365
+      }
+    };
+
+    const selectedPlan = planMapping[plan_type];
+    if (!selectedPlan) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid plan_type. Use: monthly, quarterly, or annual'
+      });
+    }
+
+    // Validate promo code if provided
+    let discount = 0;
+    let validPromo = null;
+    if (promo_code) {
+      const validation = await PromoCode.validateCode(promo_code);
+      if (validation.valid) {
+        validPromo = validation.promoCode;
+        discount = validPromo.discount_percent;
+      }
+    }
+
+    // Calculate first payment amount (with discount if applicable)
+    let firstPaymentAmount = selectedPlan.price;
+    if (discount > 0) {
+      firstPaymentAmount = Math.round(selectedPlan.price * (100 - discount) / 100);
+    }
+
+    // Create subscription via Razorpay
+    const result = await createSubscription(
+      selectedPlan.id,
+      user_id, // Pass user_id as customer identifier
+      `User ${user_id}`
+    );
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: result.error || 'Failed to create subscription'
+      });
+    }
+
+    // Store subscription info in database
+    await User.create(user_id, null, null);
+
+    // Return subscription details
+    res.json({
+      success: true,
+      subscription_id: result.subscriptionId,
+      short_url: result.shortUrl,
+      status: result.status,
+      plan_type: plan_type,
+      first_payment_amount: firstPaymentAmount,
+      regular_amount: selectedPlan.price,
+      discount_applied: discount,
+      duration_days: selectedPlan.duration_days,
+      message: discount > 0
+        ? `First payment: ₹${firstPaymentAmount/100}. Future payments: ₹${selectedPlan.price/100}`
+        : `Recurring payment: ₹${selectedPlan.price/100}`
+    });
+
+  } catch (error) {
+    console.error('Error creating subscription:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create subscription',
+      error: error.message
+    });
+  }
+});
+
+// Cancel recurring subscription
+router.post('/cancel-subscription', async (req, res) => {
+  try {
+    const { user_id, subscription_id } = req.body;
+
+    if (!user_id || !subscription_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id and subscription_id are required'
+      });
+    }
+
+    // Verify user owns this subscription
+    const user = await User.findById(user_id);
+    if (!user || user.subscription_id !== subscription_id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Subscription not found for this user'
+      });
+    }
+
+    // Cancel subscription on Razorpay (at cycle end = true means premium continues until expiry)
+    const result = await cancelSubscription(subscription_id, true);
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: result.error || 'Failed to cancel subscription'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Subscription cancelled successfully. You will have premium access until your current billing period ends.',
+      expiry_date: user.expiry_date
+    });
+
+  } catch (error) {
+    console.error('Error cancelling subscription:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to cancel subscription',
+      error: error.message
+    });
+  }
+});
 
 // Activate test subscription
 router.post('/activate-test', async (req, res) => {
