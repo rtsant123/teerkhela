@@ -83,9 +83,24 @@ router.post('/create-subscription', async (req, res) => {
     );
 
     if (!result.success) {
-      return res.status(500).json({
+      console.error('❌ Razorpay subscription creation failed:', result.error);
+      console.error('   Plan ID:', selectedPlan.id);
+      console.error('   User ID:', user_id);
+
+      // Return user-friendly message
+      let userMessage = 'Unable to process subscription. Please try again later.';
+      if (result.error.includes('authentication') || result.error.includes('Authentication')) {
+        userMessage = 'Payment system error. Please contact support.';
+        console.error('⚠️ CRITICAL: Razorpay authentication failed - check API keys!');
+      } else if (result.error.includes('plan')) {
+        userMessage = 'This subscription plan is not available. Please contact support.';
+        console.error('⚠️ CRITICAL: Razorpay plan not found - check plan IDs!');
+      }
+
+      return res.status(400).json({
         success: false,
-        message: result.error || 'Failed to create subscription'
+        message: userMessage,
+        technicalError: result.error // Include for debugging
       });
     }
 

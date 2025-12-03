@@ -45,7 +45,7 @@ class RazorpayService {
       'displayPrice': '₹999',
       'period': '/year',
       'durationDays': 365,
-      'savings': 'Save ₹789',
+      'savings': 'Save ₹189', // ₹99×12 = ₹1,188 - ₹999 = ₹189
     },
   ];
 
