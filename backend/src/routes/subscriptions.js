@@ -20,17 +20,17 @@ router.post('/create-subscription', async (req, res) => {
     // Map plan type to Razorpay plan ID
     const planMapping = {
       'monthly': {
-        id: process.env.RAZORPAY_PLAN_MONTHLY,
+        id: process.env.RAZORPAY_PLAN_MONTHLY || 'plan_monthly',
         price: 9900, // ₹99 in paise
         duration_days: 30
       },
       'quarterly': {
-        id: process.env.RAZORPAY_PLAN_QUARTERLY,
+        id: process.env.RAZORPAY_PLAN_QUARTERLY || 'plan_quarterly',
         price: 24900, // ₹249 in paise
         duration_days: 90
       },
       'annual': {
-        id: process.env.RAZORPAY_PLAN_YEARLY,
+        id: process.env.RAZORPAY_PLAN_YEARLY || 'plan_yearly',
         price: 99900, // ₹999 in paise
         duration_days: 365
       }
@@ -41,6 +41,19 @@ router.post('/create-subscription', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Invalid plan_type. Use: monthly, quarterly, or annual'
+      });
+    }
+
+    // Check if plan ID is configured (check for default fallback values only)
+    if (!selectedPlan.id || selectedPlan.id === 'plan_monthly' || selectedPlan.id === 'plan_quarterly' || selectedPlan.id === 'plan_yearly') {
+      console.error('⚠️ Razorpay plan ID not configured for', plan_type);
+      console.error('   Current plan ID:', selectedPlan.id);
+      console.error('   Set environment variable: RAZORPAY_PLAN_' + plan_type.toUpperCase());
+      return res.status(500).json({
+        success: false,
+        message: `Subscription plan not configured. Please set Razorpay plan IDs in environment variables.`,
+        error: 'RAZORPAY_PLAN_ID_MISSING',
+        details: `Missing: RAZORPAY_PLAN_${plan_type.toUpperCase()}`
       });
     }
 
@@ -62,9 +75,11 @@ router.post('/create-subscription', async (req, res) => {
     }
 
     // Create subscription via Razorpay
+    // Use a valid email format (Razorpay requires email format)
+    const customerEmail = `user_${user_id}@teerkhela.app`;
     const result = await createSubscription(
       selectedPlan.id,
-      user_id, // Pass user_id as customer identifier
+      customerEmail,
       `User ${user_id}`
     );
 

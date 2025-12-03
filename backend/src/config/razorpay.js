@@ -10,6 +10,10 @@ const razorpayInstance = new Razorpay({
 // Create subscription
 const createSubscription = async (planId, customerEmail, customerName = '') => {
   try {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay credentials not configured');
+    }
+
     const subscription = await razorpayInstance.subscriptions.create({
       plan_id: planId,
       customer_notify: 1,
@@ -30,9 +34,19 @@ const createSubscription = async (planId, customerEmail, customerName = '') => {
     };
   } catch (error) {
     console.error('❌ Error creating Razorpay subscription:', error);
+
+    // Provide more specific error messages
+    let errorMessage = error.message;
+    if (error.description) {
+      errorMessage = error.description;
+    }
+    if (error.error && error.error.description) {
+      errorMessage = error.error.description;
+    }
+
     return {
       success: false,
-      error: error.message
+      error: errorMessage || 'Failed to create subscription'
     };
   }
 };

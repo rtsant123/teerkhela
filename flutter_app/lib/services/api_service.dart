@@ -42,10 +42,18 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
       } else {
-        final errorBody = json.decode(response.body);
-        throw Exception(errorBody['message'] ?? 'Request failed');
+        try {
+          final errorBody = json.decode(response.body);
+          throw Exception(errorBody['message'] ?? errorBody['error'] ?? 'Request failed: ${response.statusCode}');
+        } catch (e) {
+          throw Exception('Request failed: ${response.statusCode} - ${response.body}');
+        }
       }
     } catch (e) {
+      // If it's already an Exception with a meaningful message, rethrow it
+      if (e is Exception && !e.toString().startsWith('Exception: SocketException')) {
+        rethrow;
+      }
       throw Exception('Network error: $e');
     }
   }
