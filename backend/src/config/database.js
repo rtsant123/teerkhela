@@ -156,22 +156,8 @@ const initDatabase = async () => {
       );
     `);
 
-    // Insert default games if not exists
-    await pool.query(`
-      INSERT INTO games (name, display_name, region, scrape_url, is_active, scrape_enabled, display_order)
-      VALUES
-        ('shillong', 'Shillong Teer', 'Meghalaya', 'shillong-teer', true, true, 1),
-        ('khanapara', 'Khanapara Teer', 'Assam', 'khanapara-teer', true, true, 2),
-        ('juwai', 'Juwai Teer', 'Meghalaya', 'juwai-teer', true, true, 3),
-        ('bhutan', 'Bhutan Teer', 'Bhutan', 'bhutan-teer', true, true, 4),
-        ('shillong-morning', 'Shillong Morning Teer', 'Meghalaya', 'shillong-morning', true, true, 5),
-        ('juwai-morning', 'Juwai Morning Teer', 'Meghalaya', 'juwai-morning', true, true, 6),
-        ('khanapara-morning', 'Khanapara Morning Teer', 'Assam', 'khanapara-morning', true, true, 7),
-        ('shillong-night', 'Shillong Night Teer', 'Meghalaya', 'shillong-night', true, true, 8),
-        ('night', 'Night Teer', 'General', 'night-teer', true, true, 9),
-        ('first', 'First Teer', 'General', 'first-teer', true, true, 10)
-      ON CONFLICT (name) DO NOTHING;
-    `);
+    // DO NOT auto-insert default games - let admin create them via admin app
+    console.log('⚠️  No default games inserted - admin must create houses manually');
 
     // Forum posts tables
     await pool.query(`
