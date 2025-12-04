@@ -49,6 +49,7 @@ router.get('/revenue-chart', adminController.getRevenueChart);
 router.get('/users', adminController.getUsers);
 router.post('/user/:userId/extend-premium', adminController.extendPremium);
 router.post('/user/:userId/deactivate', adminController.deactivatePremium);
+router.delete('/user/:userId', adminController.deleteUser);
 
 // Predictions
 router.post('/predictions/override', adminController.overridePrediction);

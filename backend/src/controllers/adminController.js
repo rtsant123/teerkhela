@@ -208,6 +208,26 @@ const deactivatePremium = async (req, res) => {
   }
 };
 
+// Delete user
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    await User.delete(userId);
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting user'
+    });
+  }
+};
+
 // Override prediction
 const overridePrediction = async (req, res) => {
   try {
@@ -1129,5 +1149,7 @@ module.exports = {
   getFomoContent,
   createFomoContent,
   updateFomoContent,
-  deleteFomoContent
+  deleteFomoContent,
+  // Users
+  deleteUser
 };

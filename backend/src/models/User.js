@@ -50,6 +50,32 @@ class User {
     }
   }
 
+  // Update user subscription status
+  static async updateSubscription(userId, subscriptionId, expiryDate, isPremium) {
+    try {
+      const result = await pool.query(
+        `UPDATE users
+         SET is_premium = $1, expiry_date = $2, subscription_id = $3, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $4
+         RETURNING *`,
+        [isPremium, expiryDate, subscriptionId, userId]
+      );
+      // If no user was updated, it means the user does not exist. Create the user.
+      if (result.rows.length === 0) {
+        return await pool.query(
+            `INSERT INTO users (id, fcm_token, device_info, is_premium, expiry_date, subscription_id)
+             VALUES ($1, null, null, $2, $3, $4)
+             RETURNING *`,
+            [userId, isPremium, expiryDate, subscriptionId]
+        );
+      }
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating subscription status:', error);
+      throw error;
+    }
+  }
+
   // Update user email
   static async updateEmail(userId, email) {
     try {
@@ -219,6 +245,17 @@ class User {
       };
     } catch (error) {
       console.error('Error getting statistics:', error);
+      throw error;
+    }
+  }
+
+  // Delete user
+  static async delete(userId) {
+    try {
+      await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting user:', error);
       throw error;
     }
   }
