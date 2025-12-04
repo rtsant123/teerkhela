@@ -29,9 +29,9 @@ class AppBottomNav extends StatelessWidget {
         ],
       ),
       child: BottomNavigationBar(
-        currentIndex: currentIndex,
+        currentIndex: currentIndex >= 0 ? currentIndex : 0,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primary,
+        selectedItemColor: currentIndex >= 0 ? AppTheme.primary : AppTheme.textSecondary,
         unselectedItemColor: AppTheme.textSecondary,
         backgroundColor: AppTheme.surface,
         elevation: 0,
@@ -99,6 +99,30 @@ class AppBottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Stack(
               children: [
+                const Icon(Icons.show_chart),
+                if (!isPremium)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.premiumGold,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 8,
+                        minHeight: 8,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            label: 'Hit Analysis',
+          ),
+          BottomNavigationBarItem(
+            icon: Stack(
+              children: [
                 const Icon(Icons.psychology_rounded),
                 if (!isPremium)
                   Positioned(
@@ -124,6 +148,7 @@ class AppBottomNav extends StatelessWidget {
             icon: Icon(Icons.calculate_rounded),
             label: 'Formula',
           ),
+          // Profile removed - available in drawer menu
         ],
       ),
     );
@@ -145,16 +170,23 @@ class AppBottomNav extends StatelessWidget {
         route = '/lucky-numbers';
         break;
       case 3:
-        route = '/dream';
+        route = '/hit-numbers';
         break;
       case 4:
+        route = '/dream';
+        break;
+      case 5:
         route = '/formula-calculator';
         break;
       default:
         return;
     }
 
-    // Use pushReplacementNamed to avoid stacking
-    Navigator.pushReplacementNamed(context, route);
+    // Pop current screen and push new one to maintain clean navigation
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      route,
+      (route) => false, // Remove all previous routes
+    );
   }
 }
