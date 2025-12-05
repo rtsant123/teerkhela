@@ -44,7 +44,7 @@ router.delete('/user/:userId', adminController.deleteUser);
 
 // Test route (no auth)
 router.get('/test', (req, res) => {
-  res.json({ success: true, message: 'Admin routes working without auth' });
+  res.json({ success: true, message: 'Admin routes working without auth - v2' });
 });
 
 // All routes below require admin auth
