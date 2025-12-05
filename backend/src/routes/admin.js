@@ -38,6 +38,15 @@ router.post('/fomo', adminController.createFomoContent);
 router.put('/fomo/:id', adminController.updateFomoContent);
 router.delete('/fomo/:id', adminController.deleteFomoContent);
 
+// Users Management (no auth - for simple admin app)
+router.get('/users', adminController.getUsers);
+router.delete('/user/:userId', adminController.deleteUser);
+
+// Test route (no auth)
+router.get('/test', (req, res) => {
+  res.json({ success: true, message: 'Admin routes working without auth' });
+});
+
 // All routes below require admin auth
 router.use(adminAuth);
 
@@ -45,11 +54,9 @@ router.use(adminAuth);
 router.get('/stats', adminController.getStatistics);
 router.get('/revenue-chart', adminController.getRevenueChart);
 
-// Users
-router.get('/users', adminController.getUsers);
+// Premium extension
 router.post('/user/:userId/extend-premium', adminController.extendPremium);
 router.post('/user/:userId/deactivate', adminController.deactivatePremium);
-router.delete('/user/:userId', adminController.deleteUser);
 
 // Predictions
 router.post('/predictions/override', adminController.overridePrediction);
