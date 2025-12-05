@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
-import '../services/google_play_billing_service.dart';
+import '../providers/user_provider.dart';
+import '../utils/app_theme.dart';
 import '../services/razorpay_service.dart';
 import '../services/api_service.dart';
-import '../providers/user_provider.dart';
-import '../config/app_config.dart';
-import '../utils/app_theme.dart';
 
 class SubscribeScreen extends StatefulWidget {
   const SubscribeScreen({super.key});
@@ -16,946 +13,492 @@ class SubscribeScreen extends StatefulWidget {
 }
 
 class _SubscribeScreenState extends State<SubscribeScreen> {
-  PaymentMethod _paymentMethod = AppConfig.paymentMethod;
-  GooglePlayBillingService? _billingService;
+  final _promoController = TextEditingController();
   RazorpayService? _razorpayService;
 
-  int _selectedPlanIndex = 2; // Yearly pre-selected
-  bool _isLoading = true;
-  bool _isPurchasing = false;
+  int _selectedPlan = 1;
+  bool _isProcessing = false;
   String? _errorMessage;
+  bool _showPromo = false;
+  String? _appliedPromo;
+  double _discount = 0;
 
-  // Google Play products
-  List<ProductDetails> _googlePlayProducts = [];
-
-  // Razorpay plans
-  List<Map<String, dynamic>> _razorpayPlans = [];
-
-  // Promo code state
-  final TextEditingController _promoCodeController = TextEditingController();
-  bool _isValidatingPromo = false;
-  Map<String, dynamic>? _appliedPromoCode;
-  String? _promoError;
+  final List<Map<String, dynamic>> _plans = [
+    {'name': '30D', 'price': 99, 'days': 30},
+    {'name': '90D', 'price': 249, 'days': 90},
+    {'name': '365D', 'price': 999, 'days': 365},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _initializePaymentService();
-  }
+    _razorpayService = RazorpayService();
+    _razorpayService!.initialize(context);
 
-  Future<void> _initializePaymentService() async {
-    setState(() => _isLoading = true);
-
-    debugPrint('🏪 Initializing ${AppConfig.buildVariant} payment service');
-
-    if (AppConfig.paymentMethod == PaymentMethod.googlePlay) {
-      // Play Store Build - Google Play Billing ONLY
-      _billingService = GooglePlayBillingService();
-
-      _billingService!.onPurchaseComplete = (success, message) {
-        if (!mounted) return;
-        setState(() => _isPurchasing = false);
-        if (success) {
-          Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
-          _showSuccessDialog(message);
-        } else {
-          setState(() => _errorMessage = message);
-        }
-      };
-
-      _billingService!.onError = (error) {
-        if (!mounted) return;
-        setState(() {
-          _isPurchasing = false;
-          _errorMessage = error;
-        });
-      };
-
-      // Wait for products to load
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _googlePlayProducts = _billingService!.getProducts();
-        _isLoading = false;
-      });
-
-      debugPrint('✅ Google Play Billing initialized with ${_googlePlayProducts.length} products');
-    } else {
-      // Direct APK Build - Razorpay ONLY
-      _razorpayService = RazorpayService();
-      _razorpayService!.initialize(context);
-
-      _razorpayService!.onPaymentComplete = (success, message) {
-        if (!mounted) return;
-        setState(() => _isPurchasing = false);
-        if (success) {
-          Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
-          _showSuccessDialog(message);
-        } else {
-          setState(() => _errorMessage = message);
-        }
-      };
-
-      _razorpayService!.onError = (error) {
-        if (!mounted) return;
-        setState(() {
-          _isPurchasing = false;
-          _errorMessage = error;
-        });
-      };
-
-      setState(() {
-        _razorpayPlans = _razorpayService!.getPlans();
-        _isLoading = false;
-      });
-
-      debugPrint('✅ Razorpay initialized with ${_razorpayPlans.length} plans');
-    }
-  }
-
-  void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green.shade600, size: 32),
-            const SizedBox(width: 12),
-            const Text('Success!'),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close subscription screen
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    _razorpayService!.onPaymentComplete = (success, message) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      if (success) {
+        Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Premium activated!'),
+              ],
             ),
-            child: const Text('Continue'),
+            backgroundColor: Colors.green,
           ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _applyPromoCode() async {
-    final code = _promoCodeController.text.trim();
-    if (code.isEmpty) return;
-
-    setState(() {
-      _isValidatingPromo = true;
-      _promoError = null;
-    });
-
-    try {
-      final result = await ApiService.validatePromoCode(code);
-
-      if (result['valid'] == true) {
-        setState(() {
-          _appliedPromoCode = result;
-          _promoError = null;
-          _isValidatingPromo = false;
-        });
+        );
       } else {
-        setState(() {
-          _appliedPromoCode = null;
-          _promoError = result['error'] ?? 'Invalid promo code';
-          _isValidatingPromo = false;
-        });
+        setState(() => _errorMessage = message);
       }
-    } catch (e) {
+    };
+
+    _razorpayService!.onError = (error) {
+      if (!mounted) return;
       setState(() {
-        _appliedPromoCode = null;
-        _promoError = 'Failed to validate promo code';
-        _isValidatingPromo = false;
+        _isProcessing = false;
+        _errorMessage = error;
       });
-    }
-  }
-
-  void _removePromoCode() {
-    setState(() {
-      _appliedPromoCode = null;
-      _promoError = null;
-      _promoCodeController.clear();
-    });
-  }
-
-  double _calculateDiscountedPrice(double originalPrice) {
-    if (_appliedPromoCode == null) return originalPrice;
-
-    final discountPercent = _appliedPromoCode!['discount_percent'] as int;
-    final discount = originalPrice * (discountPercent / 100);
-    return originalPrice - discount;
-  }
-
-  void _handlePurchase() async {
-    setState(() {
-      _isPurchasing = true;
-      _errorMessage = null;
-    });
-
-    if (_paymentMethod == PaymentMethod.googlePlay) {
-      // Google Play purchase
-      if (_googlePlayProducts.isEmpty) {
-        setState(() {
-          _isPurchasing = false;
-          _errorMessage = 'No products available';
-        });
-        return;
-      }
-      final product = _googlePlayProducts[_selectedPlanIndex];
-      await _billingService!.purchaseSubscription(product);
-    } else if (_paymentMethod == PaymentMethod.razorpay) {
-      // Razorpay purchase
-      if (_razorpayPlans.isEmpty) {
-        setState(() {
-          _isPurchasing = false;
-          _errorMessage = 'No plans available';
-        });
-        return;
-      }
-      final plan = _razorpayPlans[_selectedPlanIndex];
-
-      // Create recurring subscription (auto-renewal enabled)
-      await _razorpayService!.createRecurringSubscription(
-        plan,
-        promoCode: _appliedPromoCode,
-      );
-
-      setState(() => _isPurchasing = false); // Razorpay handles its own flow
-    }
+    };
   }
 
   @override
   void dispose() {
-    _billingService?.dispose();
     _razorpayService?.dispose();
-    _promoCodeController.dispose();
+    _promoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handlePayNow() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final plan = _plans[_selectedPlan];
+
+    if (userProvider.isGuest || userProvider.userId == null) {
+      final phone = await _showPhoneDialog();
+      if (phone == null || phone.isEmpty) return;
+
+      setState(() => _isProcessing = true);
+      try {
+        await userProvider.loginWithPhone(phone);
+      } catch (e) {
+        setState(() {
+          _isProcessing = false;
+          _errorMessage = 'Login failed. Try again.';
+        });
+        return;
+      }
+    }
+
+    setState(() {
+      _isProcessing = true;
+      _errorMessage = null;
+    });
+
+    final finalPrice = _discount > 0
+        ? plan['price'] * (1 - _discount / 100)
+        : plan['price'].toDouble();
+
+    // If 100% discount, activate premium directly without payment
+    if (_discount == 100 && _appliedPromo != null) {
+      try {
+        final response = await ApiService.activatePremiumWithPromo(
+          userId: userProvider.userId!,
+          planId: plan['name'],
+          durationDays: plan['days'],
+          promoCode: _appliedPromo!,
+        );
+
+        if (!mounted) return;
+        setState(() => _isProcessing = false);
+
+        await Provider.of<UserProvider>(context, listen: false).refreshUserStatus();
+        Navigator.pop(context);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Premium activated for free!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        setState(() {
+          _isProcessing = false;
+          _errorMessage = 'Activation failed: ${e.toString()}';
+        });
+      }
+      return;
+    }
+
+    // Regular payment with optional discount
+    final paymentPlan = {
+      'id': plan['name'],
+      'name': plan['name'],
+      'days': plan['days'],
+      'durationDays': plan['days'],
+      'price': (finalPrice * 100).toInt(),
+      'displayPrice': '₹${finalPrice.toStringAsFixed(0)}',
+    };
+
+    // Create promo code data if applied
+    Map<String, dynamic>? promoData;
+    if (_appliedPromo != null && _discount > 0) {
+      promoData = {
+        'valid': true,
+        'code': _appliedPromo,
+        'discount_percent': _discount.toInt(),
+      };
+    }
+
+    // Use openCheckout which handles promo codes properly
+    await _razorpayService!.openCheckout(paymentPlan, promoCode: promoData);
+    setState(() => _isProcessing = false);
+  }
+
+  Future<String?> _showPhoneDialog() async {
+    final phoneController = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Enter Phone Number'),
+        content: TextField(
+          controller: phoneController,
+          keyboardType: TextInputType.phone,
+          maxLength: 10,
+          autofocus: true,
+          decoration: InputDecoration(
+            prefix: Text('+91 '),
+            hintText: '9876543210',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            counterText: '',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (phoneController.text.trim().length == 10) {
+                Navigator.pop(context, phoneController.text.trim());
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('Continue'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _applyPromo() async {
+    final code = _promoController.text.trim().toUpperCase();
+    if (code.isEmpty) return;
+
+    setState(() {
+      _isProcessing = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Call backend API to validate promo code
+      final result = await ApiService.validatePromoCode(code);
+
+      if (result['valid'] == true) {
+        setState(() {
+          _appliedPromo = code;
+          _discount = result['discount_percent'].toDouble();
+          _isProcessing = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${result['description'] ?? 'Promo code applied'}'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        setState(() {
+          _isProcessing = false;
+          _errorMessage = result['error'] ?? 'Invalid promo code';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+        _errorMessage = 'Failed to validate promo code';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final plan = _plans[_selectedPlan];
+    final finalPrice = _discount > 0
+        ? plan['price'] * (1 - _discount / 100)
+        : plan['price'].toDouble();
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: _isLoading
-            ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                    ),
-                    SizedBox(height: 16),
-                    Text('Loading subscription plans...'),
-                  ],
-                ),
-              )
-            : Column(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.close, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text('Get Premium', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600)),
+      ),
+      body: Column(
+        children: [
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header with close button
-                  Padding(
-                    padding: EdgeInsets.all(screenWidth * 0.04),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Features - ALL OF THEM
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppTheme.primary.withOpacity(0.1), AppTheme.primaryDark.withOpacity(0.1)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+                    ),
+                    child: Column(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.black87),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                        const SizedBox(width: 48), // Balance the close button
+                        Text('✨ Premium Features', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                        SizedBox(height: 8),
+                        _buildFeature(Icons.stars, 'AI Lucky Numbers'),
+                        _buildFeature(Icons.psychology, 'Dream Number Analysis'),
+                        _buildFeature(Icons.trending_up, 'Common Numbers'),
+                        _buildFeature(Icons.whatshot, 'Hot & Cold Numbers'),
+                        _buildFeature(Icons.calculate, 'Formula Calculator'),
+                        _buildFeature(Icons.analytics, 'Advanced Predictions'),
+                        _buildFeature(Icons.history, 'Full Game History'),
+                        _buildFeature(Icons.assessment, 'Accuracy Stats'),
+                        _buildFeature(Icons.lightbulb, 'Hit Numbers'),
+                        _buildFeature(Icons.forum, 'Community Forum'),
                       ],
                     ),
                   ),
 
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Premium Icon
-                          Container(
-                            padding: EdgeInsets.all(screenWidth * 0.04),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [AppTheme.primary, AppTheme.primaryDark],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primary.withOpacity(0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.workspace_premium,
-                              size: screenWidth * 0.15,
-                              color: Colors.white,
+                  SizedBox(height: 16),
+
+                  // Plans - HORIZONTAL
+                  Text('Choose Plan:', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Row(
+                    children: List.generate(3, (i) => Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedPlan = i),
+                        child: Container(
+                          margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _selectedPlan == i ? AppTheme.primary : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _selectedPlan == i ? AppTheme.primary : Colors.grey.shade300,
+                              width: 2,
                             ),
                           ),
-
-                          SizedBox(height: screenHeight * 0.025),
-
-                          // Title
-                          Text(
-                            'Upgrade to VIP Premium',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: screenWidth * 0.065,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.black87,
-                            ),
-                          ),
-
-                          SizedBox(height: screenHeight * 0.01),
-
-                          // Subtitle
-                          Text(
-                            'Unlock all premium features',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: screenWidth * 0.04,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-
-                          SizedBox(height: screenHeight * 0.03),
-
-                          // Features
-                          _buildFeatures(screenWidth),
-
-                          SizedBox(height: screenHeight * 0.03),
-
-                          // Plans
-                          _buildPlans(screenWidth, screenHeight),
-
-                          SizedBox(height: screenHeight * 0.025),
-
-                          // Promo code section (only for Razorpay)
-                          if (_paymentMethod == PaymentMethod.razorpay)
-                            _buildPromoCodeSection(screenWidth, screenHeight),
-
-                          if (_errorMessage != null) ...[
-                            SizedBox(height: screenHeight * 0.02),
-                            _buildErrorBanner(screenWidth),
-                          ],
-
-                          SizedBox(height: screenHeight * 0.02),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Subscribe button
-                  _buildSubscribeButton(screenWidth, screenHeight),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _buildFeatures(double screenWidth) {
-    final features = [
-      {'icon': Icons.stars, 'text': 'VIP Lucky Numbers'},
-      {'icon': Icons.analytics, 'text': 'AI Hit Numbers Analysis'},
-      {'icon': Icons.nightlight_round, 'text': 'AI Dream Teer Number'},
-      {'icon': Icons.grid_on, 'text': 'VIP Common Numbers'},
-      {'icon': Icons.calculate, 'text': 'VIP Formula Calculator'},
-      {'icon': Icons.verified, 'text': 'AI Accuracy Tracking'},
-    ];
-
-    return Container(
-      padding: EdgeInsets.all(screenWidth * 0.045),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.check_circle, color: AppTheme.primary, size: screenWidth * 0.06),
-              SizedBox(width: screenWidth * 0.025),
-              Text(
-                'What You Get',
-                style: TextStyle(
-                  fontSize: screenWidth * 0.045,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: screenWidth * 0.03),
-          ...features.map((feature) => Padding(
-            padding: EdgeInsets.symmetric(vertical: screenWidth * 0.015),
-            child: Row(
-              children: [
-                Icon(
-                  feature['icon'] as IconData,
-                  color: AppTheme.primary,
-                  size: screenWidth * 0.05,
-                ),
-                SizedBox(width: screenWidth * 0.03),
-                Expanded(
-                  child: Text(
-                    feature['text'] as String,
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.038,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlans(double screenWidth, double screenHeight) {
-    final plans = _paymentMethod == PaymentMethod.googlePlay
-        ? _googlePlayProducts.map((product) {
-            String planName = 'Premium';
-            String period = '/month';
-            String? savings;
-
-            if (product.id == GooglePlayBillingService.monthlyProductId) {
-              planName = 'Monthly';
-              period = '/month';
-            } else if (product.id == GooglePlayBillingService.quarterlyProductId) {
-              planName = '3 Months';
-              period = '/3 months';
-              savings = 'SAVE 10%';
-            } else if (product.id == GooglePlayBillingService.annualProductId) {
-              planName = 'Yearly';
-              period = '/year';
-              savings = 'BEST VALUE';
-            }
-
-            return {
-              'name': planName,
-              'price': product.price,
-              'period': period,
-              'savings': savings,
-            };
-          }).toList()
-        : _razorpayPlans.map((plan) => {
-              'name': plan['name'],
-              'price': plan['displayPrice'],
-              'period': plan['period'],
-              'savings': plan['savings'],
-            }).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Choose Your Plan',
-          style: TextStyle(
-            fontSize: screenWidth * 0.05,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: screenHeight * 0.015),
-        ...List.generate(plans.length, (index) {
-          final plan = plans[index];
-          final isSelected = _selectedPlanIndex == index;
-          final isPopular = index == 2; // Yearly
-
-          return GestureDetector(
-            onTap: () => setState(() => _selectedPlanIndex = index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: EdgeInsets.only(bottom: screenHeight * 0.012),
-              padding: EdgeInsets.all(screenWidth * 0.04),
-              decoration: BoxDecoration(
-                gradient: isSelected
-                    ? const LinearGradient(
-                        colors: [AppTheme.primary, AppTheme.primaryDark],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: isSelected ? null : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isSelected ? Colors.transparent : Colors.grey.shade300,
-                  width: isSelected ? 0 : 2,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.4),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                children: [
-                  // Radio indicator
-                  Container(
-                    width: screenWidth * 0.06,
-                    height: screenWidth * 0.06,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isSelected ? Colors.white : Colors.transparent,
-                      border: Border.all(
-                        color: isSelected ? Colors.white : Colors.grey.shade400,
-                        width: 2,
-                      ),
-                    ),
-                    child: isSelected
-                        ? Center(
-                            child: Container(
-                              width: screenWidth * 0.03,
-                              height: screenWidth * 0.03,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          )
-                        : null,
-                  ),
-                  SizedBox(width: screenWidth * 0.03),
-
-                  // Plan details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              plan['name'] as String,
-                              style: TextStyle(
-                                fontSize: screenWidth * 0.043,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            if (plan['savings'] != null) ...[
-                              SizedBox(width: screenWidth * 0.02),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: screenWidth * 0.02,
-                                  vertical: screenWidth * 0.01,
+                          child: Column(
+                            children: [
+                              Text(
+                                _plans[i]['name'],
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedPlan == i ? Colors.white : Colors.black87,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? Colors.white.withOpacity(0.25) : Colors.orange,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  plan['savings'] as String,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.white,
-                                    fontSize: screenWidth * 0.028,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                '₹${_plans[i]['price']}',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedPlan == i ? Colors.white : AppTheme.primary,
                                 ),
                               ),
                             ],
-                          ],
-                        ),
-                        SizedBox(height: screenHeight * 0.004),
-                        Text(
-                          plan['period'] as String,
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.035,
-                            color: isSelected ? Colors.white.withOpacity(0.9) : Colors.grey.shade600,
                           ),
+                        ),
+                      ),
+                    )),
+                  ),
+
+                  SizedBox(height: 14),
+
+                  // Promo section
+                  if (!_showPromo && _appliedPromo == null)
+                    TextButton.icon(
+                      onPressed: () => setState(() => _showPromo = true),
+                      icon: Icon(Icons.local_offer, size: 16),
+                      label: Text('Have a promo code?', style: TextStyle(fontSize: 13)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.primary,
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+
+                  if (_showPromo && _appliedPromo == null) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _promoController,
+                            textCapitalization: TextCapitalization.characters,
+                            style: TextStyle(fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'Enter code',
+                              hintStyle: TextStyle(fontSize: 12),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 6),
+                        ElevatedButton(
+                          onPressed: _applyPromo,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          ),
+                          child: Text('Apply', style: TextStyle(fontSize: 13)),
                         ),
                       ],
                     ),
-                  ),
+                  ],
 
-                  // Price
-                  Text(
-                    plan['price'] as String,
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.055,
-                      fontWeight: FontWeight.w800,
-                      color: isSelected ? Colors.white : AppTheme.primary,
+                  if (_appliedPromo != null)
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green.shade700, size: 18),
+                          SizedBox(width: 6),
+                          Expanded(child: Text('$_appliedPromo - $_discount% OFF', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600, fontSize: 12))),
+                          TextButton(
+                            onPressed: () => setState(() {
+                              _appliedPromo = null;
+                              _discount = 0;
+                              _promoController.clear();
+                              _showPromo = false;
+                            }),
+                            child: Text('Remove', style: TextStyle(fontSize: 11)),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+
+                  if (_errorMessage != null) ...[
+                    SizedBox(height: 10),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700, size: 18),
+                          SizedBox(width: 6),
+                          Expanded(child: Text(_errorMessage!, style: TextStyle(color: Colors.red.shade700, fontSize: 12))),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  SizedBox(height: 80), // Space for bottom button
                 ],
               ),
             ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildPromoCodeSection(double screenWidth, double screenHeight) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Have a promo code?',
-          style: TextStyle(
-            fontSize: screenWidth * 0.04,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
           ),
+        ],
+      ),
+      // BOTTOM BUTTON - ALWAYS VISIBLE
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: Offset(0, -2))],
         ),
-        SizedBox(height: screenHeight * 0.01),
-
-        // Promo code input with apply button
-        if (_appliedPromoCode == null) ...[
-          Row(
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _promoCodeController,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(
-                    hintText: 'Enter code',
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppTheme.primary, width: 2),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.04,
-                      vertical: screenHeight * 0.015,
-                    ),
-                  ),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_discount > 0) ...[
+                    Text('₹${plan['price']}', style: TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey, fontSize: 14)),
+                    SizedBox(width: 6),
+                  ],
+                  Text('₹${finalPrice.toStringAsFixed(0)}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                  Text(' / ${plan['days']}d', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                ],
               ),
-              SizedBox(width: screenWidth * 0.025),
-              ElevatedButton(
-                onPressed: _isValidatingPromo ? null : _applyPromoCode,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.05,
-                    vertical: screenHeight * 0.0165,
+              SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _isProcessing ? null : _handlePayNow,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 3,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
+                  child: _isProcessing
+                      ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : Text('PAY NOW', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
                 ),
-                child: _isValidatingPromo
-                    ? SizedBox(
-                        height: screenHeight * 0.02,
-                        width: screenHeight * 0.02,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        'Apply',
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.038,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
             ],
           ),
-        ],
-
-        // Applied promo code display
-        if (_appliedPromoCode != null) ...[
-          Container(
-            padding: EdgeInsets.all(screenWidth * 0.04),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.local_offer, color: Colors.green.shade700, size: screenWidth * 0.05),
-                SizedBox(width: screenWidth * 0.025),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_appliedPromoCode!['code']} Applied',
-                        style: TextStyle(
-                          color: Colors.green.shade700,
-                          fontSize: screenWidth * 0.038,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        '${_appliedPromoCode!['discount_percent']}% discount',
-                        style: TextStyle(
-                          color: Colors.green.shade600,
-                          fontSize: screenWidth * 0.033,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: _removePromoCode,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.green.shade700,
-                  ),
-                  child: Text(
-                    'Remove',
-                    style: TextStyle(fontSize: screenWidth * 0.035),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: screenHeight * 0.015),
-
-          // Price breakdown
-          Container(
-            padding: EdgeInsets.all(screenWidth * 0.04),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Original Price',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.036,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    Text(
-                      _razorpayPlans.isNotEmpty ? _razorpayPlans[_selectedPlanIndex]['displayPrice'] : '₹0',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.036,
-                        color: Colors.grey.shade700,
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: screenHeight * 0.008),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Discount',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.036,
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '-${_appliedPromoCode!['discount_percent']}%',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.036,
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                Divider(height: screenHeight * 0.02),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Final Price',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.042,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    Text(
-                      _razorpayPlans.isNotEmpty
-                          ? '₹${(_calculateDiscountedPrice(_razorpayPlans[_selectedPlanIndex]['amount'] / 100)).toStringAsFixed(0)}'
-                          : '₹0',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.045,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-
-        // Promo error message
-        if (_promoError != null) ...[
-          SizedBox(height: screenHeight * 0.01),
-          Container(
-            padding: EdgeInsets.all(screenWidth * 0.03),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.red.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.red.shade700, size: screenWidth * 0.045),
-                SizedBox(width: screenWidth * 0.02),
-                Expanded(
-                  child: Text(
-                    _promoError!,
-                    style: TextStyle(
-                      color: Colors.red.shade700,
-                      fontSize: screenWidth * 0.033,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 
-  Widget _buildErrorBanner(double screenWidth) {
-    return Container(
-      padding: EdgeInsets.all(screenWidth * 0.03),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.shade200),
-      ),
+  Widget _buildFeature(IconData icon, String text) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: Colors.red.shade700, size: screenWidth * 0.05),
-          SizedBox(width: screenWidth * 0.025),
-          Expanded(
-            child: Text(
-              _errorMessage!,
-              style: TextStyle(
-                color: Colors.red.shade700,
-                fontSize: screenWidth * 0.035,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubscribeButton(double screenWidth, double screenHeight) {
-    String buttonText = 'Subscribe Now';
-    if (_paymentMethod == PaymentMethod.googlePlay && _googlePlayProducts.isNotEmpty) {
-      buttonText = 'Subscribe - ${_googlePlayProducts[_selectedPlanIndex].price}';
-    } else if (_paymentMethod == PaymentMethod.razorpay && _razorpayPlans.isNotEmpty) {
-      if (_appliedPromoCode != null) {
-        final discountedPrice = _calculateDiscountedPrice(_razorpayPlans[_selectedPlanIndex]['amount'] / 100);
-        if (discountedPrice == 0) {
-          buttonText = 'Activate Premium - FREE';
-        } else {
-          buttonText = 'Subscribe - ₹${discountedPrice.toStringAsFixed(0)}';
-        }
-      } else {
-        buttonText = 'Subscribe - ${_razorpayPlans[_selectedPlanIndex]['displayPrice']}';
-      }
-    }
-
-    return Container(
-      padding: EdgeInsets.all(screenWidth * 0.04),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: screenHeight * 0.065,
-            child: ElevatedButton(
-              onPressed: _isPurchasing ? null : _handlePurchase,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 3,
-                shadowColor: AppTheme.primary.withOpacity(0.5),
-                disabledBackgroundColor: Colors.grey.shade300,
-              ),
-              child: _isPurchasing
-                  ? SizedBox(
-                      height: screenHeight * 0.025,
-                      width: screenHeight * 0.025,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : Text(
-                      buttonText,
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.042,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.01),
-          Text(
-            'Cancel anytime • Secure payment',
-            style: TextStyle(
-              fontSize: screenWidth * 0.032,
-              color: Colors.grey.shade600,
-            ),
-          ),
+          Icon(icon, size: 16, color: AppTheme.primary),
+          SizedBox(width: 8),
+          Expanded(child: Text(text, style: TextStyle(fontSize: 12))),
         ],
       ),
     );

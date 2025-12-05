@@ -77,11 +77,18 @@ class ApiService {
   }
 
   // Register user
-  static Future<String> registerUser(String fcmToken, String deviceInfo) async {
-    final response = await _post('/user/register', {
+  static Future<String> registerUser(String fcmToken, String deviceInfo, {String? userId}) async {
+    final Map<String, dynamic> body = {
       'fcmToken': fcmToken,
       'deviceInfo': deviceInfo,
-    });
+    };
+
+    // Add userId if provided (for phone-based auth)
+    if (userId != null) {
+      body['userId'] = userId;
+    }
+
+    final response = await _post('/user/register', body);
 
     return response['userId'];
   }
@@ -610,6 +617,21 @@ class ApiService {
     }
   }
 
+  // Verify Razorpay payment and activate premium
+  static Future<void> verifyRazorpayPayment({
+    required String paymentId,
+    required String userId,
+  }) async {
+    final response = await _post('/subscriptions/razorpay-verify', {
+      'payment_id': paymentId,
+      'user_id': userId,
+    });
+
+    if (!response['success']) {
+      throw Exception(response['message'] ?? 'Failed to verify payment');
+    }
+  }
+
   // ==========================================
   // PROMO CODE SYSTEM METHODS
   // ==========================================
@@ -637,6 +659,27 @@ class ApiService {
         'valid': false,
         'error': e.toString().replaceAll('Exception: Network error: Exception: ', ''),
       };
+    }
+  }
+
+  // Activate premium with promo code (100% discount)
+  static Future<Map<String, dynamic>> activatePremiumWithPromo({
+    required String userId,
+    required String planId,
+    required int durationDays,
+    required String promoCode,
+  }) async {
+    final response = await _post('/subscriptions/activate-promo', {
+      'user_id': userId,
+      'plan_id': planId,
+      'duration_days': durationDays,
+      'promo_code': promoCode,
+    });
+
+    if (response['success']) {
+      return response;
+    } else {
+      throw Exception(response['message'] ?? 'Failed to activate premium');
     }
   }
 }

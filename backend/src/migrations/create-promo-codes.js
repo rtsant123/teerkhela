@@ -5,23 +5,52 @@ async function migrate() {
     console.log('Creating promo codes table...');
     await PromoCode.createTable();
 
-    // Create a test promo code with 100% discount for testing
-    console.log('Creating TEST100 promo code for testing...');
-    try {
-      await PromoCode.create({
+    // Create test promo codes
+    const promoCodes = [
+      {
         code: 'TEST100',
         discount_percent: 100,
-        max_uses: null, // Unlimited uses
-        valid_until: null, // Never expires
-        description: 'Testing promo code - 100% discount',
+        max_uses: null,
+        valid_until: null,
+        description: 'Testing promo code - 100% discount (free premium)',
         created_by: 'system'
-      });
-      console.log('✓ TEST100 promo code created (100% discount, unlimited uses)');
-    } catch (error) {
-      if (error.code === '23505') { // Unique violation
-        console.log('✓ TEST100 promo code already exists');
-      } else {
-        throw error;
+      },
+      {
+        code: 'SAVE50',
+        discount_percent: 50,
+        max_uses: null,
+        valid_until: null,
+        description: '50% discount on all plans',
+        created_by: 'system'
+      },
+      {
+        code: 'SAVE25',
+        discount_percent: 25,
+        max_uses: null,
+        valid_until: null,
+        description: '25% discount on all plans',
+        created_by: 'system'
+      },
+      {
+        code: 'WELCOME',
+        discount_percent: 30,
+        max_uses: null,
+        valid_until: null,
+        description: 'Welcome discount - 30% off',
+        created_by: 'system'
+      }
+    ];
+
+    for (const promoData of promoCodes) {
+      try {
+        await PromoCode.create(promoData);
+        console.log(`✓ ${promoData.code} promo code created (${promoData.discount_percent}% discount)`);
+      } catch (error) {
+        if (error.code === '23505') {
+          console.log(`✓ ${promoData.code} promo code already exists`);
+        } else {
+          throw error;
+        }
       }
     }
 
