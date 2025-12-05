@@ -20,11 +20,11 @@ android {
     namespace = "com.teerkhela.app"
     compileSdk = flutter.compileSdkVersion
 
-    packagingOptions {
-        jniLibs {
-            useLegacyPackaging = true
-        }
-    }
+//    packagingOptions {
+//        jniLibs {
+//            useLegacyPackaging = true
+//        }
+//    }
 
     buildFeatures {
         buildConfig = true
@@ -63,6 +63,21 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Enable ABI splits for smaller APKs
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
+    }
+
+    // Split APKs by ABI
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = true
+        }
     }
 
     signingConfigs {
