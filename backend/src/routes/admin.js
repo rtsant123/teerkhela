@@ -42,10 +42,7 @@ router.delete('/fomo/:id', adminController.deleteFomoContent);
 router.get('/users', adminController.getUsers);
 router.delete('/user/:userId', adminController.deleteUser);
 
-// Test route (no auth)
-router.get('/test', (req, res) => {
-  res.json({ success: true, message: 'Admin routes working without auth - v2' });
-});
+
 
 // All routes below require admin auth
 router.use(adminAuth);
