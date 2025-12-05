@@ -41,8 +41,9 @@ router.delete('/fomo/:id', adminController.deleteFomoContent);
 // Users Management (no auth - for simple admin app)
 router.get('/users', adminController.getUsers);
 router.delete('/user/:userId', adminController.deleteUser);
-
-
+router.post('/user/:userId/grant-premium', adminController.grantPremium);
+router.post('/user/:userId/extend-premium', adminController.extendPremium);
+router.post('/user/:userId/revoke-premium', adminController.deactivatePremium);
 
 // All routes below require admin auth
 router.use(adminAuth);

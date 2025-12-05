@@ -208,6 +208,55 @@ const deactivatePremium = async (req, res) => {
   }
 };
 
+// Grant premium to user
+const grantPremium = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { days = 30 } = req.body;
+
+    // Calculate expiry date
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + parseInt(days));
+
+    // Update user with premium status
+    const { pool } = require('../config/database');
+    const query = `
+      INSERT INTO users (id, is_premium, expiry_date, created_at, updated_at)
+      VALUES ($1, true, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT (id) DO UPDATE
+      SET is_premium = true,
+          expiry_date = $2,
+          updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [userId, expiryDate]);
+    const user = result.rows[0];
+
+    // Send notification
+    if (user.fcm_token) {
+      await sendNotificationToUser(
+        user.fcm_token,
+        '🎉 Premium Activated!',
+        `You now have premium access for ${days} days. Enjoy all features!`,
+        { screen: 'profile' }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: `Premium granted for ${days} days`,
+      data: user
+    });
+  } catch (error) {
+    console.error('Error granting premium:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error granting premium'
+    });
+  }
+};
+
 // Delete user
 const deleteUser = async (req, res) => {
   try {
@@ -1118,6 +1167,7 @@ module.exports = {
   login,
   getStatistics,
   getUsers,
+  grantPremium,
   extendPremium,
   deactivatePremium,
   overridePrediction,
